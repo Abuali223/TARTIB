@@ -9,6 +9,8 @@
 | Backend | **Firebase** (Auth + Firestore + Cloud Messaging) |
 | Kirish usullari | **Google Sign-In + Telefon (SMS) + Email/parol** |
 | Ishlab chiqish tartibi | Ikkala yo'nalish (A: Backend/Rollar, B: Ibodat) **parallel** |
+| Firebase loyihasi | **Noldan yaratiladi** (yo'riqnoma bilan) |
+| Namoz aniqligi | **islom.uz rasmiy taqvimи bilan daqiqама-daqiqа mos** (jadval bundle) |
 | Til | O'zbekcha (lotin) |
 | Paket | `uz.tartib.app` |
 
@@ -92,9 +94,12 @@ Hozirgi mock struktura deterministik ravishда yangi modelга o'giriladi (ME�
 
 ## B yo'nalish — Ibodat aniqligi va bildirishnomalar
 
-### B1. Namoz vaqtlari ✅ (qisman bajarildi)
-- **Bajarildi:** Fajr/Isha `18°/17°` → **`15°/15°`** (Markaziy Osiyo an'anasi). Bomdod 02:57 → **03:20** (Andijon). `src/lib/prayer.js` tuzatildi.
-- **Qoladi (ixtiyoriy, aniqlik uchun):** islom.uz rasmiy taqvimи haqiqiy quyosh botishига **~20 daqiqa ihtiyot** qo'shadi. Agar rasmiy taqvimga **daqiqама-daqiqа** moslik talab bo'lsa — viloyatlар bo'yicha **tayyor jadval** (JSON) bundle qilinadi, GPS jadvaldан tashqarида bo'lsa hisobга qaytiladi. Astronomik yo'lда Shom haqiqiy botishда qoladi (iftar to'g'ri bo'lsin).
+### B1. Namoz vaqtlari — jadval bundle (TANLANGAN: islom.uz bilan daqiqама-daqiqа mos)
+- **Bajarildi (oraliq):** Fajr/Isha `18°/17°` → **`15°/15°`** hisob. Bomdod 02:57 → **03:20**. Bu — jadvaldан tashqаридаги GPS nuqtalар uchun **zaxira** (fallback) bo'lib qoladi.
+- **Asosiy manba (qilinadi):** islom.uz rasmiy taqvимини **viloyатlар bo'yicha JSON jadval** qilib ilovага bundle qilamiz (yil bo'yi, har kун 6 vaqт). Foydalanuvchi shahri jadvалда bo'lsa — aynан rasmiy vaqт ko'rsatiladi.
+- **Oqim:** GPS/tanlangан shahar → eng yaqin jadval shahri → o'sha kунги rasmiy vaqт. Jadvалда yo'q bo'lsa → `15°` hisобга qaytiladi.
+- **Manba parserи:** islom.uz taqvимини bir marта yig'ib JSON'ga aylantirадиган skript (masalan `namoz-vaqtlari-parser` uslуbида). Litsензия/foydalanish shartlаriга e'tibор beriladi.
+- **Ma'lумот hajми:** ~14 viloyат × 365 kун × 6 vaqт ≈ kичик JSON (bir necha yuz KB), offline saqlanadi.
 
 ### B2. Qibla
 - Bearing hisobi to'g'ri. Magnetometr kalibratsiyasи va aniqlik ko'rsatkichи yaxshilanadi; deklinatsiya (magnit ↔ haqiqiy shimol) hisobga olinadi.
@@ -124,7 +129,7 @@ Har yo'nalishда: **qurish agenti → tekshiruv (review) agenti → sizning tel
 
 M0–M1 ketma-ket (asos), keyin A (M2–M4) va B (namoz ✅ / B2–B3) parallel.
 
-## 5. Ochiq savollar (foydalanuvchidан)
-1. **Firebase loyihasi** — tayyor bormi, yoki noldan yarataylikmi?
-2. **Rasmiy taqvим aniqligi** — namoz vaqti islom.uz bilan daqiqаما-daqiqа mos bo'lishи shartmi (jadval bundle), yoki hisob yetарлими?
-3. **SMS narxi** — telefon auth SMS pullik; byudjet/provayder cheklovи bormi?
+## 5. Savollar holati
+1. ~~Firebase loyihasi~~ → **Noldan yaratiladi** (hal qilindi).
+2. ~~Rasmiy taqvim aniqligi~~ → **islom.uz jadvali bundle qilinadi** (hal qilindi, B1).
+3. **SMS narxi (ochiq)** — telefon auth SMS pullik. Firebase Phone Auth bepul kvotasi cheklangan; ko'p foydalanuvchida byudjet yoki muqobil provayder (masalan Eskiz.uz) kerak bo'lishi mumkin. M1'da aniqlanadi.
