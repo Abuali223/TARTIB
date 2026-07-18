@@ -1,11 +1,9 @@
-name: EAS Android APK build
+name: APK build (EAS)
 
-# Telefon uchun standalone APK yig'adi (Expo bulutida).
-# Ishlash sharti: repo Settings → Secrets → Actions'da EXPO_TOKEN qo'shilgan bo'lishi kerak.
-# Ishga tushirish: Actions bo'limida "Run workflow" (qo'lda) yoki shu branch'ga push.
+# Telefonga o'rnatiladigan standalone APK ni Expo bulutida yig'adi.
+# Yagona shart: repo Settings → Secrets and variables → Actions'da EXPO_TOKEN qo'shilgan.
+# Ishga tushirish: shu branch'ga push, yoki Actions → "APK build (EAS)" → Run workflow.
 
-# Faqat qo'lda ishga tushiriladi (Actions → Run workflow) — token sozlanmaguncha
-# bejiz build ishlamasin. EXPO_TOKEN va FIREBASE_* sekretlari qo'shilgach ishlaydi.
 on:
   workflow_dispatch:
     inputs:
@@ -14,7 +12,13 @@ on:
         required: true
         default: preview
         type: choice
-        options: [preview, development, production]
+        options: [preview, production]
+  push:
+    branches: [claude/tartib-dc-html-wacqog]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.gitignore'
 
 jobs:
   build:
@@ -29,7 +33,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Setup EAS
+      - name: Setup EAS CLI
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
@@ -38,18 +42,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Write Firebase config
-        run: |
-          cat > src/lib/firebaseConfig.js <<'EOF'
-          export const firebaseConfig = {
-            apiKey: "${{ secrets.FIREBASE_API_KEY }}",
-            authDomain: "${{ secrets.FIREBASE_AUTH_DOMAIN }}",
-            projectId: "${{ secrets.FIREBASE_PROJECT_ID }}",
-            storageBucket: "${{ secrets.FIREBASE_STORAGE_BUCKET }}",
-            messagingSenderId: "${{ secrets.FIREBASE_SENDER_ID }}",
-            appId: "${{ secrets.FIREBASE_APP_ID }}"
-          };
-          EOF
+      - name: Link/create EAS project
+        run: eas init --non-interactive --force
 
-      - name: Build APK (EAS cloud)
-        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive --no-wait
+      - name: Build Android APK
+        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive

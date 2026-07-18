@@ -9,7 +9,8 @@ ios/
 *.apk
 *.aab
 
-# Firebase — haqiqiy konfiguratsiya git'ga tushmaydi (namuna: firebaseConfig.example.js)
-src/lib/firebaseConfig.js
+# Firebase Android/iOS native fayllari (M1'da) — git'ga tushmaydi
 google-services.json
 GoogleService-Info.plist
+# Eslatma: firebaseConfig.js (web API kaliti) repoga qo'shilgan — bu maxfiy emas,
+# xavfsizlik Firestore qoidalari bilan ta'minlanadi (Google buni tavsiya qiladi).
