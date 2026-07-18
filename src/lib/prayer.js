@@ -1,4 +1,4 @@
-import { CalculationMethod, Coordinates, Madhab, PrayerTimes, Qibla } from 'adhan';
+import { CalculationParameters, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, Qibla, Rounding } from 'adhan';
 
 // Andijon — default until GPS gives a real fix
 export const DEFAULT_COORDS = { latitude: 40.7821, longitude: 72.3442 };
@@ -14,9 +14,15 @@ const PRAYER_META = [
 ];
 
 function params() {
-  // Hanafi asr, Muslim World League angles — common for Uzbekistan
-  const p = CalculationMethod.MuslimWorldLeague();
+  // Uzbekistan: Fajr/Isha 15° (Markaziy Osiyo — musulmonlar idorasi an'anasi;
+  // aladhan "method 14" mintaqasi). MWL'ning 18°/17° Bomdodni ~24 daqiqa erta beradi.
+  // Hanafiy Asr. Shom — haqiqiy quyosh botishida qoldiriladi (rasmiy islom.uz taqvimi
+  // ~20 daqiqalik ihtiyot qo'shadi — buni faqat tayyor jadval bilan takrorlash mumkin).
+  const p = new CalculationParameters('Uzbekistan', 15, 15);
   p.madhab = Madhab.Hanafi;
+  p.methodAdjustments.dhuhr = 1;
+  p.highLatitudeRule = HighLatitudeRule.MiddleOfTheNight; // default; kenglik < 48 — ta'sirsiz
+  p.rounding = Rounding.Nearest;
   return p;
 }
 
