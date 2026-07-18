@@ -1,11 +1,12 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F } from './theme';
 import { DEFAULT_CITY, DEFAULT_COORDS, fmtClock, nextPrayer, currentPrayer, pad2, prayerList, qiblaBearing } from './lib/prayer';
 import { hijriLabel, hijriMonthLabel } from './lib/hijri';
 import { loadState, saveState, todayKey } from './lib/storage';
+import { ensureUserDoc, mapAuthError, signInEmail, signOutUser, signUpEmail, watchAuth } from './lib/auth';
 import Onboarding from './screens/Onboarding';
 import Bugun from './screens/Bugun';
 import Namoz from './screens/Namoz';
@@ -28,9 +29,10 @@ const USE_24H = true;
 const SHOW_SECONDS = true;
 const DEFAULT_MODE = 'shaxsiy';
 
-// Slice of state persisted to AsyncStorage
+// Slice of state persisted to AsyncStorage.
+// Auth/hisob endi Firebase'da — 'booted'/'account' bu yerda saqlanmaydi.
 const PERSIST_KEYS = [
-  'booted', 'account', 'mode', 'settings', 'amals', 'amalsDate', 'habits', 'tasks', 'members',
+  'mode', 'settings', 'amals', 'amalsDate', 'habits', 'tasks', 'members',
   'tasbehCount', 'tasbehTarget', 'dhikrIdx',
 ];
 
@@ -53,7 +55,10 @@ export default class Root extends React.Component {
 
   state = {
     hydrated: false,
-    booted: false, onbStep: 0, mode: DEFAULT_MODE, account: null, onbAge: '', tab: 'bugun', overlay: null,
+    // Firebase auth
+    authReady: false, fbUser: null, userDoc: null,
+    authMode: 'signup', authForm: { name: '', email: '', password: '', birthYear: '' }, authBusy: false,
+    mode: DEFAULT_MODE, tab: 'bugun', overlay: null,
     now: Date.now(),
     coords: DEFAULT_COORDS, cityName: DEFAULT_CITY, locStatus: 'default', // default | granted | denied
     selMember: null, selTask: null, selDay: new Date().getDate(),
@@ -115,9 +120,19 @@ export default class Root extends React.Component {
     }
     // 2) locate the user (offline prayer math needs coordinates only)
     this.locate();
+    // 3) Firebase auth holatini kuzatish (sessiya AsyncStorage'da saqlanadi)
+    this._unsubAuth = watchAuth(async (user) => {
+      if (user) {
+        let userDoc = null;
+        try { userDoc = await ensureUserDoc(user, {}); } catch (e) { /* offline bo'lsa keyin yuklanadi */ }
+        this.setState({ fbUser: { uid: user.uid, email: user.email, displayName: user.displayName }, userDoc, authReady: true });
+      } else {
+        this.setState({ fbUser: null, userDoc: null, authReady: true });
+      }
+    });
   }
 
-  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st); }
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st); if (this._unsubAuth) this._unsubAuth(); }
 
   componentDidUpdate(_, prev) {
     if (!this.state.hydrated) return;
@@ -163,18 +178,38 @@ export default class Root extends React.Component {
   onNMDetail = (v) => this.setState(s => ({ newM: { ...s.newM, detail: v } }));
   onNMName = (v) => this.setState(s => ({ newM: { ...s.newM, name: v } }));
 
-  onOnbAge = (v) => this.setState({ onbAge: (v + '').replace(/[^0-9]/g, '').slice(0, 3) });
-  register = () => {
-    const age = parseInt(this.state.onbAge, 10);
-    if (!age || age < 5 || age > 120) { this.flash("Iltimos, yoshingizni to'g'ri kiriting"); return; }
-    const isChild = age < 16;
-    const acc = { name: 'Anvar Karimov', email: 'anvar.karimov@gmail.com', age, isChild };
-    const mode = isChild ? 'oila' : (this.state.mode || 'shaxsiy');
-    this.setState({ account: acc, booted: true, mode, overlay: null, tab: 'bugun' });
-    this.flash(isChild ? 'Farzand/talaba rejimi faollashtirildi' : 'Xush kelibsiz, Anvar!');
+  // ————— auth (email/parol) —————
+  setAuthMode = (m) => this.setState({ authMode: m });
+  onAuthField = (k, v) => this.setState(s => ({ authForm: { ...s.authForm, [k]: k === 'birthYear' ? (v + '').replace(/[^0-9]/g, '').slice(0, 4) : v } }));
+  submitAuth = async () => {
+    const { authMode, authForm, authBusy } = this.state;
+    if (authBusy) return;
+    const email = (authForm.email || '').trim();
+    const password = authForm.password || '';
+    if (!email || !password) { this.flash('Email va parolni kiriting'); return; }
+    if (authMode === 'signup' && !(authForm.name || '').trim()) { this.flash('Ismingizni kiriting'); return; }
+    this.setState({ authBusy: true });
+    try {
+      if (authMode === 'signup') {
+        const by = parseInt(authForm.birthYear, 10);
+        await signUpEmail({ name: authForm.name, email, password, birthYear: Number.isFinite(by) ? by : null });
+        this.flash('Xush kelibsiz!');
+      } else {
+        await signInEmail({ email, password });
+      }
+      // watchAuth fbUser/userDoc'ni o'rnatadi va ilova ochiladi
+      this.setState({ authForm: { name: '', email: '', password: '', birthYear: '' } });
+    } catch (e) {
+      this.flash(mapAuthError(e));
+    } finally {
+      this.setState({ authBusy: false });
+    }
   };
   setMode = (m) => { this.setState({ mode: m, overlay: null, tab: 'bugun' }); this._scroll?.scrollTo({ y: 0, animated: false }); };
-  logout = () => this.setState({ booted: false, onbStep: 0, account: null, onbAge: '', overlay: null, tab: 'bugun' });
+  logout = async () => {
+    this.setState({ overlay: null, tab: 'bugun' });
+    try { await signOutUser(); } catch (e) { this.flash(mapAuthError(e)); }
+  };
   go = (tab) => { this.setState({ tab, overlay: null }); this._scroll?.scrollTo({ y: 0, animated: false }); };
   openOv = (name) => this.setState({ overlay: name });
   closeOv = () => this.setState({ overlay: null, selMember: null, selTask: null });
@@ -254,9 +289,15 @@ export default class Root extends React.Component {
     const goalPct = goalTotal ? Math.round(goalDone / goalTotal * 100) : 0;
 
     const memTasks = mid => S.tasks.filter(t => t.assignee === mid);
-    const acc = S.account || { name: this.ME.name + ' ' + this.ME.last, email: 'anvar.karimov@gmail.com', age: 34, isChild: false };
-    const isChild = !!acc.isChild;
-    const first = acc.name.split(' ')[0], last = acc.name.split(' ').slice(1).join(' ');
+    // Hisob endi Firebase userDoc'dan keladi
+    const booted = !!S.fbUser;
+    const ud = S.userDoc || {};
+    const nowYear = new Date().getFullYear();
+    const uAge = ud.birthYear ? nowYear - ud.birthYear : null;
+    const isChild = uAge != null ? uAge < 16 : false;
+    const accName = (ud.name || (S.fbUser && S.fbUser.displayName) || 'Foydalanuvchi').trim() || 'Foydalanuvchi';
+    const acc = { name: accName, email: ud.email || (S.fbUser && S.fbUser.email) || '', birthYear: ud.birthYear || null, isChild };
+    const first = accName.split(' ')[0], last = accName.split(' ').slice(1).join(' ');
     const mode = S.mode;
     const modeLabel = mode === 'ishxona' ? 'Ishxona' : mode === 'talim' ? "Ta'lim" : mode === 'shaxsiy' ? 'Shaxsiy' : 'Oilam';
     const canManage = mode !== 'shaxsiy' && !isChild;
@@ -412,11 +453,16 @@ export default class Root extends React.Component {
     const dueChips = dues.map(d => ({ name: d, active: S.draft.due === d, onPick: () => this.pickDue(d) }));
     const typeChips = [{ k: 'vazifa', name: 'Vazifa' }, { k: 'eslatma', name: 'Eslatma' }].map(x => ({ ...x, active: S.draft.type === x.k, onPick: () => this.pickType(x.k) }));
 
-    const age = parseInt(S.onbAge, 10);
-
     return {
-      booted: S.booted, showOnboarding: !S.booted, onb0: S.onbStep === 0, onb1: S.onbStep === 1,
-      greet, meName: first, meLast: last, meInitial: first[0],
+      authReady: S.authReady, booted, showOnboarding: S.authReady && !S.fbUser,
+      authMode: S.authMode, authForm: S.authForm, authBusy: S.authBusy,
+      setAuthMode: { signin: () => this.setAuthMode('signin'), signup: () => this.setAuthMode('signup') },
+      onAuthField: {
+        name: (v) => this.onAuthField('name', v), email: (v) => this.onAuthField('email', v),
+        password: (v) => this.onAuthField('password', v), birthYear: (v) => this.onAuthField('birthYear', v),
+      },
+      submitAuth: this.submitAuth,
+      greet, meName: first, meLast: last, meInitial: (first[0] || 'F'),
       meRole: isChild ? 'Farzand' : (mode === 'ishxona' ? 'Rahbar' : mode === 'talim' ? "O'qituvchi" : mode === 'oila' ? 'Ota-ona' : 'Foydalanuvchi'),
       cityName: S.cityName, locStatus: S.locStatus, account: acc, isChild, mode, modeLabel, canManage,
       isShaxsiy: mode === 'shaxsiy', isChildTeam: mode !== 'shaxsiy' && isChild,
@@ -442,15 +488,19 @@ export default class Root extends React.Component {
       setMode: { shaxsiy: () => this.setMode('shaxsiy'), oila: () => this.setMode('oila'), talim: () => this.setMode('talim'), ishxona: () => this.setMode('ishxona') },
       showIsh: !isChild,
       close: this.closeOv, setScroll: this.setScroll,
-      setStep: { next: () => this.setState({ onbStep: 1 }), back: () => this.setState({ onbStep: 0 }) },
-      onbAge: S.onbAge, onOnbAge: this.onOnbAge, register: this.register,
-      ageIsChild: age >= 1 && age < 16, ageIsAdult: age >= 16,
       logout: this.logout, flash: S.flash,
     };
   }
 
   render() {
-    if (!this.state.hydrated) return <View style={{ flex: 1, backgroundColor: '#0a1f18' }} />;
+    // Splash: lokal ma'lumot yuklanmaguncha yoki Firebase auth holati aniqlanmaguncha
+    if (!this.state.hydrated || !this.state.authReady) {
+      return (
+        <LinearGradient colors={['#0a1f18', '#071510', '#050f0b']} locations={[0, 0.62, 1]} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.gold} size="large" />
+        </LinearGradient>
+      );
+    }
     const v = this.vals();
     return (
       <LinearGradient colors={['#0a1f18', '#071510', '#050f0b']} locations={[0, 0.62, 1]} style={{ flex: 1 }}>

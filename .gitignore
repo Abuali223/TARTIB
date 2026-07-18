@@ -8,3 +8,8 @@ ios/
 .DS_Store
 *.apk
 *.aab
+
+# Firebase — haqiqiy konfiguratsiya git'ga tushmaydi (namuna: firebaseConfig.example.js)
+src/lib/firebaseConfig.js
+google-services.json
+GoogleService-Info.plist

@@ -1,105 +1,127 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, F } from '../theme';
-import { FadeIn, PrimaryBtn } from '../components/ui';
-import { CheckIcon, GoogleIcon, LogoMark } from '../components/icons';
+import { FadeIn } from '../components/ui';
+import { GoogleIcon, LogoMark } from '../components/icons';
+
+function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, autoCapitalize }) {
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={st.label}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={C.sageDim}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize || 'none'}
+        autoCorrect={false}
+        style={st.input}
+      />
+    </View>
+  );
+}
 
 export default function Onboarding({ v }) {
+  const signup = v.authMode === 'signup';
+  const f = v.authForm;
   return (
     <View style={StyleSheet.absoluteFill}>
       <LinearGradient colors={['#12402d', '#0a2117', '#050f0a']} locations={[0, 0.55, 1]} style={{ flex: 1 }}>
-        {v.onb0 && (
-          <FadeIn style={st.center} duration={600}>
-            <View style={{ width: 150, height: 150, alignItems: 'center', justifyContent: 'center', marginBottom: 30 }}>
-              <View style={st.glow} />
-              <LogoMark />
-            </View>
-            <Text style={st.bismillah}>بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْم</Text>
-            <Text style={st.brand}>TARTIB</Text>
-            <View style={st.rule} />
-            <Text style={st.lede}>Kuningizni ibodat, niyat va tartib bilan boshlang. Namoz, zikr, odatlar, oila, ta'lim va ishxona vazifalari — barchasi bir joyda.</Text>
-            <TouchableOpacity onPress={v.setStep.next} activeOpacity={0.85} style={st.googleBtn}>
-              <GoogleIcon />
-              <Text style={st.googleText}>Google orqali davom etish</Text>
-            </TouchableOpacity>
-            <Text style={st.note}>Bir marta ro'yxatdan o'ting — shaxsiy, oila, ta'lim va ishxona makonlaridan foydalaning</Text>
-          </FadeIn>
-        )}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <FadeIn>
+              {/* Brand */}
+              <View style={{ alignItems: 'center', marginBottom: 26 }}>
+                <View style={{ width: 96, height: 96, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                  <View style={st.glow} />
+                  <LogoMark size={80} />
+                </View>
+                <Text style={st.bismillah}>بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْم</Text>
+                <Text style={st.brand}>TARTIB</Text>
+                <View style={st.rule} />
+                <Text style={st.lede}>Ibodat, niyat va tartib — barchasi bir joyda.</Text>
+              </View>
 
-        {v.onb1 && (
-          <FadeIn style={{ flex: 1, paddingTop: 90, paddingHorizontal: 28, paddingBottom: 40 }}>
-            <Text style={st.h2}>Ma'lumotlaringiz</Text>
-            <Text style={st.sub}>
-              Hisobingiz Google orqali ulandi. Yoshingizni kiriting — 16 yoshdan kichik bo'lsangiz, avtomatik{' '}
-              <Text style={{ color: C.gold, fontFamily: F.bold }}>farzand/talaba</Text> rejimi beriladi.
-            </Text>
-            <View style={st.accCard}>
-              <View style={st.accAvatar}><Text style={{ fontFamily: F.serif, fontSize: 20, color: C.gold }}>A</Text></View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.cream }}>Anvar Karimov</Text>
-                <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage }} numberOfLines={1}>anvar.karimov@gmail.com</Text>
+              {/* Kirish / Ro'yxatdan o'tish toggle */}
+              <View style={st.tabs}>
+                <TouchableOpacity onPress={v.setAuthMode.signup} activeOpacity={0.8} style={[st.tab, signup && st.tabActive]}>
+                  <Text style={[st.tabText, signup && st.tabTextActive]}>Ro'yxatdan o'tish</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={v.setAuthMode.signin} activeOpacity={0.8} style={[st.tab, !signup && st.tabActive]}>
+                  <Text style={[st.tabText, !signup && st.tabTextActive]}>Kirish</Text>
+                </TouchableOpacity>
               </View>
-              <View style={st.accCheck}><CheckIcon size={13} /></View>
-            </View>
-            <Text style={st.label}>Yoshingiz</Text>
-            <TextInput
-              value={v.onbAge}
-              onChangeText={v.onOnbAge}
-              keyboardType="number-pad"
-              placeholder="Masalan: 28"
-              placeholderTextColor={C.sageDim}
-              style={st.ageInput}
-            />
-            {v.ageIsChild && (
-              <View style={[st.ageHint, { backgroundColor: 'rgba(111,179,224,0.12)', borderColor: 'rgba(111,179,224,0.35)' }]}>
-                <Text style={[st.ageHintText, { color: '#9FC9E8' }]}>Farzand / talaba rejimi — vazifa va eslatmalarni qabul qilasiz</Text>
+
+              {signup && (
+                <Field label="Ism" value={f.name} onChangeText={v.onAuthField.name} placeholder="To'liq ismingiz" autoCapitalize="words" />
+              )}
+              <Field label="Email" value={f.email} onChangeText={v.onAuthField.email} placeholder="siz@example.com" keyboardType="email-address" />
+              <Field label="Parol" value={f.password} onChangeText={v.onAuthField.password} placeholder="Kamida 6 belgi" secureTextEntry />
+              {signup && (
+                <Field label="Tug'ilgan yil" value={f.birthYear} onChangeText={v.onAuthField.birthYear} placeholder="Masalan: 1998" keyboardType="number-pad" />
+              )}
+
+              <TouchableOpacity onPress={v.submitAuth} activeOpacity={0.85} disabled={v.authBusy}
+                style={[st.primary, v.authBusy && { opacity: 0.7 }]}>
+                {v.authBusy
+                  ? <ActivityIndicator color={C.ink} />
+                  : <Text style={st.primaryText}>{signup ? "Ro'yxatdan o'tish" : 'Kirish'}</Text>}
+              </TouchableOpacity>
+
+              {/* Kelajakda: Google / Telefon (M1 — dev build) */}
+              <View style={st.divider}>
+                <View style={st.hr} /><Text style={st.dividerText}>yoki</Text><View style={st.hr} />
               </View>
-            )}
-            {v.ageIsAdult && (
-              <View style={[st.ageHint, { backgroundColor: 'rgba(67,192,141,0.12)', borderColor: 'rgba(67,192,141,0.35)' }]}>
-                <Text style={[st.ageHintText, { color: '#7FCBA9' }]}>To'liq huquq — oila, ta'lim va ishxona makonlarini boshqarasiz</Text>
+              <View style={st.soonBtn}>
+                <GoogleIcon size={18} />
+                <Text style={st.soonText}>Google · tez orada</Text>
               </View>
-            )}
-            <PrimaryBtn label="Ro'yxatdan o'tish" onPress={v.register} style={{ marginTop: 22, paddingVertical: 16 }} />
-            <TouchableOpacity onPress={v.setStep.back} style={{ marginTop: 'auto', padding: 12, alignItems: 'center' }}>
-              <Text style={{ fontFamily: F.medium, fontSize: 14, color: C.sageFaint }}>← Orqaga</Text>
-            </TouchableOpacity>
-          </FadeIn>
-        )}
+              <View style={st.soonBtn}>
+                <Text style={[st.soonText, { marginLeft: 0 }]}>Telefon (SMS) · tez orada</Text>
+              </View>
+
+              <Text style={st.note}>Ro'yxatdan o'tib, shaxsiy, oila, ta'lim va ishxona makonlaridan foydalaning</Text>
+            </FadeIn>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingTop: 60, paddingBottom: 40 },
-  glow: { position: 'absolute', width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(217,179,106,0.13)' },
-  bismillah: { fontFamily: F.arabic, fontSize: 22, color: C.goldD, marginBottom: 20, textAlign: 'center' },
-  brand: { fontFamily: F.serifBold, fontSize: 52, letterSpacing: 7, color: C.cream, marginBottom: 4, paddingLeft: 7 },
-  rule: { width: 44, height: 2, backgroundColor: C.gold, marginTop: 12, marginBottom: 18 },
-  lede: { fontFamily: F.regular, fontSize: 16, lineHeight: 25, color: C.sageMid, maxWidth: 280, textAlign: 'center', marginBottom: 44 },
-  googleBtn: {
-    width: '100%', maxWidth: 300, paddingVertical: 15, borderRadius: 16, backgroundColor: '#F5F0E6',
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
-    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 13, shadowOffset: { width: 0, height: 10 }, elevation: 6,
+  scroll: { paddingHorizontal: 28, paddingTop: 70, paddingBottom: 40, flexGrow: 1, justifyContent: 'center' },
+  glow: { position: 'absolute', width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(217,179,106,0.13)' },
+  bismillah: { fontFamily: F.arabic, fontSize: 18, color: C.goldD, marginBottom: 12, textAlign: 'center' },
+  brand: { fontFamily: F.serifBold, fontSize: 42, letterSpacing: 6, color: C.cream, paddingLeft: 6 },
+  rule: { width: 40, height: 2, backgroundColor: C.gold, marginTop: 10, marginBottom: 14 },
+  lede: { fontFamily: F.regular, fontSize: 14, lineHeight: 21, color: C.sageMid, maxWidth: 260, textAlign: 'center' },
+  tabs: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 4, marginBottom: 20 },
+  tab: { flex: 1, paddingVertical: 11, borderRadius: 10, alignItems: 'center' },
+  tabActive: { backgroundColor: 'rgba(217,179,106,0.16)', borderWidth: 1, borderColor: 'rgba(217,179,106,0.4)' },
+  tabText: { fontFamily: F.bold, fontSize: 14, color: C.sage },
+  tabTextActive: { color: C.gold },
+  label: { fontFamily: F.bold, fontSize: 13, color: C.sageMid, marginBottom: 8, marginHorizontal: 2 },
+  input: {
+    paddingVertical: 15, paddingHorizontal: 16, borderRadius: 14, backgroundColor: C.card,
+    borderWidth: 1, borderColor: C.borderStrong, color: C.cream, fontFamily: F.medium, fontSize: 16,
   },
-  googleText: { fontFamily: F.extrabold, fontSize: 15, color: '#1a1a1a' },
-  note: { marginTop: 16, fontFamily: F.regular, fontSize: 12, color: C.sageFaint, maxWidth: 280, lineHeight: 18, textAlign: 'center' },
-  h2: { fontFamily: F.serif, fontSize: 30, color: C.cream, marginBottom: 6 },
-  sub: { fontFamily: F.regular, fontSize: 15, color: C.sageMid, marginBottom: 24, lineHeight: 22 },
-  accCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 18,
-    backgroundColor: C.card, borderWidth: 1, borderColor: 'rgba(217,179,106,0.15)', marginBottom: 24,
+  primary: {
+    marginTop: 8, paddingVertical: 16, borderRadius: 16, backgroundColor: C.gold, alignItems: 'center',
+    shadowColor: C.gold, shadowOpacity: 0.3, shadowRadius: 13, shadowOffset: { width: 0, height: 10 }, elevation: 5,
   },
-  accAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(217,179,106,0.14)', borderWidth: 1, borderColor: 'rgba(217,179,106,0.4)', alignItems: 'center', justifyContent: 'center' },
-  accCheck: { width: 24, height: 24, borderRadius: 12, backgroundColor: C.emerald, alignItems: 'center', justifyContent: 'center' },
-  label: { fontFamily: F.bold, fontSize: 13, color: C.sageMid, marginBottom: 10, marginHorizontal: 2 },
-  ageInput: {
-    width: '100%', padding: 16, borderRadius: 14, backgroundColor: C.card,
-    borderWidth: 1, borderColor: C.borderStrong, color: C.cream,
-    fontSize: 18, fontFamily: F.bold, textAlign: 'center',
+  primaryText: { fontFamily: F.extrabold, fontSize: 16, color: C.ink },
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 18, gap: 12 },
+  hr: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
+  dividerText: { fontFamily: F.regular, fontSize: 12, color: C.sageFaint },
+  soonBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    paddingVertical: 13, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)', marginBottom: 10, opacity: 0.55,
   },
-  ageHint: { marginTop: 14, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1 },
-  ageHintText: { fontFamily: F.semibold, fontSize: 13, textAlign: 'center' },
+  soonText: { fontFamily: F.semibold, fontSize: 14, color: C.sageMid, marginLeft: 0 },
+  note: { marginTop: 18, fontFamily: F.regular, fontSize: 12, color: C.sageFaint, textAlign: 'center', lineHeight: 18 },
 });

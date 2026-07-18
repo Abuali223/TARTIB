@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// TARTIB — M0 (email/parol auth). Faqat kirgan foydalanuvchi o'z hujjatini o'qiy/yoza oladi.
+// M2–M4'da workspaces / memberships / tasks qoidalari qo'shiladi.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // users/{uid} — faqat egasi
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
+    // Qolgan hamma narsa hozircha yopiq (keyingi milestone'larda ochiladi)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
