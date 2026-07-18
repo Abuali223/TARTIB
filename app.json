@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "TARTIB",
+    "slug": "tartib",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a1f18",
+    "splash": {
+      "backgroundColor": "#0a1f18",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "package": "uz.tartib.app",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "uz.tartib.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Namoz vaqtlari va Qibla yo'nalishini aniqlash uchun joylashuvingiz kerak."
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Namoz vaqtlari va Qibla yo'nalishini aniqlash uchun joylashuvingiz ishlatiladi."
+        }
+      ]
+    ]
+  }
+}
