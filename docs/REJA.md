@@ -90,6 +90,21 @@ eslatma: yuborildi →(tushunarli)→ bajarildi
 ### A6. Migratsiya (mock → yangi model)
 Hozirgi mock struktura deterministik ravishда yangi modelга o'giriladi (ME→User, members→Users, mode→activeWorkspaceId, roles{}→Membership'lar). Batafsil — audit spetsifikatsiyasида.
 
+### A7. "Makon = ma'lumot, Inbox = global" prinsipi (jahon tajribasi)
+Tadqiqot: Slack (ko'p makon, lekin bildirishnoma silo — xato), Google Classroom (kod/havola bilan self-join), multi-tenant SaaS (tenant scoped data).
+
+**Ajratish qoidasi:**
+- **Makon (kontekst)** — board, a'zolar, natija, reyting har makonда **alohida** (scoped).
+- **Inbox / push — global**: "Menga berilган vazifалар" hamma makondан yig'iladi, har vazифада makon yorlig'и ("Ishxona"/"Maktab"/"Oila").
+- **Push bildirishnoma makonга bog'liq emas** — shaxsiy makonда tursangiz ham, boshqa makon vazифа berса, push + inbox'да chiqadi. (Slack'ning silo xatosини takrorlamаймиz.)
+- Makon almashтириш faqat **boshqaruv ko'rinишини** o'zgartiradi (board/a'zолар), **qabul qilишни emas**.
+
+**Amaliy o'zgarish:** `myTasks` (Bugun ekrani + kelajакдаги Inbox) — **cross-workspace** (hamma makondан), har kартада makon nishonи. Push har vazифа yaratилганда/holат o'zgarганда — active makonга qaramай.
+
+**Kechikиш:** vazифа o'z muddатига ega (ko'rish makonга bog'liq emas); muddат yaqin → qo'shimcha eslatма; "Yuborilди"да qolса beruvchi "kutilmoqда" ko'radi; muddат o'tса "Kechikди" belgisи.
+
+**Qo'shilish (gibrid — Google Classroom modeli):** egаси (ota/o'qituvchi/boshliq) makon yaratadi + taklif (kod/QR/havola/telefon); a'zо **o'zи qo'shiladi** va qabul qiladi. A'zо makon yaratmaydi. To'liq self-forming (Discord) faqat ochиq jamoалар uchun — TARTIB'да tabiiy rahbар bor, shунга egаси boshqаради.
+
 ---
 
 ## B yo'nalish — Ibodat aniqligi va bildirishnomalar
