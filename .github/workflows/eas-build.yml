@@ -1,0 +1,55 @@
+name: EAS Android APK build
+
+# Telefon uchun standalone APK yig'adi (Expo bulutida).
+# Ishlash sharti: repo Settings → Secrets → Actions'da EXPO_TOKEN qo'shilgan bo'lishi kerak.
+# Ishga tushirish: Actions bo'limida "Run workflow" (qo'lda) yoki shu branch'ga push.
+
+# Faqat qo'lda ishga tushiriladi (Actions → Run workflow) — token sozlanmaguncha
+# bejiz build ishlamasin. EXPO_TOKEN va FIREBASE_* sekretlari qo'shilgach ishlaydi.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build profili"
+        required: true
+        default: preview
+        type: choice
+        options: [preview, development, production]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write Firebase config
+        run: |
+          cat > src/lib/firebaseConfig.js <<'EOF'
+          export const firebaseConfig = {
+            apiKey: "${{ secrets.FIREBASE_API_KEY }}",
+            authDomain: "${{ secrets.FIREBASE_AUTH_DOMAIN }}",
+            projectId: "${{ secrets.FIREBASE_PROJECT_ID }}",
+            storageBucket: "${{ secrets.FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "${{ secrets.FIREBASE_SENDER_ID }}",
+            appId: "${{ secrets.FIREBASE_APP_ID }}"
+          };
+          EOF
+
+      - name: Build APK (EAS cloud)
+        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive --no-wait
