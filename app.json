@@ -31,6 +31,11 @@
           "locationWhenInUsePermission": "Namoz vaqtlari va Qibla yo'nalishini aniqlash uchun joylashuvingiz ishlatiladi."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c6f427a8-d221-41a7-b5eb-8739651c5abc"
+      }
+    }
   }
 }
