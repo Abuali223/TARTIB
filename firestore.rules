@@ -1,21 +1,78 @@
 rules_version = '2';
 
-// TARTIB — M0 (email/parol auth). Faqat kirgan foydalanuvchi o'z hujjatini o'qiy/yoza oladi.
-// M2–M4'da workspaces / memberships / tasks qoidalari qo'shiladi.
+// TARTIB — jamoa (makon/a'zolik/vazifa) xavfsizlik qoidalari.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // users/{uid} — faqat egasi
-    match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null && request.auth.uid == uid;
-      allow update: if request.auth != null && request.auth.uid == uid;
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function isMember(wid) {
+      return exists(/databases/$(database)/documents/memberships/$(wid + '_' + uid()));
+    }
+    function myMembership(wid) {
+      return get(/databases/$(database)/documents/memberships/$(wid + '_' + uid())).data;
+    }
+    function wsOwner(wid) {
+      return get(/databases/$(database)/documents/workspaces/$(wid)).data.ownerUserId;
+    }
+    function isOwner(wid) { return wsOwner(wid) == uid(); }
+    function hasPerm(wid, cap) {
+      return isOwner(wid) || (isMember(wid) && (cap in myMembership(wid).permissions));
+    }
+
+    // Foydalanuvchilar — o'z hujjatini yozadi; ismlar a'zolarga ko'rinadi
+    match /users/{u} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && u == uid();
       allow delete: if false;
     }
 
-    // Qolgan hamma narsa hozircha yopiq (keyingi milestone'larda ochiladi)
-    match /{document=**} {
-      allow read, write: if false;
+    // Makonlar — kod bilan qidirish uchun o'qish ochiq (nom/turi/kod maxfiy emas);
+    // yaratish faqat o'zini egasi qilib; o'zgartirish/o'chirish faqat egasi.
+    match /workspaces/{wid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerUserId == uid();
+      allow update, delete: if signedIn() && resource.data.ownerUserId == uid();
+    }
+
+    // A'zoliklar — o'z a'zoligingni yoki a'zo bo'lgan makon a'zolarini o'qiysan;
+    // o'zingni qo'shasan (kod bilan) yoki egasi qo'shadi; rolni egasi/manager o'zgartiradi.
+    match /memberships/{mid} {
+      allow read: if signedIn() && (
+        resource.data.userId == uid() || isMember(resource.data.workspaceId)
+      );
+      allow create: if signedIn() && (
+        request.resource.data.userId == uid() ||
+        isOwner(request.resource.data.workspaceId)
+      );
+      allow update: if signedIn() && (
+        isOwner(resource.data.workspaceId) ||
+        hasPerm(resource.data.workspaceId, 'MANAGE_MEMBERS') ||
+        (resource.data.userId == uid() && request.resource.data.userId == uid())
+      );
+      allow delete: if signedIn() && (
+        resource.data.userId == uid() || isOwner(resource.data.workspaceId)
+      );
+    }
+
+    // Vazifalar — mas'ul yoki makon a'zosi o'qiydi; ASSIGN ruxsatli yaratadi;
+    // holatni mas'ul/beruvchi/board-manager o'zgartiradi.
+    match /tasks/{tid} {
+      allow read: if signedIn() && (
+        resource.data.assigneeUserId == uid() || isMember(resource.data.workspaceId)
+      );
+      allow create: if signedIn() && (
+        isOwner(request.resource.data.workspaceId) ||
+        hasPerm(request.resource.data.workspaceId, 'ASSIGN_TASKS')
+      );
+      allow update: if signedIn() && (
+        resource.data.assigneeUserId == uid() ||
+        resource.data.assignerUserId == uid() ||
+        hasPerm(resource.data.workspaceId, 'VIEW_BOARD')
+      );
+      allow delete: if signedIn() && (
+        resource.data.assignerUserId == uid() || isOwner(resource.data.workspaceId)
+      );
     }
   }
 }

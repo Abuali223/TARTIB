@@ -7,8 +7,11 @@ import { DEFAULT_CITY, DEFAULT_COORDS, fmtClock, nextPrayer, currentPrayer, pad2
 import { hijriLabel, hijriMonthLabel } from './lib/hijri';
 import { loadState, saveState, todayKey } from './lib/storage';
 import { ensureUserDoc, mapAuthError, signInEmail, signOutUser, signUpEmail, watchAuth } from './lib/auth';
-import { CAP, WS_TYPES, defaultOwnerRole, isManagerPerms, isMinorAge, makeJoinCode, permissionsFor, roleOptionsFor } from './lib/roles';
-import { buildSeed } from './lib/seed';
+import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
+import {
+  addTask, createWorkspace, fetchUser, joinByCode, setTaskStatus, updateMemberRole,
+  subscribeInbox, subscribeMyMemberships, subscribeWorkspace, subscribeWorkspaceMembers, subscribeWorkspaceTasks,
+} from './lib/db';
 import Onboarding from './screens/Onboarding';
 import Bugun from './screens/Bugun';
 import Namoz from './screens/Namoz';
@@ -29,13 +32,10 @@ import WorkspaceSheet from './overlays/Workspace';
 
 const USE_24H = true;
 const SHOW_SECONDS = true;
-const CURRENT = 'me'; // joriy foydalanuvchi id (M4'da fbUser.uid bo'ladi)
-const AVATAR_COLORS = ['#E0916F', '#6FB3E0', '#A98FE0', '#43C08D', '#D9B36A'];
 
-// AsyncStorage'ga saqlanadigan qism. Auth/hisob Firebase'da.
+// Faqat shaxsiy/lokal qism saqlanadi. Jamoa (makon/a'zo/vazifa) Firestore'da.
 const PERSIST_KEYS = [
   'activeWorkspaceId', 'settings', 'amals', 'amalsDate', 'habits',
-  'users', 'workspaces', 'memberships', 'tasks', 'seeded',
   'tasbehCount', 'tasbehTarget', 'dhikrIdx',
 ];
 
@@ -53,16 +53,14 @@ const DHIKRS = [
   { name: 'Allohu Akbar', ar: 'اَللّٰهُ أَكْبَر', tr: 'Allohu akbar' },
 ];
 
-const emptySeed = { users: [], workspaces: [], memberships: [], tasks: [], seeded: false };
-
 export default class Root extends React.Component {
+  _subs = { mem: null, inbox: null, ws: new Map(), members: null, tasks: null, activeWid: null };
+
   state = {
     hydrated: false,
-    // Firebase auth
     authReady: false, fbUser: null, userDoc: null,
     authMode: 'signup', authForm: { name: '', email: '', password: '', birthYear: '' }, authBusy: false,
-    // navigatsiya
-    activeWorkspaceId: null, // null => Shaxsiy
+    activeWorkspaceId: null,
     tab: 'bugun', overlay: null,
     now: Date.now(),
     coords: DEFAULT_COORDS, cityName: DEFAULT_CITY, locStatus: 'default',
@@ -70,12 +68,15 @@ export default class Root extends React.Component {
     tasbehCount: 0, tasbehTarget: 33, dhikrIdx: 0,
     settings: { namoz: true, azon: true, zikr: false, jamoa: true },
     draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', type: 'vazifa' },
-    newM: { name: '', role: '', detail: '' },
     wsDraft: { type: 'oila', name: '' },
+    joinCode: '', joinBusy: false,
     flash: null,
     amalsDate: todayKey(),
-    // yangi model (seed'dan yoki bo'sh)
-    ...emptySeed,
+    // ——— Firestore'dan sinxron ———
+    myMemberships: [], myWorkspaces: {}, // {wid: workspace}
+    activeMembers: [], activeTasks: [], inboxTasks: [],
+    usersCache: {}, syncing: false,
+    // ——— lokal shaxsiy ———
     amals: [
       { id: 'a1', name: 'Bomdod namozi', sub: 'Jamoat bilan', done: false, ar: 'الفجر' },
       { id: 'a2', name: "Qur'on tilovati", sub: 'Kamida 10 daqiqa', done: false, ar: '' },
@@ -93,6 +94,8 @@ export default class Root extends React.Component {
     ],
   };
 
+  get uid() { return this.state.fbUser ? this.state.fbUser.uid : null; }
+
   async componentDidMount() {
     this._t = setInterval(() => this.setState({ now: Date.now() }), 1000);
     const saved = await loadState();
@@ -103,31 +106,37 @@ export default class Root extends React.Component {
         patch.amals = patch.amals.map(a => ({ ...a, done: false }));
         patch.amalsDate = todayKey();
       }
-      // Birinchi ishga tushirish — namunaviy makonlarni ekish
-      if (!patch.seeded) Object.assign(patch, buildSeed());
       this.setState({ ...patch, hydrated: true });
     } else {
-      this.setState({ ...buildSeed(), hydrated: true });
+      this.setState({ hydrated: true });
     }
     this.locate();
     this._unsubAuth = watchAuth(async (user) => {
       if (user) {
         let userDoc = null;
         try { userDoc = await ensureUserDoc(user, {}); } catch (e) { /* offline */ }
-        this.setState({ fbUser: { uid: user.uid, email: user.email, displayName: user.displayName }, userDoc, authReady: true });
+        this.setState({ fbUser: { uid: user.uid, email: user.email, displayName: user.displayName }, userDoc, authReady: true }, () => this.startSync(user.uid));
       } else {
-        this.setState({ fbUser: null, userDoc: null, authReady: true });
+        this.stopSync();
+        this.setState({ fbUser: null, userDoc: null, authReady: true, myMemberships: [], myWorkspaces: {}, activeMembers: [], activeTasks: [], inboxTasks: [] });
       }
     });
   }
 
-  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st); if (this._unsubAuth) this._unsubAuth(); }
+  componentWillUnmount() {
+    clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st);
+    if (this._unsubAuth) this._unsubAuth();
+    this.stopSync();
+  }
 
   componentDidUpdate(_, prev) {
-    if (!this.state.hydrated) return;
-    for (const k of PERSIST_KEYS) {
-      if (prev[k] !== this.state[k]) { this.schedulePersist(); break; }
+    if (this.state.hydrated) {
+      for (const k of PERSIST_KEYS) {
+        if (prev[k] !== this.state[k]) { this.schedulePersist(); break; }
+      }
     }
+    // Faol makon o'zgarsa — a'zolar/vazifalarga obuna
+    if (prev.activeWorkspaceId !== this.state.activeWorkspaceId) this.syncActive();
   }
 
   schedulePersist() {
@@ -137,6 +146,78 @@ export default class Root extends React.Component {
       for (const k of PERSIST_KEYS) slice[k] = this.state[k];
       saveState(slice);
     }, 400);
+  }
+
+  // ————— Firestore sinxron —————
+  startSync(uid) {
+    this.stopSync();
+    this.setState({ syncing: true });
+    this._subs.mem = subscribeMyMemberships(uid, (rows, err) => {
+      if (err || !rows) { this.setState({ syncing: false }); return; }
+      // Har makonga obuna (workspace hujjati)
+      const ids = rows.map(m => m.workspaceId);
+      for (const wid of ids) {
+        if (!this._subs.ws.has(wid)) {
+          this._subs.ws.set(wid, subscribeWorkspace(wid, (ws) => {
+            this.setState(s => ({ myWorkspaces: { ...s.myWorkspaces, [wid]: ws || undefined } }));
+          }));
+        }
+      }
+      // Endi a'zo bo'lmagan makonlardan obunani uzish
+      for (const [wid, unsub] of this._subs.ws) {
+        if (!ids.includes(wid)) { unsub && unsub(); this._subs.ws.delete(wid); this.setState(s => { const m = { ...s.myWorkspaces }; delete m[wid]; return { myWorkspaces: m }; }); }
+      }
+      this.setState({ myMemberships: rows, syncing: false }, () => {
+        // agar faol makon endi a'zoligimda bo'lmasa — shaxsiyga qayt
+        if (this.state.activeWorkspaceId && !ids.includes(this.state.activeWorkspaceId)) {
+          this.setState({ activeWorkspaceId: null });
+        }
+      });
+    });
+    this._subs.inbox = subscribeInbox(uid, (rows, err) => {
+      if (err || !rows) return;
+      this.setState({ inboxTasks: rows });
+      this.ensureUsers(rows.map(t => t.assignerUserId));
+    });
+  }
+
+  syncActive() {
+    const wid = this.state.activeWorkspaceId;
+    if (this._subs.activeWid === wid) return;
+    if (this._subs.members) { this._subs.members(); this._subs.members = null; }
+    if (this._subs.tasks) { this._subs.tasks(); this._subs.tasks = null; }
+    this._subs.activeWid = wid;
+    if (!wid) { this.setState({ activeMembers: [], activeTasks: [] }); return; }
+    this._subs.members = subscribeWorkspaceMembers(wid, (rows, err) => {
+      if (err || !rows) return;
+      this.setState({ activeMembers: rows });
+      this.ensureUsers(rows.map(m => m.userId));
+    });
+    this._subs.tasks = subscribeWorkspaceTasks(wid, (rows, err) => {
+      if (err || !rows) return;
+      this.setState({ activeTasks: rows });
+      this.ensureUsers(rows.flatMap(t => [t.assignerUserId, t.assigneeUserId]));
+    });
+  }
+
+  stopSync() {
+    const s = this._subs;
+    if (s.mem) s.mem(); if (s.inbox) s.inbox();
+    if (s.members) s.members(); if (s.tasks) s.tasks();
+    for (const [, unsub] of s.ws) unsub && unsub();
+    this._subs = { mem: null, inbox: null, ws: new Map(), members: null, tasks: null, activeWid: null };
+  }
+
+  async ensureUsers(ids) {
+    const me = this.uid;
+    const missing = [...new Set(ids)].filter(id => id && id !== me && !this.state.usersCache[id]);
+    if (!missing.length) return;
+    const fetched = await Promise.all(missing.map(fetchUser));
+    this.setState(s => {
+      const c = { ...s.usersCache };
+      fetched.forEach(u => { c[u.id] = u; });
+      return { usersCache: c };
+    });
   }
 
   locate = async () => {
@@ -158,12 +239,12 @@ export default class Root extends React.Component {
   };
 
   // ————— helpers —————
-  activeWs() { return this.state.activeWorkspaceId ? this.state.workspaces.find(w => w.id === this.state.activeWorkspaceId) : null; }
-  myMembership(wsId) { return this.state.memberships.find(m => m.workspaceId === wsId && m.userId === CURRENT && m.status === 'active'); }
+  activeWs() { return this.state.activeWorkspaceId ? this.state.myWorkspaces[this.state.activeWorkspaceId] : null; }
+  myMembershipOf(wid) { return this.state.myMemberships.find(m => m.workspaceId === wid); }
   canIn(ws, cap) {
     if (!ws) return false;
-    if (ws.ownerUserId === CURRENT) return true;
-    const mem = this.myMembership(ws.id);
+    if (ws.ownerUserId === this.uid) return true;
+    const mem = this.myMembershipOf(ws.id);
     return !!mem && mem.permissions.includes(cap);
   }
 
@@ -194,7 +275,7 @@ export default class Root extends React.Component {
     }
   };
   logout = async () => {
-    this.setState({ overlay: null, tab: 'bugun' });
+    this.setState({ overlay: null, tab: 'bugun', activeWorkspaceId: null });
     try { await signOutUser(); } catch (e) { this.flash(mapAuthError(e)); }
   };
 
@@ -205,86 +286,70 @@ export default class Root extends React.Component {
   setScroll = (el) => { this._scroll = el; };
   setActiveWorkspace = (id) => { this.setState({ activeWorkspaceId: id, overlay: null, tab: id ? 'jamoa' : 'bugun' }); this._scroll?.scrollTo({ y: 0, animated: false }); };
 
-  // ————— makon yaratish —————
+  // ————— makon —————
   pickWsType = (t) => this.setState(s => ({ wsDraft: { ...s.wsDraft, type: t } }));
   onWsName = (v) => this.setState(s => ({ wsDraft: { ...s.wsDraft, name: v } }));
-  createWorkspace = () => {
+  createWorkspace = async () => {
     const { type, name } = this.state.wsDraft;
     if (!name.trim()) { this.flash('Makon nomini kiriting'); return; }
-    const id = 'w' + Date.now();
-    const role = defaultOwnerRole(type);
-    this.setState(s => ({
-      workspaces: [...s.workspaces, { id, type, name: name.trim(), ownerUserId: CURRENT, code: makeJoinCode(type, Date.now()) }],
-      memberships: [...s.memberships, { id: 'mem_' + id + '_me', workspaceId: id, userId: CURRENT, role, permissions: permissionsFor(type, role, { isOwner: true }), status: 'active', group: null, restricted: false }],
-      activeWorkspaceId: id, wsDraft: { type: 'oila', name: '' }, overlay: null, tab: 'jamoa',
-    }));
-    this.flash('Makon yaratildi ✓');
+    try {
+      const { wid } = await createWorkspace(this.uid, { type, name });
+      this.setState({ wsDraft: { type: 'oila', name: '' }, overlay: null, activeWorkspaceId: wid, tab: 'jamoa' });
+      this.flash('Makon yaratildi ✓');
+    } catch (e) { this.flash('Xatolik: makon yaratilmadi'); }
+  };
+  onJoinCode = (v) => this.setState({ joinCode: (v + '').toUpperCase() });
+  submitJoin = async () => {
+    if (this.state.joinBusy) return;
+    const code = this.state.joinCode.trim();
+    if (!code) { this.flash('Kodni kiriting'); return; }
+    this.setState({ joinBusy: true });
+    try {
+      const ws = await joinByCode(this.uid, code, { restricted: this.state.userDoc ? isMinorAge(this.state.userDoc.birthYear) : false });
+      this.setState({ joinCode: '', overlay: null, activeWorkspaceId: ws.id, tab: 'jamoa' });
+      this.flash('Makonga qo\'shildingiz ✓');
+    } catch (e) {
+      this.flash(e.code === 'ws/not-found' ? 'Bunday kod topilmadi' : e.code === 'ws/already-member' ? 'Siz allaqachon a\'zosiz' : 'Qo\'shilishda xatolik');
+    } finally {
+      this.setState({ joinBusy: false });
+    }
   };
 
   // ————— a'zolar —————
-  setMemberRole = (wsId, userId, role) => this.setState(s => {
-    const ws = s.workspaces.find(w => w.id === wsId);
-    if (!ws) return null;
-    return {
-      memberships: s.memberships.map(m => (m.workspaceId === wsId && m.userId === userId)
-        ? { ...m, role, permissions: permissionsFor(ws.type, role, { isOwner: ws.ownerUserId === userId, restricted: m.restricted }) }
-        : m),
-    };
-  });
-  pickNMRole = (r) => this.setState(s => ({ newM: { ...s.newM, role: r } }));
-  onNMDetail = (v) => this.setState(s => ({ newM: { ...s.newM, detail: v } }));
-  onNMName = (v) => this.setState(s => ({ newM: { ...s.newM, name: v } }));
-  addMember = () => {
-    const ws = this.activeWs();
-    if (!ws) { this.flash('Avval makon tanlang'); return; }
-    if (!this.canIn(ws, CAP.MANAGE_MEMBERS)) { this.flash("A'zo qo'shishga ruxsat yo'q"); return; }
-    const n = this.state.newM;
-    if (!n.name.trim()) { this.flash('Ism kiriting'); return; }
-    if (!n.role) { this.flash('Rolni tanlang'); return; }
-    const uid = 'u' + Date.now();
-    this.setState(s => ({
-      users: [...s.users, { id: uid, name: n.name.trim(), color: AVATAR_COLORS[s.users.length % AVATAR_COLORS.length], online: false }],
-      memberships: [...s.memberships, { id: 'mem_' + ws.id + '_' + uid, workspaceId: ws.id, userId: uid, role: n.role, permissions: permissionsFor(ws.type, n.role, {}), status: 'active', group: n.detail || null, restricted: false }],
-      newM: { name: '', role: '', detail: '' }, overlay: null,
-    }));
-    this.flash("A'zo qo'shildi ✓");
+  setMemberRole = async (ws, userId, role) => {
+    try { await updateMemberRole(ws, userId, role); } catch (e) { this.flash("Rolni o'zgartirib bo'lmadi"); }
   };
 
   // ————— vazifalar —————
   selectMember = (id) => this.setState({ selMember: id, overlay: 'member' });
   selectTask = (id) => this.setState({ selTask: id, overlay: 'task' });
   selectDay = (d) => this.setState({ selDay: d });
-  setStatus = (id, status) => this.setState(s => {
-    const t = s.tasks.find(x => x.id === id);
-    if (!t) return null;
-    const isAssignee = t.assigneeUserId === CURRENT;
-    const ws = s.workspaces.find(w => w.id === t.workspaceId);
-    const canBoard = ws && (ws.ownerUserId === CURRENT || (this.myMembership(ws.id) || {}).permissions?.includes(CAP.VIEW_BOARD));
-    // Ruxsat tekshiruvi: mas'ul o'z vazifasini, manager qayta ochadi
-    if (['qabul', 'rad', 'bajarilmoqda', 'bajarildi'].includes(status) && !isAssignee) return null;
-    if (status === 'yuborildi' && !(t.assignerUserId === CURRENT || canBoard)) return null;
-    return { tasks: s.tasks.map(x => x.id === id ? { ...x, status } : x) };
-  });
+  setStatus = async (id, status) => {
+    // Ruxsat mijoz tomonida ham tekshiriladi (Firestore rules asosiy himoya)
+    try { await setTaskStatus(id, status); } catch (e) { this.flash("Holatni o'zgartirib bo'lmadi"); }
+  };
   toggleSetting = (k) => this.setState(s => ({ settings: { ...s.settings, [k]: !s.settings[k] } }));
   onDraftTitle = (v) => this.setState(s => ({ draft: { ...s.draft, title: v } }));
   pickAssignee = (id) => this.setState(s => ({ draft: { ...s.draft, assigneeId: id } }));
   pickCat = (c) => this.setState(s => ({ draft: { ...s.draft, category: c } }));
   pickDue = (d) => this.setState(s => ({ draft: { ...s.draft, due: d } }));
   pickType = (t) => this.setState(s => ({ draft: { ...s.draft, type: t } }));
-  submitAssign = () => {
+  submitAssign = async () => {
     const ws = this.activeWs();
     if (!ws) { this.flash('Avval makon tanlang'); return; }
     if (!this.canIn(ws, CAP.ASSIGN_TASKS)) { this.flash("Vazifa yuborishga ruxsat yo'q"); return; }
     const d = this.state.draft;
     if (!d.assigneeId || !d.title.trim()) { this.flash("A'zo va nomni kiriting"); return; }
-    const id = 'k' + Date.now();
     const isR = d.type === 'eslatma';
-    this.setState(s => ({
-      tasks: [{ id, workspaceId: ws.id, assignerUserId: CURRENT, assigneeUserId: d.assigneeId, title: d.title.trim(), desc: d.category + (isR ? " bo'yicha eslatma." : " yo'nalishidagi vazifa.") + ' Muddat: ' + d.due + '.', status: 'yuborildi', due: d.due, cat: d.category, type: d.type }, ...s.tasks],
-      draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', type: 'vazifa' },
-      overlay: null, tab: 'jamoa',
-    }));
-    this.flash(isR ? 'Eslatma yuborildi ✓' : 'Vazifa yuborildi ✓');
+    try {
+      await addTask(this.uid, {
+        workspaceId: ws.id, assigneeUserId: d.assigneeId, title: d.title.trim(),
+        desc: d.category + (isR ? " bo'yicha eslatma." : " yo'nalishidagi vazifa.") + ' Muddat: ' + d.due + '.',
+        cat: d.category, due: d.due, type: d.type,
+      });
+      this.setState({ draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', type: 'vazifa' }, overlay: null, tab: 'jamoa' });
+      this.flash(isR ? 'Eslatma yuborildi ✓' : 'Vazifa yuborildi ✓');
+    } catch (e) { this.flash('Vazifa yuborilmadi'); }
   };
 
   // ————— personal —————
@@ -299,6 +364,7 @@ export default class Root extends React.Component {
   // ————— derived values for screens —————
   vals() {
     const S = this.state;
+    const me = this.uid;
     const now = new Date(S.now);
     const coords = S.coords;
     const wd = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
@@ -307,7 +373,6 @@ export default class Root extends React.Component {
     const h = now.getHours();
     const greet = h >= 5 && h < 11 ? 'Xayrli tong' : h >= 11 && h < 17 ? 'Xayrli kun' : h >= 17 && h < 22 ? 'Xayrli kech' : 'Xayrli tun';
 
-    // Namoz vaqtlari
     const list = prayerList(coords, now);
     const nextP = nextPrayer(coords, now);
     const curP = currentPrayer(coords, now);
@@ -324,48 +389,46 @@ export default class Root extends React.Component {
     const goalDone = S.amals.filter(a => a.done).length, goalTotal = S.amals.length;
     const goalPct = goalTotal ? Math.round(goalDone / goalTotal * 100) : 0;
 
-    // ——— hisob / foydalanuvchi ———
     const booted = !!S.fbUser;
     const ud = S.userDoc || {};
     const isChild = isMinorAge(ud.birthYear, now);
     const accName = (ud.name || (S.fbUser && S.fbUser.displayName) || 'Foydalanuvchi').trim() || 'Foydalanuvchi';
     const acc = { name: accName, email: ud.email || (S.fbUser && S.fbUser.email) || '', birthYear: ud.birthYear || null, isChild };
     const first = accName.split(' ')[0], last = accName.split(' ').slice(1).join(' ');
-    const meUser = { id: CURRENT, name: accName, color: ud.photoColor || C.gold };
-    const userById = id => id === CURRENT ? meUser : (S.users.find(u => u.id === id) || { id, name: id, color: C.gold });
+    const meUser = { id: me, name: accName, color: ud.photoColor || C.gold };
+    const userById = id => id === me ? meUser : (S.usersCache[id] || { id, name: 'Foydalanuvchi', color: C.gold });
 
     // ——— faol makon ———
-    const activeWs = S.activeWorkspaceId ? S.workspaces.find(w => w.id === S.activeWorkspaceId) : null;
+    const activeWs = S.activeWorkspaceId ? S.myWorkspaces[S.activeWorkspaceId] : null;
     const isShaxsiy = !activeWs;
     const wsType = activeWs ? activeWs.type : 'shaxsiy';
-    const myMem = activeWs ? S.memberships.find(m => m.workspaceId === activeWs.id && m.userId === CURRENT && m.status === 'active') : null;
-    const isOwner = !!activeWs && activeWs.ownerUserId === CURRENT;
+    const myMem = activeWs ? S.myMemberships.find(m => m.workspaceId === activeWs.id) : null;
+    const isOwner = !!activeWs && activeWs.ownerUserId === me;
     const can = (cap) => isOwner || (!!myMem && myMem.permissions.includes(cap));
     const canManage = !!activeWs && (isOwner || can(CAP.VIEW_BOARD));
-    const isChildTeam = !!activeWs && !isOwner && !can(CAP.VIEW_BOARD); // cheklangan a'zo ko'rinishi
+    const isChildTeam = !!activeWs && !isOwner && !can(CAP.VIEW_BOARD);
 
     const modeLabel = activeWs ? activeWs.name : 'Shaxsiy';
     const roleLabel = activeWs ? WS_TYPES[wsType].label : 'Shaxsiy';
     const membersLabel = activeWs ? WS_TYPES[wsType].membersLabel : "A'zolar";
     const jamoaSub = activeWs ? WS_TYPES[wsType].sub : 'Shaxsiy makon';
 
-    const wsTasks = activeWs ? S.tasks.filter(t => t.workspaceId === activeWs.id) : [];
+    const wsTasks = activeWs ? S.activeTasks : [];
     const memTasksOf = uid => wsTasks.filter(t => t.assigneeUserId === uid);
-    const wsMemberships = activeWs ? S.memberships.filter(m => m.workspaceId === activeWs.id && m.userId !== CURRENT && m.status === 'active') : [];
+    const wsMembers = activeWs ? S.activeMembers.filter(m => m.userId !== me) : [];
 
-    const members = wsMemberships.map(mem => {
+    const members = wsMembers.map(mem => {
       const u = userById(mem.userId);
       const ts = memTasksOf(mem.userId), done = ts.filter(t => t.status === 'bajarildi').length, pct = ts.length ? Math.round(done / ts.length * 100) : 0;
       return {
-        id: u.id, name: u.name, initial: (u.name || '?')[0], color: u.color, online: !!u.online,
+        id: u.id, name: u.name, initial: (u.name || '?')[0], color: u.color || C.gold, online: false,
         role: mem.role, isMgr: isManagerPerms(mem.permissions),
         label: (wsType === 'talim' && mem.group) ? (mem.role + ' · ' + mem.group) : mem.role,
         doneCount: done, totalCount: ts.length, pct, onOpen: () => this.selectMember(mem.userId),
       };
     });
 
-    // Board — faol makonda men bergan vazifalar
-    const managed = activeWs ? wsTasks.filter(t => t.assignerUserId === CURRENT) : [];
+    const managed = activeWs ? wsTasks.filter(t => t.assignerUserId === me) : [];
     const board = {
       send: managed.filter(t => t.status === 'yuborildi').length,
       prog: managed.filter(t => t.status === 'qabul' || t.status === 'bajarilmoqda').length,
@@ -374,22 +437,21 @@ export default class Root extends React.Component {
     board.total = managed.length;
     board.pct = board.total ? Math.round(board.done / board.total * 100) : 0;
 
-    const wsNameOf = wid => (S.workspaces.find(w => w.id === wid) || {}).name || '';
+    const wsNameOf = wid => (S.myWorkspaces[wid] || {}).name || '';
     const taskCard = t => {
       const assignee = userById(t.assigneeUserId);
       return {
         id: t.id, title: t.title, cat: t.cat, due: t.due,
         statusMeta: STATUS_META[t.status] || STATUS_META.yuborildi,
         type: t.type, isReminder: t.type === 'eslatma',
-        assigneeName: assignee.name, assigneeInitial: (assignee.name || '?')[0], assigneeColor: assignee.color,
-        wsLabel: wsNameOf(t.workspaceId),
-        onOpen: () => this.selectTask(t.id),
+        assigneeName: assignee.name, assigneeInitial: (assignee.name || '?')[0], assigneeColor: assignee.color || C.gold,
+        wsLabel: wsNameOf(t.workspaceId), onOpen: () => this.selectTask(t.id),
       };
     };
     const jamoaTasks = managed.map(taskCard);
 
-    // Global inbox — barcha makonlardan menga berilgan vazifalar
-    const myAll = S.tasks.filter(t => t.assigneeUserId === CURRENT);
+    // Global inbox
+    const myAll = S.inboxTasks;
     const myTotal = myAll.length;
     const myDone = myAll.filter(t => t.status === 'bajarildi').length;
     const myPct = myTotal ? Math.round(myDone / myTotal * 100) : 0;
@@ -399,7 +461,7 @@ export default class Root extends React.Component {
       return {
         id: t.id, title: t.title, desc: t.desc, cat: t.cat, due: t.due, type: t.type,
         statusMeta: STATUS_META[t.status] || STATUS_META.yuborildi,
-        assignerName: t.assignerUserId === CURRENT ? 'Men' : assigner.name,
+        assignerName: t.assignerUserId === me ? 'Men' : assigner.name,
         wsLabel: wsNameOf(t.workspaceId),
         isReminder: isR, notDone: t.status !== 'bajarildi',
         isPending: !isR && t.status === 'yuborildi', canStart: !isR && t.status === 'qabul', canComplete: !isR && t.status === 'bajarilmoqda',
@@ -409,40 +471,39 @@ export default class Root extends React.Component {
       };
     });
 
-    // Tanlangan a'zo
     let selMemberObj = null;
     if (S.selMember && activeWs) {
-      const mem = S.memberships.find(m => m.workspaceId === activeWs.id && m.userId === S.selMember && m.status === 'active');
+      const mem = S.activeMembers.find(m => m.userId === S.selMember);
       if (mem) {
         const u = userById(mem.userId);
         const ts = memTasksOf(mem.userId), done = ts.filter(t => t.status === 'bajarildi').length, tot = ts.length;
         selMemberObj = {
-          name: u.name, initial: (u.name || '?')[0], color: u.color, role: mem.role,
+          name: u.name, initial: (u.name || '?')[0], color: u.color || C.gold, role: mem.role,
           label: (wsType === 'talim' && mem.group) ? (mem.role + ' · ' + mem.group) : mem.role,
           doneCount: done, totalCount: tot, pct: tot ? Math.round(done / tot * 100) : 0,
-          roleChips: roleOptionsFor(wsType).map(r => ({ name: r, active: r === mem.role, onPick: () => this.setMemberRole(activeWs.id, u.id, r) })),
+          canEditRole: this.canIn(activeWs, CAP.MANAGE_MEMBERS),
+          roleChips: roleOptionsFor(wsType).map(r => ({ name: r, active: r === mem.role, onPick: () => this.setMemberRole(activeWs, u.id, r) })),
           tasks: ts.map(taskCard),
           onAssign: () => this.setState(s => ({ draft: { ...s.draft, assigneeId: u.id }, overlay: 'assign' })),
         };
       }
     }
 
-    // Tanlangan vazifa
     let selTaskObj = null;
     if (S.selTask) {
-      const t = S.tasks.find(x => x.id === S.selTask);
+      const t = S.activeTasks.find(x => x.id === S.selTask) || S.inboxTasks.find(x => x.id === S.selTask);
       if (t) {
         const isR = t.type === 'eslatma';
-        const isAssignee = t.assigneeUserId === CURRENT;
-        const tws = S.workspaces.find(w => w.id === t.workspaceId);
-        const canBoard = !!tws && (tws.ownerUserId === CURRENT || ((this.myMembership(tws.id) || {}).permissions || []).includes(CAP.VIEW_BOARD));
-        const isManagerOfTask = t.assignerUserId === CURRENT || canBoard;
+        const isAssignee = t.assigneeUserId === me;
+        const tws = S.myWorkspaces[t.workspaceId];
+        const canBoard = !!tws && (tws.ownerUserId === me || ((this.myMembershipOf(tws.id) || {}).permissions || []).includes(CAP.VIEW_BOARD));
+        const isManagerOfTask = t.assignerUserId === me || canBoard;
         const assignee = userById(t.assigneeUserId), assigner = userById(t.assignerUserId);
         selTaskObj = {
           title: t.title, desc: t.desc, due: t.due, cat: t.cat, type: t.type,
           statusMeta: STATUS_META[t.status] || STATUS_META.yuborildi,
-          assigneeName: assignee.name, assigneeInitial: (assignee.name || '?')[0], assigneeColor: assignee.color,
-          assignerName: t.assignerUserId === CURRENT ? 'Men (siz)' : assigner.name,
+          assigneeName: assignee.name, assigneeInitial: (assignee.name || '?')[0], assigneeColor: assignee.color || C.gold,
+          assignerName: t.assignerUserId === me ? 'Men (siz)' : assigner.name,
           isReminder: isR, reminderPending: isR && isAssignee && t.status !== 'bajarildi',
           canAccept: !isR && isAssignee && t.status === 'yuborildi',
           canStart: !isR && isAssignee && t.status === 'qabul',
@@ -455,7 +516,6 @@ export default class Root extends React.Component {
       }
     }
 
-    // Kalendar
     const daysUz = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
     const y = now.getFullYear(), mIdx = now.getMonth();
     const firstDow = (new Date(y, mIdx, 1).getDay() + 6) % 7;
@@ -506,15 +566,19 @@ export default class Root extends React.Component {
     const dueChips = dues.map(d => ({ name: d, active: S.draft.due === d, onPick: () => this.pickDue(d) }));
     const typeChips = [{ k: 'vazifa', name: 'Vazifa' }, { k: 'eslatma', name: 'Eslatma' }].map(x => ({ ...x, active: S.draft.type === x.k, onPick: () => this.pickType(x.k) }));
 
-    // Makon almashtirish varag'i uchun ro'yxat
-    const myWorkspaces = S.workspaces
-      .filter(w => S.memberships.some(m => m.workspaceId === w.id && m.userId === CURRENT && m.status === 'active'))
-      .map(w => {
-        const mem = S.memberships.find(m => m.workspaceId === w.id && m.userId === CURRENT);
-        return { id: w.id, name: w.name, type: w.type, typeLabel: WS_TYPES[w.type].label, role: mem ? mem.role : '', active: w.id === S.activeWorkspaceId, onSelect: () => this.setActiveWorkspace(w.id) };
-      });
+    // Makon almashtirish varag'i
+    const myWorkspaces = S.myMemberships
+      .map(mem => {
+        const w = S.myWorkspaces[mem.workspaceId];
+        if (!w) return null;
+        return { id: w.id, name: w.name, type: w.type, typeLabel: WS_TYPES[w.type].label, role: mem.role, active: w.id === S.activeWorkspaceId, onSelect: () => this.setActiveWorkspace(w.id) };
+      })
+      .filter(Boolean);
     const wsTypeChips = [{ k: 'oila', name: 'Oila' }, { k: 'talim', name: "Ta'lim" }, { k: 'ishxona', name: 'Ishxona' }]
       .map(x => ({ ...x, active: S.wsDraft.type === x.k, onPick: () => this.pickWsType(x.k) }));
+
+    // Taklif (invite) — faol makon kodi
+    const inviteCode = activeWs ? activeWs.code : '';
 
     return {
       authReady: S.authReady, booted, showOnboarding: S.authReady && !S.fbUser,
@@ -540,8 +604,8 @@ export default class Root extends React.Component {
       tasbeh, qibla,
       assignMembers, catChips, dueChips, typeChips, draftTitle: S.draft.title,
       onDraftTitle: this.onDraftTitle, onSubmitAssign: this.submitAssign,
-      newM: S.newM, onNMName: this.onNMName, onNMDetail: this.onNMDetail, addMember: this.addMember,
-      roleChipsAdd: roleOptionsFor(wsType === 'shaxsiy' ? 'oila' : wsType).map(r => ({ name: r, active: S.newM.role === r, onPick: () => this.pickNMRole(r) })),
+      // taklif
+      inviteCode, canInvite: this.canIn(activeWs, CAP.MANAGE_MEMBERS),
       settings: S.settings,
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
       tab: S.tab,
@@ -551,6 +615,7 @@ export default class Root extends React.Component {
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
+      joinCode: S.joinCode, onJoinCode: this.onJoinCode, submitJoin: this.submitJoin, joinBusy: S.joinBusy,
       showIsh: !isChild,
       close: this.closeOv, setScroll: this.setScroll,
       logout: this.logout, flash: S.flash,
