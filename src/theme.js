@@ -24,25 +24,26 @@ const dark = {
   statusBarStyle: 'light',
 };
 
-// Yorug' (kunduzgi) — qorong'i rejimdek UYG'UN: och sage-yashil fon + oq kartalar.
-// Bir yashil oila (fon ozgina to'qroq, kartalar ochroq); teal chegara bilan ajraladi.
+// Yorug' (kunduzgi) — brend teal-yashil fon + YARIM-SHAFFOF (glassy) kartalar.
+// Kartalar fon bilan uyg'un (fon ko'rinib turadi), oltin chegara bilan ajraladi.
+// Matn — OCH (ko'rinadi), qorong'i rejimdagidek.
 const light = {
-  gold: '#B98C38', goldL: '#CFA24C', goldD: '#9C7328', amber: '#B9822B', emerald: '#236B5D',
-  cream: '#1C2723',           // asosiy matn (och fonda to'q) — karta va fon ikkalasi och
-  onBg: '#22312A', onBgDim: 'rgba(34,49,42,0.60)',  // fon (sage) ustidagi matn — to'q
-  sage: '#586459', sageMid: '#45524A', sageDim: '#8A968D', sageFaint: '#6E7C72',
-  red: '#C0553F', blue: '#2F7EA6', blueL: '#276487', purple: '#6E52A0',
-  ink: '#173E36',             // oltin tugma ustidagi matn
-  card: '#FFFFFF', cardAlt: '#EEF3EF',
-  border: 'rgba(35,107,93,0.20)', borderStrong: 'rgba(35,107,93,0.42)',
-  hairline: 'rgba(28,39,35,0.08)',
-  overlay1: 'rgba(28,39,35,0.03)', overlay2: 'rgba(28,39,35,0.05)', overlay3: 'rgba(28,39,35,0.08)',
-  bg: ['#DAE5DF', '#D0DDD6', '#C7D6CE'],    // yumshoq sage-yashil sahifa foni
-  radialTop: ['#F7FAF8', '#EFF4F1', '#E8EFEA'],  // overlay/lock/onboarding — ochroq
-  cardGrad: ['#FFFFFF', '#F5F9F6'],   // oq kartalar (feature)
-  sheet: ['#FBFCFA', '#F2F6F3'],
-  scrim: '#D0DDD6',
-  statusBarStyle: 'dark',
+  gold: '#E2B562', goldL: '#EFCB80', goldD: '#CFA24C', amber: '#E8B45F', emerald: '#43C08D',
+  cream: '#F3EEE1',           // asosiy matn — och (glassy karta va fon ustida ko'rinadi)
+  onBg: '#F3EEE1', onBgDim: '#BCCFC5',
+  sage: '#A7BCB0', sageMid: '#C2D2C8', sageDim: '#7E948A', sageFaint: '#95A99E',
+  red: '#E88C74', blue: '#7FBEE6', blueL: '#9BCDEE', purple: '#B39BE6',
+  ink: '#123A31',             // oltin tugma ustidagi matn (to'q)
+  card: 'rgba(255,255,255,0.07)', cardAlt: 'rgba(255,255,255,0.045)',
+  border: 'rgba(226,181,98,0.30)', borderStrong: 'rgba(226,181,98,0.45)',
+  hairline: 'rgba(255,255,255,0.09)',
+  overlay1: 'rgba(255,255,255,0.05)', overlay2: 'rgba(255,255,255,0.08)', overlay3: 'rgba(255,255,255,0.12)',
+  bg: ['#1A6355', '#155249', '#123F37'],   // brend teal-yashil fon
+  radialTop: ['#1A6355', '#134139', '#0E332C'],  // overlay/lock/onboarding — teal
+  cardGrad: ['rgba(255,255,255,0.10)', 'rgba(255,255,255,0.05)'],   // glassy feature kartalar
+  sheet: ['#175448', '#123F37'],
+  scrim: '#1A6355',
+  statusBarStyle: 'light',
 };
 
 export const THEMES = { dark, light };
