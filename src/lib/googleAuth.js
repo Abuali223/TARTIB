@@ -16,7 +16,7 @@
 // Bularsiz "Google bilan kirish" tugmasi ko'rinadi, lekin bosilganda "sozlanmagan"
 // deb ogohlantiradi. Email/parol usuli esa hozir to'liq ishlaydi.
 
-export const GOOGLE_WEB_CLIENT_ID = '';      // ...apps.googleusercontent.com
+export const GOOGLE_WEB_CLIENT_ID = '236709813792-i3kmaei5oevjqhcn62adqkjf30msreff.apps.googleusercontent.com';
 export const GOOGLE_ANDROID_CLIENT_ID = '';  // ...apps.googleusercontent.com (ixtiyoriy — standalone APK uchun)
 export const GOOGLE_IOS_CLIENT_ID = '';      // ...apps.googleusercontent.com (ixtiyoriy)
 
