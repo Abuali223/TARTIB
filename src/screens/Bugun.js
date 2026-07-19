@@ -94,31 +94,40 @@ export default function Bugun({ v }) {
         ))}
       </View>
 
-      {/* tasks assigned to me */}
-      <View style={{ marginHorizontal: 2, marginTop: 22, marginBottom: 12 }}>
-        <SectionTitle>Menga berilgan vazifalar</SectionTitle>
-      </View>
-      {v.myTasks.map(t => (
-        <TouchableOpacity key={t.id} onPress={t.onOpen} activeOpacity={0.85} style={st.taskCard}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t.title}</Text>
-              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 3 }}>{t.assignerName} · {t.due}</Text>
-            </View>
-            <StatusPill meta={t.statusMeta} />
+      {/* tasks assigned to me (global inbox — barcha makonlardan) */}
+      {v.myTasks.length > 0 && (
+        <>
+          <View style={{ marginHorizontal: 2, marginTop: 22, marginBottom: 12 }}>
+            <SectionTitle>Menga berilgan vazifalar</SectionTitle>
           </View>
-          {t.isPending && (
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-              <TouchableOpacity onPress={t.onAccept} activeOpacity={0.85} style={st.acceptBtn}>
-                <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>Qabul qilish</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={t.onReject} activeOpacity={0.85} style={st.rejectBtn}>
-                <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.red }}>Rad etish</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </TouchableOpacity>
-      ))}
+          {v.myTasks.map(t => (
+            <TouchableOpacity key={t.id} onPress={t.onOpen} activeOpacity={0.85} style={st.taskCard}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t.title}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                    {!!t.wsLabel && (
+                      <View style={st.wsTag}><Text style={st.wsTagText}>{t.wsLabel}</Text></View>
+                    )}
+                    <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage }}>{t.assignerName} · {t.due}</Text>
+                  </View>
+                </View>
+                <StatusPill meta={t.statusMeta} />
+              </View>
+              {t.isPending && (
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                  <TouchableOpacity onPress={t.onAccept} activeOpacity={0.85} style={st.acceptBtn}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>Qabul qilish</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={t.onReject} activeOpacity={0.85} style={st.rejectBtn}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.red }}>Rad etish</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </>
+      )}
     </FadeIn>
   );
 }
@@ -131,6 +140,8 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(217,179,106,0.12)', borderWidth: 1, borderColor: 'rgba(217,179,106,0.28)', marginBottom: 9,
   },
   modeBtnText: { fontFamily: F.bold, fontSize: 12, color: C.gold },
+  wsTag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: 'rgba(111,179,224,0.16)' },
+  wsTagText: { fontFamily: F.bold, fontSize: 10, color: '#8FC4E8' },
   date: { fontFamily: F.regular, fontSize: 13, color: C.sage, letterSpacing: 0.3 },
   greet: { fontFamily: F.serif, fontSize: 25, color: C.cream, marginTop: 3 },
   hijri: { fontFamily: F.arabic, fontSize: 14, color: C.goldD, marginTop: 3 },

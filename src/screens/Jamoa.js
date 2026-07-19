@@ -61,6 +61,13 @@ export default function Jamoa({ v }) {
 
           {/* members */}
           <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{v.membersLabel}</SectionTitle>
+          {v.members.length === 0 && (
+            <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.emptyCard}>
+              <Text style={st.emptyTitle}>Hali a'zo yo'q</Text>
+              <Text style={st.emptyText}>Taklif kodini ulashing — a'zolar qo'shilgach shu yerda ko'rinadi.</Text>
+              <Text style={st.emptyAction}>+ Taklif kodini olish</Text>
+            </TouchableOpacity>
+          )}
           <View style={{ gap: 11, marginBottom: 24 }}>
             {v.members.map(m => (
               <TouchableOpacity key={m.id} onPress={m.onOpen} activeOpacity={0.85} style={st.memberRow}>
@@ -83,6 +90,11 @@ export default function Jamoa({ v }) {
 
           {/* recent assignments */}
           <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>So'nggi topshiriqlar</SectionTitle>
+          {v.jamoaTasks.length === 0 && (
+            <View style={st.emptyCard}>
+              <Text style={st.emptyText}>Hali topshiriq yuborilmagan. Yuqoridagi tugma orqali vazifa yoki eslatma yuboring.</Text>
+            </View>
+          )}
           <View style={{ gap: 11 }}>
             {v.jamoaTasks.map(t => (
               <TouchableOpacity key={t.id} onPress={t.onOpen} activeOpacity={0.85} style={st.taskRow}>
@@ -192,6 +204,10 @@ const st = StyleSheet.create({
     borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
   },
   taskCard: { borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 16 },
+  emptyCard: { borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderStyle: 'dashed', padding: 18, marginBottom: 20, alignItems: 'center' },
+  emptyTitle: { fontFamily: F.bold, fontSize: 15, color: C.cream, marginBottom: 6 },
+  emptyText: { fontFamily: F.regular, fontSize: 13, color: C.sageMid, textAlign: 'center', lineHeight: 19 },
+  emptyAction: { fontFamily: F.bold, fontSize: 13, color: C.gold, marginTop: 12 },
   ackBtn: {
     marginTop: 14, paddingVertical: 11, borderRadius: 12, alignItems: 'center',
     backgroundColor: 'rgba(111,179,224,0.16)', borderWidth: 1, borderColor: 'rgba(111,179,224,0.4)',
