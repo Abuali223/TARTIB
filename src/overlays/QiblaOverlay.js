@@ -57,14 +57,23 @@ export default function QiblaOverlay({ v }) {
 
   const marker = ((bearing - heading) % 360 + 360) % 360;
   const aligned = marker < 6 || marker > 354;
+  const behind = marker > 150 && marker < 210; // Qibla orqa tomonda
   const manual = hasSensor === false;
+
+  const feedback = aligned
+    ? "Qibla to'g'ri yo'nalishda ✓"
+    : behind
+      ? 'Qibla orqangizda — teskari buriling'
+      : marker <= 180
+        ? "O'ngga buriling →"
+        : "← Chapga buriling";
 
   return (
     <OverlayShell title="Qibla" onClose={v.close} radial>
       <View style={{ flex: 1, alignItems: 'center', paddingTop: 14, paddingHorizontal: 24, paddingBottom: 40 }}>
         <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage }}>{v.qibla.cityName} · Qibla {bearing}°</Text>
-        <Text style={{ fontFamily: F.bold, fontSize: 16, marginTop: 8, color: aligned ? C.emerald : C.sage }}>
-          {aligned ? "Qibla to'g'ri yo'nalishda ✓" : 'Telefonni aylantiring'}
+        <Text style={{ fontFamily: F.bold, fontSize: 16, marginTop: 8, color: aligned ? C.emerald : behind ? C.red : C.sage }}>
+          {feedback}
         </Text>
 
         <View style={{ width: SIZE, height: SIZE, marginTop: 26, marginBottom: 20 }} {...(manual ? pan.panHandlers : {})}>
