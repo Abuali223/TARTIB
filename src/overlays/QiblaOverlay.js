@@ -1,51 +1,50 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View } from 'react-native';
-import { Magnetometer } from 'expo-sensors';
+import * as Location from 'expo-location';
 import { C, F } from '../theme';
 import { OverlayShell } from '../components/ui';
 
 const SIZE = 290;
 
-// Shortest-arc low-pass filter so the needle doesn't jitter or spin the long way round
+// Eng qisqa yoy bo'yicha silliqlash — igna sakramasin/teskari aylanmasin
 function smoothHeading(prev, next, alpha = 0.25) {
   let d = ((next - prev + 540) % 360) - 180;
   return (prev + d * alpha + 360) % 360;
 }
 
 export default function QiblaOverlay({ v }) {
-  const bearing = v.qibla.bearing;
+  const bearing = v.qibla.bearing; // haqiqiy shimoldan Qibla burchagi
   const [heading, setHeading] = useState(0);
-  const [sensorOk, setSensorOk] = useState(null); // null = probing, true, false
+  const [hasSensor, setHasSensor] = useState(null); // null=aniqlanmoqda, true, false
+  const [lowAccuracy, setLowAccuracy] = useState(false);
   const headingRef = useRef(0);
-  const centerRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let sub = null, alive = true;
     (async () => {
-      const available = await Magnetometer.isAvailableAsync().catch(() => false);
-      if (!alive) return;
-      if (!available) { setSensorOk(false); return; }
-      setSensorOk(true);
-      Magnetometer.setUpdateInterval(80);
-      sub = Magnetometer.addListener(({ x, y }) => {
-        // Device held flat, portrait: angle of magnetic north
-        let deg = Math.atan2(y, x) * (180 / Math.PI);
-        deg = (deg + 360 + 270) % 360; // rotate into screen-up = north convention
-        const h = smoothHeading(headingRef.current, 360 - deg);
-        headingRef.current = h;
-        setHeading(h);
-      });
+      try {
+        // Tizimning kompas (magnetometr + akselerometr fusion) yo'nalishi
+        sub = await Location.watchHeadingAsync((h) => {
+          if (!alive) return;
+          // trueHeading — deklinatsiyaga moslangan; mavjud bo'lmasa magHeading
+          const val = (typeof h.trueHeading === 'number' && h.trueHeading >= 0) ? h.trueHeading : h.magHeading;
+          if (val == null || val < 0) return;
+          headingRef.current = smoothHeading(headingRef.current, val);
+          setHeading(headingRef.current);
+          // Android: accuracy 0..3 (3=yuqori); past bo'lsa kalibrlash kerak
+          if (typeof h.accuracy === 'number') setLowAccuracy(h.accuracy >= 0 && h.accuracy < 2);
+          setHasSensor(true);
+        });
+      } catch (e) {
+        if (alive) setHasSensor(false);
+      }
     })();
-    return () => { alive = false; sub && sub.remove(); };
+    return () => { alive = false; if (sub && sub.remove) sub.remove(); };
   }, []);
 
-  // Emulator / no-sensor fallback: rotate the rose with a finger, like the mockup
+  // Kompas bo'lmasa (emulator) — barmoq bilan aylantirish zaxira rejimi
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
-    onPanResponderGrant: (e) => {
-      const { locationX, locationY } = e.nativeEvent;
-      centerRef.current = { x: locationX, y: locationY };
-    },
     onPanResponderMove: (e) => {
       const { locationX, locationY } = e.nativeEvent;
       const cx = SIZE / 2, cy = SIZE / 2;
@@ -57,8 +56,8 @@ export default function QiblaOverlay({ v }) {
   })).current;
 
   const marker = ((bearing - heading) % 360 + 360) % 360;
-  const aligned = marker < 8 || marker > 352;
-  const manual = sensorOk === false;
+  const aligned = marker < 6 || marker > 354;
+  const manual = hasSensor === false;
 
   return (
     <OverlayShell title="Qibla" onClose={v.close} radial>
@@ -69,16 +68,16 @@ export default function QiblaOverlay({ v }) {
         </Text>
 
         <View style={{ width: SIZE, height: SIZE, marginTop: 26, marginBottom: 20 }} {...(manual ? pan.panHandlers : {})}>
-          {/* fixed top pointer */}
+          {/* tepadagi qat'iy o'q — telefon qayerga qaragani */}
           <View style={st.pointer} />
-          {/* rotating rose */}
+          {/* aylanuvchi rose — N haqiqiy shimolga ishora qiladi */}
           <View style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${-heading}deg` }] }]}>
             <View style={st.rose} />
             <Text style={[st.cardinal, { top: 12, alignSelf: 'center', color: C.red }]}>N</Text>
             <Text style={[st.cardinal, { bottom: 12, alignSelf: 'center' }]}>S</Text>
             <Text style={[st.cardinal, { left: 12, top: SIZE / 2 - 10 }]}>W</Text>
             <Text style={[st.cardinal, { right: 12, top: SIZE / 2 - 10 }]}>E</Text>
-            {/* Kaaba marker at the qibla bearing */}
+            {/* Ka'ba belgisi — Qibla burchagida (rose bilan birga aylanadi) */}
             <View style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${bearing}deg` }] }]}>
               <View style={st.kaabaWrap}>
                 <View style={st.kaaba}><View style={st.kaabaBand} /></View>
@@ -86,7 +85,7 @@ export default function QiblaOverlay({ v }) {
               </View>
             </View>
           </View>
-          {/* needle pointing at the qibla relative to heading */}
+          {/* igna — Qiblaga telefon yo'nalishiga nisbatan ishora qiladi */}
           <View style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${marker}deg` }] }]}>
             <View style={st.needle} />
           </View>
@@ -94,6 +93,9 @@ export default function QiblaOverlay({ v }) {
         </View>
 
         <Text style={{ fontFamily: F.extrabold, fontSize: 40, color: C.cream, fontVariant: ['tabular-nums'] }}>{Math.round(heading)}°</Text>
+        {lowAccuracy && !manual && (
+          <Text style={st.calibrate}>Kompasni kalibrlang — telefonni havoda ∞ (sakkiz) shaklida aylantiring</Text>
+        )}
         <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sageFaint, marginTop: 6, textAlign: 'center', lineHeight: 19 }}>
           {manual
             ? "Sensor topilmadi — kompasni barmoq bilan aylantirib,\nQibla belgisini yuqoridagi o'qqa moslang"
@@ -130,5 +132,9 @@ const st = StyleSheet.create({
     position: 'absolute', top: SIZE / 2 - 8, left: SIZE / 2 - 8, width: 16, height: 16, borderRadius: 8,
     backgroundColor: C.gold, zIndex: 6,
     shadowColor: C.gold, shadowOpacity: 0.6, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 6,
+  },
+  calibrate: {
+    fontFamily: F.semibold, fontSize: 12, color: C.amber, marginTop: 8, textAlign: 'center',
+    paddingHorizontal: 20, lineHeight: 17,
   },
 });
