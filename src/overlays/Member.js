@@ -13,8 +13,8 @@ export default function MemberOverlay({ v }) {
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 }}>
           <Avatar name={m.name} color={m.color} size={64} radius={20} fontSize={26} />
-          <View>
-            <Text style={{ fontFamily: F.serif, fontSize: 24, color: C.cream }}>{m.name}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text numberOfLines={1} style={{ fontFamily: F.serif, fontSize: 24, color: C.cream }}>{m.name}</Text>
             <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, marginTop: 2 }}>{t(m.label)}</Text>
           </View>
         </View>

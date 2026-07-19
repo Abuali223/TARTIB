@@ -30,7 +30,7 @@ export default function AssignOverlay({ v }) {
             <TouchableOpacity key={m.id} onPress={m.onPick} activeOpacity={0.8}
               style={[st.memberChip, m.active && { borderColor: m.color, backgroundColor: m.color + '18' }]}>
               <Avatar name={m.name} color={m.color} size={44} />
-              <Text style={{ fontFamily: F.regular, fontSize: 12, color: '#C6D4CC', marginTop: 6 }}>{m.name}</Text>
+              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageMid, marginTop: 6 }}>{m.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

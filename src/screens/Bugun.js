@@ -144,7 +144,7 @@ const mkSt = (C) => StyleSheet.create({
   },
   modeBtnText: { fontFamily: F.bold, fontSize: 12, color: C.gold },
   wsTag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: 'rgba(111,179,224,0.16)' },
-  wsTagText: { fontFamily: F.bold, fontSize: 10, color: '#8FC4E8' },
+  wsTagText: { fontFamily: F.bold, fontSize: 10, color: C.blueL },
   date: { fontFamily: F.regular, fontSize: 13, color: C.onBgDim, letterSpacing: 0.3 },
   greet: { fontFamily: F.serif, fontSize: 25, color: C.onBg, marginTop: 3 },
   hijri: { fontFamily: F.arabic, fontSize: 14, color: C.goldD, marginTop: 3 },
@@ -153,11 +153,10 @@ const mkSt = (C) => StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(217,179,106,0.25)', alignItems: 'center', justifyContent: 'center',
   },
   prayerCard: {
-    borderRadius: 24, padding: 22, borderWidth: 1, borderColor: 'rgba(217,179,106,0.24)',
+    borderRadius: 22, padding: 22, borderWidth: 1, borderColor: C.border,
     marginBottom: 18, overflow: 'hidden',
-    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3,
   },
-  crescentWatermark: { position: 'absolute', right: -18, top: -24, fontFamily: F.arabic, fontSize: 130, color: 'rgba(217,179,106,0.07)', lineHeight: 140 },
+  crescentWatermark: { position: 'absolute', right: -18, top: -24, fontFamily: F.arabic, fontSize: 130, color: 'rgba(217,179,106,0.06)', lineHeight: 140 },
   kicker: { fontFamily: F.regular, fontSize: 11, color: C.sage, letterSpacing: 1.1 },
   prayerCta: {
     marginTop: 18, paddingVertical: 12, borderRadius: 14, alignItems: 'center',

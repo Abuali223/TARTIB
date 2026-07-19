@@ -41,7 +41,7 @@ export default function TaskOverlay({ v }) {
         {task.reminderPending && (
           <>
             <View style={st.reminderNote}>
-              <Text style={{ fontFamily: F.regular, fontSize: 13, color: '#9FC9E8', lineHeight: 19 }}>{t("Bu — eslatma. O'qib chiqqaningizni tasdiqlang.")}</Text>
+              <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.blueL, lineHeight: 19 }}>{t("Bu — eslatma. O'qib chiqqaningizni tasdiqlang.")}</Text>
             </View>
             <TouchableOpacity onPress={task.onAck} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.blue }]}>
               <Text style={st.fullBtnText}>{t('Tushunarli')} ✓</Text>

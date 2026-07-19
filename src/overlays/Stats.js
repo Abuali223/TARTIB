@@ -30,7 +30,7 @@ export default function StatsOverlay({ v }) {
           <View style={{ gap: 12 }}>
             {v.habits.map((h, i) => (
               <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Text style={{ flex: 1, fontFamily: F.regular, fontSize: 14, color: '#C6D4CC' }}>{t(h.name)}</Text>
+                <Text style={{ flex: 1, fontFamily: F.regular, fontSize: 14, color: C.sageMid }}>{t(h.name)}</Text>
                 <Text style={{ fontFamily: F.extrabold, fontSize: 13, color: C.gold }}>{h.streak} {t('kun')}</Text>
               </View>
             ))}

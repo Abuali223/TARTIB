@@ -127,7 +127,7 @@ const mkSt = (C) => StyleSheet.create({
   },
   rose: {
     ...StyleSheet.absoluteFillObject, borderRadius: SIZE / 2,
-    backgroundColor: C.cardAlt, borderWidth: 1, borderColor: C.borderStrong,
+    backgroundColor: C.card, borderWidth: 1, borderColor: C.borderStrong,
   },
   cardinal: { position: 'absolute', fontFamily: F.bold, fontSize: 14, color: C.sage },
   kaabaWrap: { position: 'absolute', top: 34, alignSelf: 'center', alignItems: 'center', gap: 5 },
