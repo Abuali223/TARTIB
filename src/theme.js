@@ -40,7 +40,7 @@ const light = {
   overlay1: 'rgba(255,255,255,0.06)', overlay2: 'rgba(255,255,255,0.09)', overlay3: 'rgba(255,255,255,0.13)',
   bg: ['#1A6355', '#155249', '#123F37'],   // brend teal-yashil fon
   radialTop: ['#1A6355', '#134139', '#0E332C'],  // overlay/lock/onboarding — teal
-  cardGrad: ['rgba(255,255,255,0.13)', 'rgba(255,255,255,0.07)'],   // glassy feature kartalar
+  cardGrad: ['rgba(255,255,255,0.11)', 'rgba(255,255,255,0.10)'],   // tekis glassy (soya-effekt yo'q)
   sheet: ['#175448', '#123F37'],
   scrim: '#1A6355',
   statusBarStyle: 'light',

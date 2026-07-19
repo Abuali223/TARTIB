@@ -155,7 +155,7 @@ const mkSt = (C) => StyleSheet.create({
   prayerCard: {
     borderRadius: 24, padding: 22, borderWidth: 1, borderColor: 'rgba(217,179,106,0.24)',
     marginBottom: 18, overflow: 'hidden',
-    shadowColor: '#000', shadowOpacity: 0.32, shadowRadius: 17, shadowOffset: { width: 0, height: 14 }, elevation: 8,
+    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3,
   },
   crescentWatermark: { position: 'absolute', right: -18, top: -24, fontFamily: F.arabic, fontSize: 130, color: 'rgba(217,179,106,0.07)', lineHeight: 140 },
   kicker: { fontFamily: F.regular, fontSize: 11, color: C.sage, letterSpacing: 1.1 },

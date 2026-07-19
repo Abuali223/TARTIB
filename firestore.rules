@@ -1,75 +1,113 @@
 rules_version = '2';
 
 // TARTIB — jamoa (makon/a'zolik/vazifa) xavfsizlik qoidalari.
+// Tamoyil: KLIENTGA ISHONMAYMIZ. permissions/role/status/assignerUserId kabi
+// maydonlar serverda tekshiriladi; foydalanuvchi o'ziga ruxsat "yozib" ololmaydi.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
     function uid() { return request.auth.uid; }
-    function isMember(wid) {
-      return exists(/databases/$(database)/documents/memberships/$(wid + '_' + uid()));
+    function membershipPath(wid) {
+      return /databases/$(database)/documents/memberships/$(wid + '_' + uid());
     }
-    function myMembership(wid) {
-      return get(/databases/$(database)/documents/memberships/$(wid + '_' + uid())).data;
-    }
+    function isMember(wid) { return exists(membershipPath(wid)); }
+    function myMembership(wid) { return get(membershipPath(wid)).data; }
     function wsOwner(wid) {
       return get(/databases/$(database)/documents/workspaces/$(wid)).data.ownerUserId;
     }
-    function isOwner(wid) { return wsOwner(wid) == uid(); }
+    function isOwner(wid) { return isExistingWs(wid) && wsOwner(wid) == uid(); }
+    function isExistingWs(wid) {
+      return exists(/databases/$(database)/documents/workspaces/$(wid));
+    }
+    function wsCode(wid) {
+      return get(/databases/$(database)/documents/workspaces/$(wid)).data.code;
+    }
     function hasPerm(wid, cap) {
       return isOwner(wid) || (isMember(wid) && (cap in myMembership(wid).permissions));
     }
 
-    // Foydalanuvchilar — o'z hujjatini yozadi; ismlar a'zolarga ko'rinadi
+    // Foydalanuvchilar — ko'rsatiladigan ma'lumot (ism/rang) a'zolarga ko'rinadi.
+    // Email Firestore'da SAQLANMAYDI (u Auth'da). O'z hujjatini o'zi yozadi.
     match /users/{u} {
       allow read: if signedIn();
       allow create, update: if signedIn() && u == uid();
       allow delete: if false;
     }
 
-    // Makonlar — kod bilan qidirish uchun o'qish ochiq (nom/turi/kod maxfiy emas);
-    // yaratish faqat o'zini egasi qilib; o'zgartirish/o'chirish faqat egasi.
+    // Makonlar — FAQAT a'zo yoki egasi o'qiydi (kod/nom begonaga ko'rinmaydi).
     match /workspaces/{wid} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (isMember(wid) || wsOwner(wid) == uid());
       allow create: if signedIn() && request.resource.data.ownerUserId == uid();
       allow update, delete: if signedIn() && resource.data.ownerUserId == uid();
     }
 
-    // A'zoliklar — o'z a'zoligingni yoki a'zo bo'lgan makon a'zolarini o'qiysan;
-    // o'zingni qo'shasan (kod bilan) yoki egasi qo'shadi; rolni egasi/manager o'zgartiradi.
+    // Kod → makon xaritasi. Aniq kodni bilgan get() qiladi; RO'YXATLAB bo'lmaydi
+    // (list=false) — shu bois hamma kodlarni sanab chiqib bo'lmaydi.
+    match /joinCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && isOwner(request.resource.data.workspaceId);
+      allow update, delete: if false;
+    }
+
+    // A'zoliklar
     match /memberships/{mid} {
       allow read: if signedIn() && (
         resource.data.userId == uid() || isMember(resource.data.workspaceId)
       );
-      allow create: if signedIn() && (
-        request.resource.data.userId == uid() ||
-        isOwner(request.resource.data.workspaceId)
-      );
-      allow update: if signedIn() && (
-        isOwner(resource.data.workspaceId) ||
-        hasPerm(resource.data.workspaceId, 'MANAGE_MEMBERS') ||
-        (resource.data.userId == uid() && request.resource.data.userId == uid())
-      );
+
+      // Yaratish: FAQAT o'zim uchun (mid == wid_uid) va
+      //   (a) makon egasiman (createWorkspace) — yoki
+      //   (b) to'g'ri kod bilan qo'shilyapman va ruxsatlarim faqat RECEIVE_TASKS.
+      allow create: if signedIn()
+        && mid == (request.resource.data.workspaceId + '_' + uid())
+        && request.resource.data.userId == uid()
+        && (
+          isOwner(request.resource.data.workspaceId)
+          || (
+            request.resource.data.joinCode == wsCode(request.resource.data.workspaceId)
+            && request.resource.data.permissions == ['RECEIVE_TASKS']
+            && request.resource.data.status == 'active'
+          )
+        );
+
+      // Yangilash: FAQAT egasi yoki MANAGE_MEMBERS ruxsatli.
+      // O'zini o'zi tahrirlash (rol/ruxsat oshirish) MUMKIN EMAS.
+      // Makon va foydalanuvchi o'zgармaydi.
+      allow update: if signedIn()
+        && request.resource.data.workspaceId == resource.data.workspaceId
+        && request.resource.data.userId == resource.data.userId
+        && (isOwner(resource.data.workspaceId) || hasPerm(resource.data.workspaceId, 'MANAGE_MEMBERS'));
+
       allow delete: if signedIn() && (
         resource.data.userId == uid() || isOwner(resource.data.workspaceId)
       );
     }
 
-    // Vazifalar — mas'ul yoki makon a'zosi o'qiydi; ASSIGN ruxsatli yaratadi;
-    // holatni mas'ul/beruvchi/board-manager o'zgartiradi.
+    // Vazifalar
     match /tasks/{tid} {
       allow read: if signedIn() && (
         resource.data.assigneeUserId == uid() || isMember(resource.data.workspaceId)
       );
-      allow create: if signedIn() && (
-        isOwner(request.resource.data.workspaceId) ||
-        hasPerm(request.resource.data.workspaceId, 'ASSIGN_TASKS')
-      );
-      allow update: if signedIn() && (
-        resource.data.assigneeUserId == uid() ||
-        resource.data.assignerUserId == uid() ||
-        hasPerm(resource.data.workspaceId, 'VIEW_BOARD')
-      );
+
+      // Yaratish: beruvchi = o'zim, va ASSIGN_TASKS ruxsatim bor.
+      allow create: if signedIn()
+        && request.resource.data.assignerUserId == uid()
+        && (isOwner(request.resource.data.workspaceId) || hasPerm(request.resource.data.workspaceId, 'ASSIGN_TASKS'));
+
+      // Yangilash: makon/beruvchi/mas'ul o'zgармaydi (faqat holat va shu kabi).
+      allow update: if signedIn()
+        && request.resource.data.workspaceId == resource.data.workspaceId
+        && request.resource.data.assignerUserId == resource.data.assignerUserId
+        && request.resource.data.assigneeUserId == resource.data.assigneeUserId
+        && (
+          resource.data.assigneeUserId == uid()
+          || resource.data.assignerUserId == uid()
+          || isOwner(resource.data.workspaceId)
+          || hasPerm(resource.data.workspaceId, 'VIEW_BOARD')
+        );
+
       allow delete: if signedIn() && (
         resource.data.assignerUserId == uid() || isOwner(resource.data.workspaceId)
       );

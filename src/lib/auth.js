@@ -22,9 +22,10 @@ export async function ensureUserDoc(user, { name, birthYear } = {}) {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
+    // email'ni Firestore'ga YOZMAYMIZ — u Firebase Auth'da bor (PII sizib chiqmasin).
+    // Faqat ko'rsatiladigan maydonlar (ism, rang) + birthYear (voyaga yetganlikni aniqlash uchun).
     await setDoc(ref, {
       name: (name || user.displayName || '').trim(),
-      email: user.email || '',
       birthYear: birthYear || null,
       photoColor: AVATAR_COLORS[Math.abs(hashCode(user.uid)) % AVATAR_COLORS.length],
       createdAt: serverTimestamp(),

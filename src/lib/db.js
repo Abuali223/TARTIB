@@ -3,12 +3,23 @@
 
 import {
   collection, query, where, limit, onSnapshot,
-  doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp,
+  doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp,
 } from 'firebase/firestore';
+import * as Crypto from 'expo-crypto';
 import { db } from './firebase';
 import { CAP, defaultOwnerRole, makeJoinCode, permissionsFor, roleOptionsFor } from './roles';
 
 const membershipId = (wid, uid) => `${wid}_${uid}`;
+
+// Kriptografik tasodifiy 32-bit son (ID/kod urug'i uchun — bashorat qilib bo'lmaydi)
+function randSeed() {
+  try {
+    const b = Crypto.getRandomBytes(4);
+    return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]) >>> 0;
+  } catch (e) {
+    return Math.floor(Math.random() * 0xffffffff);
+  }
+}
 
 // Har makon turi uchun standart (oddiy a'zo) rol — qo'shilganda beriladi
 export function defaultMemberRole(type) {
@@ -17,41 +28,44 @@ export function defaultMemberRole(type) {
 
 // ————— Yozish —————
 
-// Yangi makon + egaga a'zolik (bitta batch'da)
+// Yangi makon + egaga a'zolik.
+// Ketma-ket yoziladi (batch emas): avval makon, keyin joinCodes, keyin egа a'zoligi —
+// shunda a'zolik qoidasi isOwner() ni tekshira oladi (makon allaqachon mavjud).
+// ID'lar Firestore avto-ID (to'qnashuv yo'q); kod kriptografik tasodifiy.
 export async function createWorkspace(uid, { type, name }) {
-  const wid = 'w' + Date.now();
-  const code = makeJoinCode(type, Date.now());
+  const wid = doc(collection(db, 'workspaces')).id;   // avto-ID, to'qnashmaydi
+  const code = makeJoinCode(type, randSeed());        // bashoratsiz kod
   const role = defaultOwnerRole(type);
-  const batch = writeBatch(db);
-  batch.set(doc(db, 'workspaces', wid), {
+  await setDoc(doc(db, 'workspaces', wid), {
     type, name: name.trim(), ownerUserId: uid, code, createdAt: serverTimestamp(),
   });
-  batch.set(doc(db, 'memberships', membershipId(wid, uid)), {
+  // Kod → makon xaritasi (faqat aniq kodni bilgan get() qiladi; ro'yxatlab bo'lmaydi)
+  await setDoc(doc(db, 'joinCodes', code), { workspaceId: wid, type });
+  await setDoc(doc(db, 'memberships', membershipId(wid, uid)), {
     workspaceId: wid, userId: uid, role,
     permissions: permissionsFor(type, role, { isOwner: true }),
-    status: 'active', group: null, restricted: false, createdAt: serverTimestamp(),
+    status: 'active', group: null, restricted: false, joinCode: code, createdAt: serverTimestamp(),
   });
-  await batch.commit();
   return { wid, code };
 }
 
-// Kod bilan qo'shilish
+// Kod bilan qo'shilish — joinCodes orqali (makonni to'g'ridan-to'g'ri o'qimaydi).
 export async function joinByCode(uid, code, { restricted = false } = {}) {
   const clean = (code || '').trim().toUpperCase();
   if (!clean) throw new Error('empty-code');
-  const snap = await getDocs(query(collection(db, 'workspaces'), where('code', '==', clean), limit(1)));
-  if (snap.empty) { const e = new Error('not-found'); e.code = 'ws/not-found'; throw e; }
-  const ws = { id: snap.docs[0].id, ...snap.docs[0].data() };
-  const mid = membershipId(ws.id, uid);
+  const jc = await getDoc(doc(db, 'joinCodes', clean));
+  if (!jc.exists()) { const e = new Error('not-found'); e.code = 'ws/not-found'; throw e; }
+  const { workspaceId: wid, type } = jc.data();
+  const mid = membershipId(wid, uid);
   const existing = await getDoc(doc(db, 'memberships', mid));
   if (existing.exists()) { const e = new Error('already'); e.code = 'ws/already-member'; throw e; }
-  const role = defaultMemberRole(ws.type);
+  const role = defaultMemberRole(type);
   await setDoc(doc(db, 'memberships', mid), {
-    workspaceId: ws.id, userId: uid, role,
-    permissions: permissionsFor(ws.type, role, { restricted }),
-    status: 'active', group: null, restricted, createdAt: serverTimestamp(),
+    workspaceId: wid, userId: uid, role,
+    permissions: permissionsFor(type, role, { restricted }),  // qo'shiluvchi = faqat RECEIVE_TASKS
+    status: 'active', group: null, restricted, joinCode: clean, createdAt: serverTimestamp(),
   });
-  return ws;
+  return { id: wid, type };
 }
 
 export async function updateMemberRole(ws, userId, role) {
@@ -70,7 +84,7 @@ export async function leaveWorkspace(wid, uid) {
 }
 
 export async function addTask(uid, { workspaceId, assigneeUserId, title, desc, cat, due, type }) {
-  const tid = 'k' + Date.now();
+  const tid = doc(collection(db, 'tasks')).id;   // avto-ID, to'qnashmaydi
   await setDoc(doc(db, 'tasks', tid), {
     workspaceId, assignerUserId: uid, assigneeUserId,
     title, desc, cat, due, type, status: 'yuborildi', createdAt: serverTimestamp(),

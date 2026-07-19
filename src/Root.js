@@ -232,7 +232,8 @@ export default class Root extends React.Component {
       for (const wid of ids) {
         if (!this._subs.ws.has(wid)) {
           this._subs.ws.set(wid, subscribeWorkspace(wid, (ws) => {
-            this.setState(s => ({ myWorkspaces: { ...s.myWorkspaces, [wid]: ws || undefined } }));
+            // Vaqtinchalik null/xatoni e'tiborsiz qoldiramiz (avvalgi qiymatni saqlaymiz)
+            this.setState(s => (ws ? { myWorkspaces: { ...s.myWorkspaces, [wid]: ws } } : {}));
           }));
         }
       }
@@ -252,6 +253,8 @@ export default class Root extends React.Component {
       this.setState({ inboxTasks: rows });
       this.ensureUsers(rows.map(t => t.assignerUserId));
     });
+    // stopSync activeWid'ni null qildi — faol makon a'zolari/vazifalariga qayta obuna bo'lamiz
+    this.syncActive();
   }
 
   syncActive() {
@@ -327,7 +330,7 @@ export default class Root extends React.Component {
     if (!ws) return false;
     if (ws.ownerUserId === this.uid) return true;
     const mem = this.myMembershipOf(ws.id);
-    return !!mem && mem.permissions.includes(cap);
+    return !!mem && (mem.permissions || []).includes(cap);
   }
 
   // ————— auth —————
@@ -576,7 +579,7 @@ export default class Root extends React.Component {
     const wsType = activeWs ? activeWs.type : 'shaxsiy';
     const myMem = activeWs ? S.myMemberships.find(m => m.workspaceId === activeWs.id) : null;
     const isOwner = !!activeWs && activeWs.ownerUserId === me;
-    const can = (cap) => isOwner || (!!myMem && myMem.permissions.includes(cap));
+    const can = (cap) => isOwner || (!!myMem && (myMem.permissions || []).includes(cap));
     const canManage = !!activeWs && (isOwner || can(CAP.VIEW_BOARD));
     const isChildTeam = !!activeWs && !isOwner && !can(CAP.VIEW_BOARD);
 
@@ -594,7 +597,7 @@ export default class Root extends React.Component {
       const ts = memTasksOf(mem.userId), done = ts.filter(t => t.status === 'bajarildi').length, pct = ts.length ? Math.round(done / ts.length * 100) : 0;
       return {
         id: u.id, name: u.name, initial: (u.name || '?')[0], color: u.color || C.gold, online: false,
-        role: mem.role, isMgr: isManagerPerms(mem.permissions),
+        role: mem.role, isMgr: isManagerPerms(mem.permissions || []),
         label: (wsType === 'talim' && mem.group) ? (mem.role + ' · ' + mem.group) : mem.role,
         doneCount: done, totalCount: ts.length, pct, onOpen: () => this.selectMember(mem.userId),
       };
