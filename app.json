@@ -41,6 +41,12 @@
       ],
       "expo-notifications",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Ilovani ochish uchun Face ID ishlatiladi."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, BackHandler, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, BackHandler, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F } from './theme';
@@ -11,6 +11,9 @@ import { loadState, saveState, todayKey } from './lib/storage';
 import { ensureUserDoc, mapAuthError, signInEmail, signInWithGoogleIdToken, signOutUser, signUpEmail, watchAuth } from './lib/auth';
 import { googleConfigured } from './lib/googleAuth';
 import GoogleBridge from './components/GoogleBridge';
+import LockScreen from './screens/LockScreen';
+import { verifyPin, hashPin, biometricAvailable, biometricAuth } from './lib/lock';
+import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
 import { schedulePrayerReminders } from './lib/notifications';
 import {
@@ -43,6 +46,7 @@ const SHOW_SECONDS = true;
 const PERSIST_KEYS = [
   'activeWorkspaceId', 'settings', 'amals', 'amalsDate', 'habits',
   'tasbehCount', 'tasbehTarget', 'dhikrIdx', 'madhab', 'manualCity', 'lang',
+  'lockEnabled', 'pinHash', 'biometricEnabled',
 ];
 
 export const STATUS_META = {
@@ -72,6 +76,9 @@ export default class Root extends React.Component {
     now: Date.now(),
     coords: DEFAULT_COORDS, cityName: DEFAULT_CITY, locStatus: 'default',
     madhab: 'hanafi', manualCity: null, lang: 'lotin',
+    lockEnabled: false, pinHash: null, biometricEnabled: false,
+    locked: false, pinSetup: false, // pinSetup: yangi PIN o'rnatish oynasi
+    bioAvailable: false,
     selMember: null, selTask: null, selDay: new Date().getDate(),
     tasbehCount: 0, tasbehTarget: 33, dhikrIdx: 0,
     settings: { namoz: true, azon: true, zikr: false, jamoa: true },
@@ -115,12 +122,22 @@ export default class Root extends React.Component {
         patch.amalsDate = todayKey();
       }
       if (patch.lang) setLang(patch.lang); // i18n modulini saqlangan tilga moslash
+      if (patch.lockEnabled && patch.pinHash) patch.locked = true; // ochilishda qulflangan
       this.setState({ ...patch, hydrated: true }, () => this.syncNotifications());
     } else {
       this.setState({ hydrated: true }, () => this.syncNotifications());
     }
     this.locate();
     this._backSub = BackHandler.addEventListener('hardwareBackPress', this.onHardwareBack);
+    biometricAvailable().then(a => this.setState({ bioAvailable: a })).catch(() => {});
+    // Ilova fonga ketib qaytsa — qulflansin
+    this._appStateSub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') { this._bg = false; return; }
+      if ((s === 'background' || s === 'inactive') && this.state.lockEnabled && this.state.pinHash) {
+        this._bg = true;
+        this.setState({ locked: true });
+      }
+    });
     this._unsubAuth = watchAuth(async (user) => {
       if (user) {
         let userDoc = null;
@@ -137,12 +154,15 @@ export default class Root extends React.Component {
     clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st);
     if (this._unsubAuth) this._unsubAuth();
     if (this._backSub) this._backSub.remove();
+    if (this._appStateSub) this._appStateSub.remove();
     this.stopSync();
   }
 
   // Android "ortga" tugmasi: ilovadan chiqib ketmasin — avval oyna/tabni yopsin
   onHardwareBack = () => {
-    const { overlay, tab, fbUser } = this.state;
+    const { overlay, tab, fbUser, locked, pinSetup } = this.state;
+    if (locked) return true;                          // qulf ekrani — chiqmasin
+    if (pinSetup) { this.setState({ pinSetup: false }); return true; }
     if (overlay) {
       // Sozlamalar ichidagi tanlovlar — Sozlamalarga qaytadi, aks holda yopiladi
       if (overlay === 'madhab' || overlay === 'city' || overlay === 'lang') this.setState({ overlay: 'settings' });
@@ -422,6 +442,48 @@ export default class Root extends React.Component {
   setAppLang = (key) => { setLang(key); this.setState({ lang: key, overlay: 'settings' }); };
   openPicker = (which) => this.setState({ overlay: which }); // 'madhab' | 'city' | 'lang'
   backToSettings = () => this.setState({ overlay: 'settings' });
+
+  // ————— Ilovani ulashish —————
+  shareApp = async () => {
+    try { await Share.share({ message: appShareMessage() }); } catch (e) { /* bekor qilindi */ }
+  };
+
+  // ————— Ilova qulfi (PIN + biometrika) —————
+  startSetPin = () => this.setState({ pinSetup: true, overlay: null });
+  cancelSetPin = () => this.setState({ pinSetup: false });
+  onSetPin = async (pin) => {
+    try {
+      const h = await hashPin(pin);
+      this.setState({ pinHash: h, lockEnabled: true, pinSetup: false, locked: false });
+      this.flash('Ilova qulfi yoqildi');
+    } catch (e) { this.flash('Xatolik — qaytadan urining'); }
+  };
+  disableLock = () => this.setState({ lockEnabled: false, biometricEnabled: false, pinHash: null, locked: false });
+  toggleLock = () => {
+    if (this.state.lockEnabled) this.disableLock();
+    else this.startSetPin();
+  };
+  toggleBiometric = async () => {
+    if (this.state.biometricEnabled) { this.setState({ biometricEnabled: false }); return; }
+    if (!this.state.bioAvailable) { this.flash("Qurilmada barmoq izi sozlanmagan"); return; }
+    const ok = await biometricAuth('Barmoq izini tasdiqlang');
+    if (ok) { this.setState({ biometricEnabled: true }); this.flash('Barmoq izi yoqildi'); }
+  };
+  unlockWithPin = async (pin) => {
+    const ok = await verifyPin(pin, this.state.pinHash);
+    if (ok) this.setState({ locked: false });
+    return ok;
+  };
+  unlockWithBiometric = async () => {
+    if (!this.state.biometricEnabled) return false;
+    const ok = await biometricAuth('Kirish uchun tasdiqlang');
+    if (ok) this.setState({ locked: false });
+    return ok;
+  };
+  forgotLogout = async () => {
+    this.disableLock();
+    try { await signOutUser(); } catch (e) { /* noop */ }
+  };
   onDraftTitle = (v) => this.setState(s => ({ draft: { ...s.draft, title: v } }));
   pickAssignee = (id) => this.setState(s => ({ draft: { ...s.draft, assigneeId: id } }));
   pickCat = (c) => this.setState(s => ({ draft: { ...s.draft, category: c } }));
@@ -751,6 +813,11 @@ export default class Root extends React.Component {
       madhabName, isManualCity: !!S.manualCity, langName,
       openMadhab: () => this.openPicker('madhab'), openCity: () => this.openPicker('city'), openLang: () => this.openPicker('lang'),
       madhabPicker, cityPicker, langPicker,
+      // Qulf + ulashish
+      lockEnabled: S.lockEnabled, biometricEnabled: S.biometricEnabled, bioAvailable: S.bioAvailable,
+      locked: S.locked, pinSetup: S.pinSetup,
+      toggleLock: this.toggleLock, toggleBiometric: this.toggleBiometric, changePin: this.startSetPin,
+      shareApp: this.shareApp,
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
       open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
@@ -817,6 +884,21 @@ export default class Root extends React.Component {
         {/* Status-bar scrim: edge-to-edge'da skroll qilingan kontent tepadan sizib chiqmasin */}
         {Platform.OS === 'android' && !!StatusBar.currentHeight && (
           <View pointerEvents="none" style={[st.topScrim, { height: StatusBar.currentHeight }]} />
+        )}
+
+        {/* Yangi PIN o'rnatish oynasi (Sozlamalardan) */}
+        {v.pinSetup && (
+          <LockScreen mode="set" onSetPin={this.onSetPin} />
+        )}
+        {/* Qulf ekrani — hammasidan ustun */}
+        {v.locked && v.booted && (
+          <LockScreen
+            mode="unlock"
+            onUnlock={this.unlockWithPin}
+            biometricEnabled={this.state.biometricEnabled}
+            onBiometric={this.unlockWithBiometric}
+            onForgot={this.forgotLogout}
+          />
         )}
       </LinearGradient>
     );

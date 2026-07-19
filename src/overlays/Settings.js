@@ -50,6 +50,21 @@ export default function SettingsOverlay({ v }) {
           <InfoRow label={t('Mavzu')} value={t("To'q yashil")} gold last />
         </View>
 
+        <Text style={st.section}>{t('XAVFSIZLIK')}</Text>
+        <View style={st.card}>
+          <ToggleRow label={t('Ilova qulfi (PIN)')} on={v.lockEnabled} onToggle={v.toggleLock} last={!v.lockEnabled} />
+          {v.lockEnabled && (
+            <>
+              <ToggleRow label={t('Barmoq izi bilan ochish')} on={v.biometricEnabled} onToggle={v.toggleBiometric} />
+              <InfoRow label={t("PIN'ni o'zgartirish")} value={t("O'zgartirish")} onPress={v.changePin} last />
+            </>
+          )}
+        </View>
+
+        <TouchableOpacity onPress={v.shareApp} activeOpacity={0.85} style={st.shareBtn}>
+          <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.gold }}>{t('Ilovani ulashish')}</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={v.logout} activeOpacity={0.85} style={st.logoutBtn}>
           <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.red }}>{t('Chiqish')}</Text>
         </TouchableOpacity>
@@ -65,6 +80,7 @@ const st = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 16 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: C.hairline },
   rowLabel: { flex: 1, fontFamily: F.regular, fontSize: 15, color: C.cream },
+  shareBtn: { paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,179,106,0.4)', backgroundColor: 'rgba(217,179,106,0.08)', alignItems: 'center', marginBottom: 12 },
   logoutBtn: { paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(224,120,95,0.4)', alignItems: 'center' },
   footer: { textAlign: 'center', fontFamily: F.regular, fontSize: 12, color: C.sageDim, marginTop: 18 },
 });
