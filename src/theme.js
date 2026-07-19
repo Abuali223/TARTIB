@@ -31,13 +31,13 @@ const light = {
   red: '#C0553F', blue: '#2F7EA6', blueL: '#276487', purple: '#6E52A0',
   ink: '#173E36',             // oltin tugma ustidagi matn (to'q yashil)
   card: '#FFFFFF', cardAlt: '#F0F2EC',
-  border: 'rgba(28,39,35,0.12)', borderStrong: 'rgba(35,107,93,0.42)',
-  hairline: 'rgba(28,39,35,0.07)',
-  overlay1: 'rgba(28,39,35,0.03)', overlay2: 'rgba(28,39,35,0.05)', overlay3: 'rgba(28,39,35,0.09)',
-  bg: ['#F5F6F1', '#EFF1EC', '#E9EDE6'],
-  radialTop: ['#FBFCF9', '#F3F6F1', '#ECF1EA'],
-  cardGrad: ['#EAF2EF', '#DCEAE3'],   // yumshoq teal — to'q matn o'qiladi
-  sheet: ['#FBFCF9', '#F3F6F1'],
+  border: '#E7EAE6', borderStrong: 'rgba(35,107,93,0.42)',
+  hairline: '#EEF0EB',
+  overlay1: 'rgba(28,39,35,0.03)', overlay2: 'rgba(28,39,35,0.05)', overlay3: 'rgba(28,39,35,0.08)',
+  bg: ['#F5F6F1', '#F5F6F1', '#F2F3EE'],   // neytral oq (brend --bg), yashil tusdan tozalangan
+  radialTop: ['#FAFBF8', '#F5F6F1', '#F2F3EE'],
+  cardGrad: ['#F0F2EC', '#E8EBE4'],   // yumshoq neytral panel (--border-2), to'q matn o'qiladi
+  sheet: ['#FBFCFA', '#F5F6F1'],
   scrim: '#F5F6F1',
   statusBarStyle: 'dark',
 };
