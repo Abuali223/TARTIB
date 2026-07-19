@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
+import { t } from '../lib/i18n';
 
 const DOW = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
 const MO = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
@@ -26,11 +27,11 @@ export default function DatePicker({ value, onPick }) {
     <View style={st.card}>
       <View style={st.header}>
         <TouchableOpacity onPress={prev} activeOpacity={0.7} style={st.nav}><Text style={st.navT}>‹</Text></TouchableOpacity>
-        <Text style={st.month}>{MO[ym.m]} {ym.y}</Text>
+        <Text style={st.month}>{t(MO[ym.m])} {ym.y}</Text>
         <TouchableOpacity onPress={next} activeOpacity={0.7} style={st.nav}><Text style={st.navT}>›</Text></TouchableOpacity>
       </View>
       <View style={st.grid}>
-        {DOW.map((d, i) => (<View key={'h' + i} style={st.cell}><Text style={st.dow}>{d}</Text></View>))}
+        {DOW.map((d, i) => (<View key={'h' + i} style={st.cell}><Text style={st.dow}>{t(d)}</Text></View>))}
       </View>
       <View style={st.grid}>
         {cells.map((d, i) => {

@@ -3,6 +3,7 @@ import { PanResponder, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { C, F } from '../theme';
 import { OverlayShell } from '../components/ui';
+import { t } from '../lib/i18n';
 
 const SIZE = 290;
 
@@ -62,17 +63,17 @@ export default function QiblaOverlay({ v }) {
 
   const turn = marker <= 180 ? Math.round(marker) : Math.round(360 - marker);
   const feedback = aligned
-    ? "Qibla to'g'ri yo'nalishda ✓"
+    ? t("Qibla to'g'ri yo'nalishda") + ' ✓'
     : behind
-      ? `Qibla orqangizda — teskari buriling (${turn}°)`
+      ? `${t('Qibla orqangizda — teskari buriling')} (${turn}°)`
       : marker <= 180
-        ? `O'ngga ${turn}° buriling →`
-        : `← Chapga ${turn}° buriling`;
+        ? `${t("O'ngga")} ${turn}° ${t('buriling')} →`
+        : `← ${t('Chapga')} ${turn}° ${t('buriling')}`;
 
   return (
-    <OverlayShell title="Qibla" onClose={v.close} radial>
+    <OverlayShell title={t('Qibla')} onClose={v.close} radial>
       <View style={{ flex: 1, alignItems: 'center', paddingTop: 14, paddingHorizontal: 24, paddingBottom: 40 }}>
-        <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage }}>{v.qibla.cityName} · Qibla {bearing}°</Text>
+        <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage }}>{t(v.qibla.cityName)} · {t('Qibla')} {bearing}°</Text>
         <Text style={{ fontFamily: F.bold, fontSize: 16, marginTop: 8, color: aligned ? C.emerald : behind ? C.red : C.sage }}>
           {feedback}
         </Text>
@@ -104,12 +105,12 @@ export default function QiblaOverlay({ v }) {
 
         <Text style={{ fontFamily: F.extrabold, fontSize: 40, color: C.cream, fontVariant: ['tabular-nums'] }}>{Math.round(heading)}°</Text>
         {lowAccuracy && !manual && (
-          <Text style={st.calibrate}>Kompasni kalibrlang — telefonni havoda ∞ (sakkiz) shaklida aylantiring</Text>
+          <Text style={st.calibrate}>{t('Kompasni kalibrlang — telefonni havoda ∞ (sakkiz) shaklida aylantiring')}</Text>
         )}
         <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sageFaint, marginTop: 6, textAlign: 'center', lineHeight: 19 }}>
           {manual
-            ? "Sensor topilmadi — kompasni barmoq bilan aylantirib,\nQibla belgisini yuqoridagi o'qqa moslang"
-            : "Telefonni tekis ushlab aylantiring —\nQibla belgisi yuqoridagi o'qqa kelsin"}
+            ? t("Sensor topilmadi — kompasni barmoq bilan aylantirib,\nQibla belgisini yuqoridagi o'qqa moslang")
+            : t("Telefonni tekis ushlab aylantiring —\nQibla belgisi yuqoridagi o'qqa kelsin")}
         </Text>
       </View>
     </OverlayShell>

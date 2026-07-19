@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { Avatar, OverlayShell, StatusPill } from '../components/ui';
+import { t } from '../lib/i18n';
 
 function InfoRow({ label, children, last }) {
   return (
@@ -13,59 +14,59 @@ function InfoRow({ label, children, last }) {
 }
 
 export default function TaskOverlay({ v }) {
-  const t = v.selTaskObj;
+  const task = v.selTaskObj;
   return (
-    <OverlayShell title="Vazifa" onClose={v.close}>
+    <OverlayShell title={t('Vazifa')} onClose={v.close}>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <View style={{ alignSelf: 'flex-start' }}><StatusPill meta={t.statusMeta} /></View>
-        <Text style={st.title}>{t.title}</Text>
-        <Text style={st.desc}>{t.desc}</Text>
+        <View style={{ alignSelf: 'flex-start' }}><StatusPill meta={task.statusMeta} /></View>
+        <Text style={st.title}>{t(task.title)}</Text>
+        <Text style={st.desc}>{t(task.desc)}</Text>
 
         <View style={st.infoCard}>
-          <InfoRow label="Mas'ul">
+          <InfoRow label={t("Mas'ul")}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Avatar name={t.assigneeName} color={t.assigneeColor} size={32} radius={10} fontSize={13} />
-              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: C.cream }}>{t.assigneeName}</Text>
+              <Avatar name={task.assigneeName} color={task.assigneeColor} size={32} radius={10} fontSize={13} />
+              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: C.cream }}>{task.assigneeName}</Text>
             </View>
           </InfoRow>
-          <InfoRow label="Bergan"><Text style={st.infoValue}>{t.assignerName}</Text></InfoRow>
-          <InfoRow label="Muddat"><Text style={st.infoValue}>{t.due}</Text></InfoRow>
-          <InfoRow label="Yo'nalish" last><Text style={st.infoValue}>{t.cat}</Text></InfoRow>
+          <InfoRow label={t('Bergan')}><Text style={st.infoValue}>{task.assignerName}</Text></InfoRow>
+          <InfoRow label={t('Muddat')}><Text style={st.infoValue}>{t(task.due)}</Text></InfoRow>
+          <InfoRow label={t("Yo'nalish")} last><Text style={st.infoValue}>{t(task.cat)}</Text></InfoRow>
         </View>
 
-        {t.reminderPending && (
+        {task.reminderPending && (
           <>
             <View style={st.reminderNote}>
-              <Text style={{ fontFamily: F.regular, fontSize: 13, color: '#9FC9E8', lineHeight: 19 }}>Bu — eslatma. O'qib chiqqaningizni tasdiqlang.</Text>
+              <Text style={{ fontFamily: F.regular, fontSize: 13, color: '#9FC9E8', lineHeight: 19 }}>{t("Bu — eslatma. O'qib chiqqaningizni tasdiqlang.")}</Text>
             </View>
-            <TouchableOpacity onPress={t.onAck} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.blue }]}>
-              <Text style={st.fullBtnText}>Tushunarli ✓</Text>
+            <TouchableOpacity onPress={task.onAck} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.blue }]}>
+              <Text style={st.fullBtnText}>{t('Tushunarli')} ✓</Text>
             </TouchableOpacity>
           </>
         )}
-        {t.canAccept && (
+        {task.canAccept && (
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <TouchableOpacity onPress={t.onAccept} activeOpacity={0.85} style={[st.fullBtn, { flex: 1, backgroundColor: C.emerald }]}>
-              <Text style={st.fullBtnText}>Qabul qilish</Text>
+            <TouchableOpacity onPress={task.onAccept} activeOpacity={0.85} style={[st.fullBtn, { flex: 1, backgroundColor: C.emerald }]}>
+              <Text style={st.fullBtnText}>{t('Qabul qilish')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={t.onReject} activeOpacity={0.85} style={[st.fullBtn, { flex: 1, borderWidth: 1, borderColor: 'rgba(224,120,95,0.5)' }]}>
-              <Text style={[st.fullBtnText, { color: C.red }]}>Rad etish</Text>
+            <TouchableOpacity onPress={task.onReject} activeOpacity={0.85} style={[st.fullBtn, { flex: 1, borderWidth: 1, borderColor: 'rgba(224,120,95,0.5)' }]}>
+              <Text style={[st.fullBtnText, { color: C.red }]}>{t('Rad etish')}</Text>
             </TouchableOpacity>
           </View>
         )}
-        {t.canStart && (
-          <TouchableOpacity onPress={t.onStart} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.amber }]}>
-            <Text style={st.fullBtnText}>Ishni boshlash</Text>
+        {task.canStart && (
+          <TouchableOpacity onPress={task.onStart} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.amber }]}>
+            <Text style={st.fullBtnText}>{t('Ishni boshlash')}</Text>
           </TouchableOpacity>
         )}
-        {t.canComplete && (
-          <TouchableOpacity onPress={t.onComplete} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.emerald }]}>
-            <Text style={st.fullBtnText}>Bajarildi deb belgilash ✓</Text>
+        {task.canComplete && (
+          <TouchableOpacity onPress={task.onComplete} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.emerald }]}>
+            <Text style={st.fullBtnText}>{t('Bajarildi deb belgilash')} ✓</Text>
           </TouchableOpacity>
         )}
-        {t.isFinal && (
-          <TouchableOpacity onPress={t.onReopen} activeOpacity={0.85} style={[st.fullBtn, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)' }]}>
-            <Text style={[st.fullBtnText, { color: C.sageMid, fontFamily: F.bold }]}>Qayta ochish</Text>
+        {task.isFinal && (
+          <TouchableOpacity onPress={task.onReopen} activeOpacity={0.85} style={[st.fullBtn, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)' }]}>
+            <Text style={[st.fullBtnText, { color: C.sageMid, fontFamily: F.bold }]}>{t('Qayta ochish')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

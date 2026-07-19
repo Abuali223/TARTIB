@@ -3,6 +3,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, F } from '../theme';
 import { BriefcaseIcon, CheckIcon, ChevronRight, GradCapIcon, PersonIcon, UsersIcon } from '../components/icons';
+import { t } from '../lib/i18n';
 
 const TYPE_ICON = {
   oila: { Icon: UsersIcon, bg: 'rgba(67,192,141,0.14)', color: '#43C08D' },
@@ -35,26 +36,26 @@ export default function WorkspaceSheet({ v }) {
 
           {screen === 'list' && (
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 470 }}>
-              <Text style={st.title}>Makonni tanlang</Text>
-              <Text style={st.sub}>Bitta hisob — barcha makonlar</Text>
+              <Text style={st.title}>{t('Makonni tanlang')}</Text>
+              <Text style={st.sub}>{t('Bitta hisob — barcha makonlar')}</Text>
 
-              <Row active={v.shaxsiyActive} onPress={v.onSelectShaxsiy} iconBg="rgba(217,179,106,0.14)" icon={<PersonIcon />} title="Shaxsiy" sub="O'zim uchun ibodat va odatlar" />
+              <Row active={v.shaxsiyActive} onPress={v.onSelectShaxsiy} iconBg="rgba(217,179,106,0.14)" icon={<PersonIcon />} title={t('Shaxsiy')} sub={t("O'zim uchun ibodat va odatlar")} />
 
               {v.myWorkspaces.map(w => {
                 const ic = TYPE_ICON[w.type] || TYPE_ICON.oila;
                 const Icon = ic.Icon;
-                return <Row key={w.id} active={w.active} onPress={w.onSelect} iconBg={ic.bg} icon={<Icon color={ic.color} />} title={w.name} sub={`${w.typeLabel} · ${w.role}`} />;
+                return <Row key={w.id} active={w.active} onPress={w.onSelect} iconBg={ic.bg} icon={<Icon color={ic.color} />} title={w.name} sub={`${t(w.typeLabel)} · ${t(w.role)}`} />;
               })}
 
               {v.myWorkspaces.length === 0 && (
-                <Text style={st.empty}>Hali makoningiz yo'q. Yangi makon yarating yoki kod bilan qo'shiling.</Text>
+                <Text style={st.empty}>{t("Hali makoningiz yo'q. Yangi makon yarating yoki kod bilan qo'shiling.")}</Text>
               )}
 
               <TouchableOpacity onPress={() => setScreen('create')} activeOpacity={0.85} style={st.dashed}>
                 <View style={[st.rowIcon, { backgroundColor: 'rgba(217,179,106,0.14)' }]}>
                   <Text style={{ fontFamily: F.medium, fontSize: 22, color: C.gold, lineHeight: 26 }}>+</Text>
                 </View>
-                <Text style={{ flex: 1, fontFamily: F.bold, fontSize: 16, color: C.gold }}>Yangi makon yaratish</Text>
+                <Text style={{ flex: 1, fontFamily: F.bold, fontSize: 16, color: C.gold }}>{t('Yangi makon yaratish')}</Text>
                 <ChevronRight color={C.gold} />
               </TouchableOpacity>
 
@@ -62,7 +63,7 @@ export default function WorkspaceSheet({ v }) {
                 <View style={[st.rowIcon, { backgroundColor: 'rgba(111,179,224,0.14)' }]}>
                   <Text style={{ fontFamily: F.medium, fontSize: 20, color: C.blue }}>#</Text>
                 </View>
-                <Text style={{ flex: 1, fontFamily: F.bold, fontSize: 16, color: C.blue }}>Kod bilan qo'shilish</Text>
+                <Text style={{ flex: 1, fontFamily: F.bold, fontSize: 16, color: C.blue }}>{t("Kod bilan qo'shilish")}</Text>
                 <ChevronRight color={C.blue} />
               </TouchableOpacity>
             </ScrollView>
@@ -70,36 +71,36 @@ export default function WorkspaceSheet({ v }) {
 
           {screen === 'create' && (
             <View>
-              <Text style={st.title}>Yangi makon</Text>
-              <Text style={st.sub}>Oila, ta'lim yoki ishxona</Text>
-              <Text style={st.label}>Turi</Text>
+              <Text style={st.title}>{t('Yangi makon')}</Text>
+              <Text style={st.sub}>{t("Oila, ta'lim yoki ishxona")}</Text>
+              <Text style={st.label}>{t('Turi')}</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 18 }}>
-                {v.wsTypeChips.map((t, i) => {
-                  const ic = TYPE_ICON[t.k]; const Icon = ic.Icon;
+                {v.wsTypeChips.map((ch, i) => {
+                  const ic = TYPE_ICON[ch.k]; const Icon = ic.Icon;
                   return (
-                    <TouchableOpacity key={i} onPress={t.onPick} activeOpacity={0.85} style={[st.typeChip, t.active && { borderColor: ic.color, backgroundColor: ic.color + '18' }]}>
-                      <Icon color={t.active ? ic.color : C.sage} />
-                      <Text style={{ fontFamily: F.bold, fontSize: 13, color: t.active ? C.cream : C.sage, marginTop: 6 }}>{t.name}</Text>
+                    <TouchableOpacity key={i} onPress={ch.onPick} activeOpacity={0.85} style={[st.typeChip, ch.active && { borderColor: ic.color, backgroundColor: ic.color + '18' }]}>
+                      <Icon color={ch.active ? ic.color : C.sage} />
+                      <Text style={{ fontFamily: F.bold, fontSize: 13, color: ch.active ? C.cream : C.sage, marginTop: 6 }}>{t(ch.name)}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-              <Text style={st.label}>Nomi</Text>
-              <TextInput value={v.wsDraft.name} onChangeText={v.onWsName} placeholder="Masalan: Karimovlar oilasi" placeholderTextColor={C.sageDim} style={st.input} />
+              <Text style={st.label}>{t('Nomi')}</Text>
+              <TextInput value={v.wsDraft.name} onChangeText={v.onWsName} placeholder={t('Masalan: Karimovlar oilasi')} placeholderTextColor={C.sageDim} style={st.input} />
               <TouchableOpacity onPress={v.createWorkspace} activeOpacity={0.85} style={st.primary}>
-                <Text style={st.primaryText}>Yaratish</Text>
+                <Text style={st.primaryText}>{t('Yaratish')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setScreen('list')} activeOpacity={0.8} style={st.back}>
-                <Text style={st.backText}>← Orqaga</Text>
+                <Text style={st.backText}>← {t('Orqaga')}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {screen === 'join' && (
             <View>
-              <Text style={st.title}>Kod bilan qo'shilish</Text>
-              <Text style={st.sub}>Sizga berilgan taklif kodini kiriting</Text>
-              <Text style={st.label}>Taklif kodi</Text>
+              <Text style={st.title}>{t("Kod bilan qo'shilish")}</Text>
+              <Text style={st.sub}>{t('Sizga berilgan taklif kodini kiriting')}</Text>
+              <Text style={st.label}>{t('Taklif kodi')}</Text>
               <TextInput
                 value={v.joinCode}
                 onChangeText={v.onJoinCode}
@@ -110,10 +111,10 @@ export default function WorkspaceSheet({ v }) {
                 style={[st.input, { textAlign: 'center', fontFamily: F.extrabold, fontSize: 18, letterSpacing: 2 }]}
               />
               <TouchableOpacity onPress={v.submitJoin} activeOpacity={0.85} disabled={v.joinBusy} style={[st.primary, v.joinBusy && { opacity: 0.7 }]}>
-                {v.joinBusy ? <ActivityIndicator color={C.ink} /> : <Text style={st.primaryText}>Qo'shilish</Text>}
+                {v.joinBusy ? <ActivityIndicator color={C.ink} /> : <Text style={st.primaryText}>{t("Qo'shilish")}</Text>}
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setScreen('list')} activeOpacity={0.8} style={st.back}>
-                <Text style={st.backText}>← Orqaga</Text>
+                <Text style={st.backText}>← {t('Orqaga')}</Text>
               </TouchableOpacity>
             </View>
           )}

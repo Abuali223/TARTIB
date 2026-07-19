@@ -3,25 +3,26 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput
 import { C, F } from '../theme';
 import { Avatar, Chip, OverlayShell, PrimaryBtn } from '../components/ui';
 import DatePicker from '../components/DatePicker';
+import { t } from '../lib/i18n';
 
 const MO = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
-const dueLabel = (d) => `${d.getDate()} ${MO[d.getMonth()]}`;
+const dueLabel = (d) => `${d.getDate()} ${t(MO[d.getMonth()])}`;
 
 export default function AssignOverlay({ v }) {
   const [showCal, setShowCal] = useState(false);
   return (
-    <OverlayShell title="Topshiriq yuborish" onClose={v.close}>
+    <OverlayShell title={t('Topshiriq yuborish')} onClose={v.close}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={st.label}>Turi</Text>
+        <Text style={st.label}>{t('Turi')}</Text>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-          {v.typeChips.map((t, i) => (
-            <Chip key={i} label={t.name} active={t.active} onPress={t.onPick}
+          {v.typeChips.map((ch, i) => (
+            <Chip key={i} label={t(ch.name)} active={ch.active} onPress={ch.onPick}
               style={{ flex: 1, paddingVertical: 12, borderRadius: 13, alignItems: 'center' }} />
           ))}
         </View>
 
-        <Text style={st.label}>Kimga</Text>
+        <Text style={st.label}>{t('Kimga')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }} contentContainerStyle={{ gap: 10, paddingBottom: 6 }}>
           {v.assignMembers.map(m => (
             <TouchableOpacity key={m.id} onPress={m.onPick} activeOpacity={0.8}
@@ -32,29 +33,29 @@ export default function AssignOverlay({ v }) {
           ))}
         </ScrollView>
 
-        <Text style={st.label}>Vazifa nomi</Text>
+        <Text style={st.label}>{t('Vazifa nomi')}</Text>
         <TextInput
           value={v.draftTitle}
           onChangeText={v.onDraftTitle}
-          placeholder="Masalan: Asr namozini o'qish"
+          placeholder={t("Masalan: Asr namozini o'qish")}
           placeholderTextColor={C.sageDim}
           style={st.input}
         />
 
-        <Text style={st.label}>Yo'nalish</Text>
+        <Text style={st.label}>{t("Yo'nalish")}</Text>
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
           {v.catChips.map((c, i) => (
-            <Chip key={i} label={c.name} active={c.active} onPress={c.onPick} />
+            <Chip key={i} label={t(c.name)} active={c.active} onPress={c.onPick} />
           ))}
         </View>
 
-        <Text style={st.label}>Muddat</Text>
+        <Text style={st.label}>{t('Muddat')}</Text>
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
           {v.dueChips.map((d, i) => (
-            <Chip key={i} label={d.name} active={d.active} onPress={() => { setShowCal(false); d.onPick(); }} />
+            <Chip key={i} label={t(d.name)} active={d.active} onPress={() => { setShowCal(false); d.onPick(); }} />
           ))}
           <Chip
-            label={v.dueDate ? `📅 ${dueLabel(v.dueDate)}` : '📅 Sana tanlash'}
+            label={v.dueDate ? `📅 ${dueLabel(v.dueDate)}` : `📅 ${t('Sana tanlash')}`}
             active={!!v.dueDate || showCal}
             onPress={() => setShowCal(s => !s)}
           />
@@ -67,7 +68,7 @@ export default function AssignOverlay({ v }) {
         )}
         <View style={{ height: 14 }} />
 
-        <PrimaryBtn label="Yuborish" onPress={v.onSubmitAssign} style={{ paddingVertical: 16 }} />
+        <PrimaryBtn label={t('Yuborish')} onPress={v.onSubmitAssign} style={{ paddingVertical: 16 }} />
       </ScrollView>
       </KeyboardAvoidingView>
     </OverlayShell>

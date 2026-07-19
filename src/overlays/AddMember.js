@@ -4,6 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { C, F } from '../theme';
 import { OverlayShell } from '../components/ui';
 import { UsersIcon } from '../components/icons';
+import { t } from '../lib/i18n';
 
 export default function AddMemberOverlay({ v }) {
   const [copied, setCopied] = useState(false);
@@ -18,27 +19,27 @@ export default function AddMemberOverlay({ v }) {
   };
 
   return (
-    <OverlayShell title="Taklif qilish" onClose={v.close}>
+    <OverlayShell title={t('Taklif qilish')} onClose={v.close}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 16 }}>
         <View style={st.iconWrap}><UsersIcon color={C.gold} size={30} /></View>
-        <Text style={st.h}>A'zolarni taklif qiling</Text>
+        <Text style={st.h}>{t("A'zolarni taklif qiling")}</Text>
         <Text style={st.sub}>
-          Quyidagi kodni ulashing. Boshqa foydalanuvchi TARTIB'da{'\n'}
-          <Text style={{ color: C.gold, fontFamily: F.bold }}>Makon → Kod bilan qo'shilish</Text> orqali kiritsa, makoningizga qo'shiladi.
+          {t('Quyidagi kodni ulashing. Boshqa foydalanuvchi TARTIB’da')}{'\n'}
+          <Text style={{ color: C.gold, fontFamily: F.bold }}>{t("Makon → Kod bilan qo'shilish")}</Text> {t('orqali kiritsa, makoningizga qo’shiladi.')}
         </Text>
 
         <View style={st.codeCard}>
-          <Text style={st.codeLabel}>TAKLIF KODI</Text>
+          <Text style={st.codeLabel}>{t('TAKLIF KODI')}</Text>
           <Text style={st.code}>{code}</Text>
         </View>
 
         <TouchableOpacity onPress={copy} activeOpacity={0.85} style={st.copyBtn}>
-          <Text style={st.copyText}>{copied ? 'Nusxalandi ✓' : 'Kodni nusxalash'}</Text>
+          <Text style={st.copyText}>{copied ? t('Nusxalandi') + ' ✓' : t('Kodni nusxalash')}</Text>
         </TouchableOpacity>
 
         <View style={st.note}>
           <Text style={st.noteText}>
-            A'zo qo'shilgach, uni <Text style={{ color: C.gold }}>A'zolar</Text> ro'yxatida ko'rasiz va rolini (masalan O'qituvchi, Xodim) o'zgartira olasiz.
+            {t("A'zo qo'shilgach, uni")} <Text style={{ color: C.gold }}>{t("A'zolar")}</Text> {t("ro'yxatida ko'rasiz va rolini (masalan O'qituvchi, Xodim) o'zgartira olasiz.")}
           </Text>
         </View>
       </View>

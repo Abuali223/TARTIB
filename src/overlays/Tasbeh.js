@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { OverlayShell, ProgressRing } from '../components/ui';
+import { t } from '../lib/i18n';
 
 function PulsingCount({ count }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -20,41 +21,41 @@ function PulsingCount({ count }) {
 }
 
 export default function TasbehOverlay({ v }) {
-  const t = v.tasbeh;
+  const tb = v.tasbeh;
   return (
-    <OverlayShell title="Tasbeh" onClose={v.close} radial>
+    <OverlayShell title={t('Tasbeh')} onClose={v.close} radial>
       <ScrollView contentContainerStyle={st.body} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {t.dhikrs.map((d, i) => (
+          {tb.dhikrs.map((d, i) => (
             <TouchableOpacity key={i} onPress={d.onPick} activeOpacity={0.8}
               style={[st.dhikrChip, d.active && st.dhikrChipActive]}>
-              <Text style={{ fontFamily: F.bold, fontSize: 13, color: d.active ? C.gold : C.sage }}>{d.name}</Text>
+              <Text style={{ fontFamily: F.bold, fontSize: 13, color: d.active ? C.gold : C.sage }}>{t(d.name)}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={{ fontFamily: F.arabic, fontSize: 34, color: C.gold, textAlign: 'center', marginBottom: 2 }}>{t.ar}</Text>
-        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginBottom: 6 }}>{t.tr}</Text>
+        <Text style={{ fontFamily: F.arabic, fontSize: 34, color: C.gold, textAlign: 'center', marginBottom: 2 }}>{tb.ar}</Text>
+        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginBottom: 6 }}>{t(tb.tr)}</Text>
 
-        <TouchableOpacity onPress={t.onTap} activeOpacity={0.9} style={{ marginVertical: 10 }}>
-          <ProgressRing size={250} strokeWidth={6} progress={t.progress}>
-            <PulsingCount count={t.count} />
-            <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, marginTop: 6 }}>/ {t.target}</Text>
+        <TouchableOpacity onPress={tb.onTap} activeOpacity={0.9} style={{ marginVertical: 10 }}>
+          <ProgressRing size={250} strokeWidth={6} progress={tb.progress}>
+            <PulsingCount count={tb.count} />
+            <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, marginTop: 6 }}>/ {tb.target}</Text>
           </ProgressRing>
         </TouchableOpacity>
 
         <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sageMid, marginBottom: 18 }}>
-          Tugallangan davra: <Text style={{ color: C.gold, fontFamily: F.bold }}>{t.rounds}</Text>
+          {t('Tugallangan davra')}: <Text style={{ color: C.gold, fontFamily: F.bold }}>{tb.rounds}</Text>
         </Text>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-          {t.targets.map((x, i) => (
+          {tb.targets.map((x, i) => (
             <TouchableOpacity key={i} onPress={x.onPick} activeOpacity={0.8}
               style={[st.targetBtn, x.active && { backgroundColor: 'rgba(217,179,106,0.16)', borderColor: 'rgba(217,179,106,0.5)' }]}>
               <Text style={{ fontFamily: F.extrabold, fontSize: 15, color: x.active ? C.gold : C.sage }}>{x.n}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity onPress={t.onReset} activeOpacity={0.8} style={st.resetBtn}>
-          <Text style={{ fontFamily: F.bold, fontSize: 14, color: C.sageMid }}>Qayta boshlash</Text>
+        <TouchableOpacity onPress={tb.onReset} activeOpacity={0.8} style={st.resetBtn}>
+          <Text style={{ fontFamily: F.bold, fontSize: 14, color: C.sageMid }}>{t('Qayta boshlash')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </OverlayShell>
