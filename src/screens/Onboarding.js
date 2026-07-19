@@ -71,14 +71,23 @@ export default function Onboarding({ v }) {
                   : <Text style={st.primaryText}>{signup ? "Ro'yxatdan o'tish" : 'Kirish'}</Text>}
               </TouchableOpacity>
 
-              {/* Kelajakda: Google / Telefon (M1 — dev build) */}
+              {/* Google / Telefon (SMS) */}
               <View style={st.divider}>
                 <View style={st.hr} /><Text style={st.dividerText}>yoki</Text><View style={st.hr} />
               </View>
-              <View style={st.soonBtn}>
-                <GoogleIcon size={18} />
-                <Text style={st.soonText}>Google · tez orada</Text>
-              </View>
+              {v.googleEnabled ? (
+                <TouchableOpacity onPress={v.startGoogle} activeOpacity={0.85} disabled={v.googleBusy}
+                  style={[st.googleBtn, v.googleBusy && { opacity: 0.7 }]}>
+                  {v.googleBusy
+                    ? <ActivityIndicator color={C.cream} />
+                    : (<><GoogleIcon size={18} /><Text style={st.googleText}>Google bilan kirish</Text></>)}
+                </TouchableOpacity>
+              ) : (
+                <View style={st.soonBtn}>
+                  <GoogleIcon size={18} />
+                  <Text style={st.soonText}>Google · tez orada</Text>
+                </View>
+              )}
               <View style={st.soonBtn}>
                 <Text style={[st.soonText, { marginLeft: 0 }]}>Telefon (SMS) · tez orada</Text>
               </View>
@@ -117,6 +126,12 @@ const st = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 18, gap: 12 },
   hr: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
   dividerText: { fontFamily: F.regular, fontSize: 12, color: C.sageFaint },
+  googleBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)',
+    backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 10, minHeight: 50,
+  },
+  googleText: { fontFamily: F.semibold, fontSize: 15, color: C.cream },
   soonBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     paddingVertical: 13, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',

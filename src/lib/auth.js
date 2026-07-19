@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -43,6 +45,14 @@ export async function signUpEmail({ name, email, password, birthYear }) {
 
 export async function signInEmail({ email, password }) {
   const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+  await ensureUserDoc(cred.user, {});
+  return cred.user;
+}
+
+// Google id_token (expo-auth-session'dan kelgan) bilan Firebase'ga kirish
+export async function signInWithGoogleIdToken(idToken) {
+  const credential = GoogleAuthProvider.credential(idToken);
+  const cred = await signInWithCredential(auth, credential);
   await ensureUserDoc(cred.user, {});
   return cred.user;
 }

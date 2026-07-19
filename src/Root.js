@@ -6,7 +6,9 @@ import { C, F } from './theme';
 import { DEFAULT_CITY, DEFAULT_COORDS, fmtClock, nextPrayer, currentPrayer, pad2, prayerList, qiblaBearing } from './lib/prayer';
 import { hijriLabel, hijriMonthLabel } from './lib/hijri';
 import { loadState, saveState, todayKey } from './lib/storage';
-import { ensureUserDoc, mapAuthError, signInEmail, signOutUser, signUpEmail, watchAuth } from './lib/auth';
+import { ensureUserDoc, mapAuthError, signInEmail, signInWithGoogleIdToken, signOutUser, signUpEmail, watchAuth } from './lib/auth';
+import { googleConfigured } from './lib/googleAuth';
+import GoogleBridge from './components/GoogleBridge';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
 import { schedulePrayerReminders } from './lib/notifications';
 import {
@@ -61,6 +63,7 @@ export default class Root extends React.Component {
     hydrated: false,
     authReady: false, fbUser: null, userDoc: null,
     authMode: 'signup', authForm: { name: '', email: '', password: '', birthYear: '' }, authBusy: false,
+    googleBusy: false, googleReady: false,
     activeWorkspaceId: null,
     tab: 'bugun', overlay: null,
     now: Date.now(),
@@ -291,6 +294,40 @@ export default class Root extends React.Component {
   logout = async () => {
     this.setState({ overlay: null, tab: 'bugun', activeWorkspaceId: null });
     try { await signOutUser(); } catch (e) { this.flash(mapAuthError(e)); }
+  };
+
+  // ————— Google bilan kirish (expo-auth-session ko'prigi orqali) —————
+  _googlePrompt = null;
+  onGoogleReady = (promptAsync) => {
+    this._googlePrompt = promptAsync;
+    const ready = !!promptAsync;
+    if (this.state.googleReady !== ready) this.setState({ googleReady: ready });
+  };
+  startGoogle = async () => {
+    if (this.state.googleBusy) return;
+    if (!googleConfigured) { this.flash('Google hali sozlanmagan — email bilan kiring'); return; }
+    if (!this._googlePrompt) { this.flash('Google tayyorlanmoqda, biroz kuting'); return; }
+    this.setState({ googleBusy: true });
+    try {
+      await this._googlePrompt();  // natija GoogleBridge → onGoogleToken orqali keladi
+    } catch (e) {
+      this.flash('Google oynasi ochilmadi');
+      this.setState({ googleBusy: false });
+    }
+  };
+  onGoogleToken = async (idToken) => {
+    try {
+      await signInWithGoogleIdToken(idToken);  // watchAuth qolganini bajaradi
+      this.flash('Xush kelibsiz!');
+    } catch (e) {
+      this.flash(mapAuthError(e));
+    } finally {
+      this.setState({ googleBusy: false });
+    }
+  };
+  onGoogleError = (msg) => {
+    this.setState({ googleBusy: false });
+    if (msg) this.flash('Google: ' + msg);
   };
 
   // ————— navigatsiya —————
@@ -608,6 +645,8 @@ export default class Root extends React.Component {
         password: (v) => this.onAuthField('password', v), birthYear: (v) => this.onAuthField('birthYear', v),
       },
       submitAuth: this.submitAuth,
+      googleEnabled: googleConfigured, googleBusy: S.googleBusy, googleReady: S.googleReady,
+      startGoogle: this.startGoogle,
       greet, meName: first, meLast: last, meInitial: (first[0] || 'F'),
       meRole: isChild ? 'Farzand' : (activeWs ? (myMem ? myMem.role : '—') : 'Shaxsiy'),
       cityName: S.cityName, locStatus: S.locStatus, account: acc, isChild, mode: wsType, modeLabel, canManage,
@@ -667,6 +706,9 @@ export default class Root extends React.Component {
         )}
 
         {v.showOnboarding && <Onboarding v={v} />}
+        {v.showOnboarding && googleConfigured && (
+          <GoogleBridge onReady={this.onGoogleReady} onToken={this.onGoogleToken} onError={this.onGoogleError} />
+        )}
 
         {v.ov.tasbeh && <TasbehOverlay v={v} />}
         {v.ov.qibla && <QiblaOverlay v={v} />}
