@@ -60,13 +60,14 @@ export default function QiblaOverlay({ v }) {
   const behind = marker > 150 && marker < 210; // Qibla orqa tomonda
   const manual = hasSensor === false;
 
+  const turn = marker <= 180 ? Math.round(marker) : Math.round(360 - marker);
   const feedback = aligned
     ? "Qibla to'g'ri yo'nalishda ✓"
     : behind
-      ? 'Qibla orqangizda — teskari buriling'
+      ? `Qibla orqangizda — teskari buriling (${turn}°)`
       : marker <= 180
-        ? "O'ngga buriling →"
-        : "← Chapga buriling";
+        ? `O'ngga ${turn}° buriling →`
+        : `← Chapga ${turn}° buriling`;
 
   return (
     <OverlayShell title="Qibla" onClose={v.close} radial>
