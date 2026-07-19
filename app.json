@@ -30,7 +30,8 @@
         {
           "locationWhenInUsePermission": "Namoz vaqtlari va Qibla yo'nalishini aniqlash uchun joylashuvingiz ishlatiladi."
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

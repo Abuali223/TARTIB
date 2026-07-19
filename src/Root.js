@@ -8,6 +8,7 @@ import { hijriLabel, hijriMonthLabel } from './lib/hijri';
 import { loadState, saveState, todayKey } from './lib/storage';
 import { ensureUserDoc, mapAuthError, signInEmail, signOutUser, signUpEmail, watchAuth } from './lib/auth';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
+import { schedulePrayerReminders } from './lib/notifications';
 import {
   addTask, createWorkspace, fetchUser, joinByCode, setTaskStatus, updateMemberRole,
   subscribeInbox, subscribeMyMemberships, subscribeWorkspace, subscribeWorkspaceMembers, subscribeWorkspaceTasks,
@@ -106,9 +107,9 @@ export default class Root extends React.Component {
         patch.amals = patch.amals.map(a => ({ ...a, done: false }));
         patch.amalsDate = todayKey();
       }
-      this.setState({ ...patch, hydrated: true });
+      this.setState({ ...patch, hydrated: true }, () => this.syncNotifications());
     } else {
-      this.setState({ hydrated: true });
+      this.setState({ hydrated: true }, () => this.syncNotifications());
     }
     this.locate();
     this._unsubAuth = watchAuth(async (user) => {
@@ -137,6 +138,19 @@ export default class Root extends React.Component {
     }
     // Faol makon o'zgarsa — a'zolar/vazifalarga obuna
     if (prev.activeWorkspaceId !== this.state.activeWorkspaceId) this.syncActive();
+    // Koordinata yoki namoz/azon sozlamasi o'zgarsa — bildirishnomalarni qayta rejalash
+    if (this.state.hydrated && (
+      prev.coords !== this.state.coords ||
+      prev.settings.namoz !== this.state.settings.namoz ||
+      prev.settings.azon !== this.state.settings.azon
+    )) this.syncNotifications();
+  }
+
+  syncNotifications() {
+    const key = `${this.state.coords.latitude.toFixed(3)},${this.state.coords.longitude.toFixed(3)}|${this.state.settings.namoz}|${this.state.settings.azon}`;
+    if (this._notifKey === key) return;
+    this._notifKey = key;
+    schedulePrayerReminders(this.state.coords, { enabled: this.state.settings.namoz, sound: this.state.settings.azon }).catch(() => {});
   }
 
   schedulePersist() {
