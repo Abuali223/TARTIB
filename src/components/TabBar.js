@@ -1,18 +1,19 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
+import { CalendarIcon, CrescentIcon, HomeIcon, ProfileTabIcon, UsersIcon } from '../components/icons';
 
 // Edge-to-edge (SDK 54) tufayli ilova tizim panellari ostiga chiziladi.
 // react-native-safe-area-context native modul — OTA'da eski APK'ni buzadi,
 // shu bois tizim navigatsiya paneli balandligini xavfsiz zaxira bilan qoplaymiz.
 const NAV_INSET = Platform.OS === 'android' ? 46 : 34;
-import { CalendarIcon, CrescentIcon, HomeIcon, ProfileTabIcon, UsersIcon } from '../components/icons';
+const ICON_SIZE = 28;
 
 function Tab({ onPress, active, label, Icon }) {
   const color = active ? C.gold : C.sage;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={st.tab}>
-      <Icon color={color} />
+      <Icon color={color} size={ICON_SIZE} />
       <Text style={[st.label, { color }]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -24,7 +25,7 @@ export default function TabBar({ v }) {
       <Tab onPress={v.go.bugun} active={v.tab === 'bugun'} label="Bugun" Icon={HomeIcon} />
       <Tab onPress={v.go.namoz} active={v.tab === 'namoz'} label="Namoz" Icon={CrescentIcon} />
       <Tab onPress={v.go.reja} active={v.tab === 'reja'} label="Reja" Icon={CalendarIcon} />
-      <Tab onPress={v.go.jamoa} active={v.tab === 'jamoa'} label="Jamoa" Icon={({ color }) => <UsersIcon color={color} size={24} strokeWidth={1.7} />} />
+      <Tab onPress={v.go.jamoa} active={v.tab === 'jamoa'} label="Jamoa" Icon={({ color, size }) => <UsersIcon color={color} size={size} strokeWidth={1.7} />} />
       <Tab onPress={v.go.profil} active={v.tab === 'profil'} label="Profil" Icon={ProfileTabIcon} />
     </View>
   );
@@ -38,5 +39,5 @@ const st = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: 'rgba(217,179,106,0.12)',
   },
   tab: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 6 },
-  label: { fontFamily: F.semibold, fontSize: 10 },
+  label: { fontFamily: F.semibold, fontSize: 11 },
 });
