@@ -19,22 +19,37 @@ export async function verifyPin(pin, hash) {
   return h === hash;
 }
 
+// expo-local-authentication faqat native moduli MAVJUD bo'lsa yuklanadi.
+// requireOptionalNativeModule null qaytaradi (throw QILMAYDI) — shu bois eski
+// APK'da (modul yo'q) require umuman chaqirilmaydi va ilova yiqilmaydi.
+function getLA() {
+  try {
+    const { requireOptionalNativeModule } = require('expo-modules-core');
+    if (!requireOptionalNativeModule('ExpoLocalAuthentication')) return null;
+    return require('expo-local-authentication');
+  } catch (e) {
+    return null;
+  }
+}
+
 // Qurilmada biometrika bor va sozlanganmi (barmoq izi/yuz)
 export async function biometricAvailable() {
+  const LA = getLA();
+  if (!LA) return false;
   try {
-    const LA = require('expo-local-authentication');
     const has = await LA.hasHardwareAsync();
     const enrolled = await LA.isEnrolledAsync();
     return !!(has && enrolled);
   } catch (e) {
-    return false; // modul yo'q (eski APK) yoki xato
+    return false;
   }
 }
 
 // Biometrika bilan tasdiqlash. success=true bo'lsa ochiladi.
 export async function biometricAuth(prompt = 'Kirish uchun tasdiqlang') {
+  const LA = getLA();
+  if (!LA) return false;
   try {
-    const LA = require('expo-local-authentication');
     const res = await LA.authenticateAsync({
       promptMessage: prompt,
       cancelLabel: 'Bekor qilish',
