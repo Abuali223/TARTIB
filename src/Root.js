@@ -68,7 +68,7 @@ export default class Root extends React.Component {
     selMember: null, selTask: null, selDay: new Date().getDate(),
     tasbehCount: 0, tasbehTarget: 33, dhikrIdx: 0,
     settings: { namoz: true, azon: true, zikr: false, jamoa: true },
-    draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', type: 'vazifa' },
+    draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', dueDate: null, type: 'vazifa' },
     wsDraft: { type: 'oila', name: '' },
     joinCode: '', joinBusy: false,
     flash: null,
@@ -346,7 +346,12 @@ export default class Root extends React.Component {
   onDraftTitle = (v) => this.setState(s => ({ draft: { ...s.draft, title: v } }));
   pickAssignee = (id) => this.setState(s => ({ draft: { ...s.draft, assigneeId: id } }));
   pickCat = (c) => this.setState(s => ({ draft: { ...s.draft, category: c } }));
-  pickDue = (d) => this.setState(s => ({ draft: { ...s.draft, due: d } }));
+  pickDue = (d) => this.setState(s => ({ draft: { ...s.draft, due: d, dueDate: null } }));
+  pickDueDate = (dateObj) => {
+    const MO = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+    const label = dateObj.getDate() + ' ' + MO[dateObj.getMonth()];
+    this.setState(s => ({ draft: { ...s.draft, due: label, dueDate: dateObj } }));
+  };
   pickType = (t) => this.setState(s => ({ draft: { ...s.draft, type: t } }));
   submitAssign = async () => {
     const ws = this.activeWs();
@@ -361,7 +366,7 @@ export default class Root extends React.Component {
         desc: d.category + (isR ? " bo'yicha eslatma." : " yo'nalishidagi vazifa.") + ' Muddat: ' + d.due + '.',
         cat: d.category, due: d.due, type: d.type,
       });
-      this.setState({ draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', type: 'vazifa' }, overlay: null, tab: 'jamoa' });
+      this.setState({ draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', dueDate: null, type: 'vazifa' }, overlay: null, tab: 'jamoa' });
       this.flash(isR ? 'Eslatma yuborildi ✓' : 'Vazifa yuborildi ✓');
     } catch (e) { this.flash('Vazifa yuborilmadi'); }
   };
@@ -577,7 +582,7 @@ export default class Root extends React.Component {
     const dues = ['Bugun', 'Ertaga', 'Bu hafta', 'Juma'];
     const assignMembers = members.map(m => ({ id: m.id, name: m.name, color: m.color, active: S.draft.assigneeId === m.id, onPick: () => this.pickAssignee(m.id) }));
     const catChips = cats.map(c => ({ name: c, active: S.draft.category === c, onPick: () => this.pickCat(c) }));
-    const dueChips = dues.map(d => ({ name: d, active: S.draft.due === d, onPick: () => this.pickDue(d) }));
+    const dueChips = dues.map(d => ({ name: d, active: S.draft.due === d && !S.draft.dueDate, onPick: () => this.pickDue(d) }));
     const typeChips = [{ k: 'vazifa', name: 'Vazifa' }, { k: 'eslatma', name: 'Eslatma' }].map(x => ({ ...x, active: S.draft.type === x.k, onPick: () => this.pickType(x.k) }));
 
     // Makon almashtirish varag'i
@@ -617,6 +622,7 @@ export default class Root extends React.Component {
       habits, prayerWeek, overallPct, leaderboard,
       tasbeh, qibla,
       assignMembers, catChips, dueChips, typeChips, draftTitle: S.draft.title,
+      dueDate: S.draft.dueDate, onPickDueDate: this.pickDueDate,
       onDraftTitle: this.onDraftTitle, onSubmitAssign: this.submitAssign,
       // taklif
       inviteCode, canInvite: this.canIn(activeWs, CAP.MANAGE_MEMBERS),

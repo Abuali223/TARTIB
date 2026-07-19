@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { Avatar, Chip, OverlayShell, PrimaryBtn } from '../components/ui';
+import DatePicker from '../components/DatePicker';
+
+const MO = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+const dueLabel = (d) => `${d.getDate()} ${MO[d.getMonth()]}`;
 
 export default function AssignOverlay({ v }) {
+  const [showCal, setShowCal] = useState(false);
   return (
     <OverlayShell title="Topshiriq yuborish" onClose={v.close}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
@@ -44,11 +49,23 @@ export default function AssignOverlay({ v }) {
         </View>
 
         <Text style={st.label}>Muddat</Text>
-        <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
+        <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
           {v.dueChips.map((d, i) => (
-            <Chip key={i} label={d.name} active={d.active} onPress={d.onPick} />
+            <Chip key={i} label={d.name} active={d.active} onPress={() => { setShowCal(false); d.onPick(); }} />
           ))}
+          <Chip
+            label={v.dueDate ? `📅 ${dueLabel(v.dueDate)}` : '📅 Sana tanlash'}
+            active={!!v.dueDate || showCal}
+            onPress={() => setShowCal(s => !s)}
+          />
         </View>
+        {showCal && (
+          <DatePicker
+            value={v.dueDate}
+            onPick={(date) => { v.onPickDueDate(date); setShowCal(false); }}
+          />
+        )}
+        <View style={{ height: 14 }} />
 
         <PrimaryBtn label="Yuborish" onPress={v.onSubmitAssign} style={{ paddingVertical: 16 }} />
       </ScrollView>
