@@ -6,6 +6,11 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a1f18",
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": {
+      "url": "https://u.expo.dev/c6f427a8-d221-41a7-b5eb-8739651c5abc",
+      "fallbackToCacheTimeout": 0
+    },
     "splash": {
       "backgroundColor": "#0a1f18",
       "resizeMode": "contain"

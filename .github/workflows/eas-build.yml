@@ -1,8 +1,9 @@
 name: APK build (EAS)
 
 # Telefonga o'rnatiladigan standalone APK ni Expo bulutida yig'adi.
-# Yagona shart: repo Settings → Secrets and variables → Actions'da EXPO_TOKEN qo'shilgan.
-# Ishga tushirish: shu branch'ga push, yoki Actions → "APK build (EAS)" → Run workflow.
+# FAQAT QO'LDA ishga tushiriladi (native o'zgarish bo'lganda). Kundalik JS o'zgarishlar
+# uchun APK kerak emas — 'OTA update (EAS)' workflow havodan yangilaydi.
+# Shart: repo Settings → Secrets → Actions'da EXPO_TOKEN.
 
 on:
   workflow_dispatch:
@@ -13,12 +14,6 @@ on:
         default: preview
         type: choice
         options: [preview, production]
-  push:
-    branches: [claude/tartib-dc-html-wacqog]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.gitignore'
 
 jobs:
   build:

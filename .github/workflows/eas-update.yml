@@ -1,0 +1,46 @@
+name: OTA update (EAS)
+
+# Havodan yangilash (Over-The-Air). JS/UI o'zgarishlarni Expo bulutiga jo'natadi —
+# foydalanuvchi ilovani QAYTA OCHGANDA avtomatik yuklab oladi (qayta o'rnatish shart emas).
+# Native o'zgarish (yangi native modul) bo'lsa — 'APK build (EAS)' bilan yangi APK kerak.
+# Shart: EXPO_TOKEN sekret + ilova expo-updates bilan yig'ilgan (preview kanal) bo'lishi.
+
+on:
+  push:
+    branches: [claude/tartib-dc-html-wacqog]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.gitignore'
+      - '.github/**'
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Yangilash izohi"
+        required: false
+        default: "Yangilash"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish OTA update
+        run: eas update --branch preview --message "${{ github.event.inputs.message || github.event.head_commit.message }}" --non-interactive
