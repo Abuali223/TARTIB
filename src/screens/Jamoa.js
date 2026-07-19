@@ -27,7 +27,7 @@ export default function Jamoa({ v }) {
             <ChevronDown />
           </TouchableOpacity>
           <Text style={st.h2}>{t(v.modeLabel)}</Text>
-          <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, marginTop: 2 }}>{t(v.jamoaSub)}</Text>
+          <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.onBgDim, marginTop: 2 }}>{t(v.jamoaSub)}</Text>
         </View>
         {v.canManage && (
           <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.addBtn}>
@@ -64,7 +64,7 @@ export default function Jamoa({ v }) {
           <PrimaryBtn label={t('+ Eslatma yoki vazifa yuborish')} onPress={v.open.assign} style={{ marginBottom: 22 }} />
 
           {/* members */}
-          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{t(v.membersLabel)}</SectionTitle>
+          <SectionTitle onBg style={{ marginHorizontal: 2, marginBottom: 12 }}>{t(v.membersLabel)}</SectionTitle>
           {v.members.length === 0 && (
             <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.emptyCard}>
               <Text style={st.emptyTitle}>{t("Hali a'zo yo'q")}</Text>
@@ -93,7 +93,7 @@ export default function Jamoa({ v }) {
           </View>
 
           {/* recent assignments */}
-          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{t("So'nggi topshiriqlar")}</SectionTitle>
+          <SectionTitle onBg style={{ marginHorizontal: 2, marginBottom: 12 }}>{t("So'nggi topshiriqlar")}</SectionTitle>
           {v.jamoaTasks.length === 0 && (
             <View style={st.emptyCard}>
               <Text style={st.emptyText}>{t('Hali topshiriq yuborilmagan. Yuqoridagi tugma orqali vazifa yoki eslatma yuboring.')}</Text>
@@ -130,7 +130,7 @@ export default function Jamoa({ v }) {
               </View>
             </View>
           </LinearGradient>
-          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{t('Sizga berilgan topshiriqlar')}</SectionTitle>
+          <SectionTitle onBg style={{ marginHorizontal: 2, marginBottom: 12 }}>{t('Sizga berilgan topshiriqlar')}</SectionTitle>
           <View style={{ gap: 11 }}>
             {v.myTasks.map(task => (
               <View key={task.id} style={st.taskCard}>
@@ -178,7 +178,7 @@ export default function Jamoa({ v }) {
 
 const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
-  h2: { fontFamily: F.serif, fontSize: 30, color: C.cream },
+  h2: { fontFamily: F.serif, fontSize: 30, color: C.onBg },
   modeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
     paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99,
@@ -209,8 +209,8 @@ const mkSt = (C) => StyleSheet.create({
   },
   taskCard: { borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 16 },
   emptyCard: { borderRadius: 18, backgroundColor: C.overlay1, borderWidth: 1, borderColor: C.overlay3, borderStyle: 'dashed', padding: 18, marginBottom: 20, alignItems: 'center' },
-  emptyTitle: { fontFamily: F.bold, fontSize: 15, color: C.cream, marginBottom: 6 },
-  emptyText: { fontFamily: F.regular, fontSize: 13, color: C.sageMid, textAlign: 'center', lineHeight: 19 },
+  emptyTitle: { fontFamily: F.bold, fontSize: 15, color: C.onBg, marginBottom: 6 },
+  emptyText: { fontFamily: F.regular, fontSize: 13, color: C.onBgDim, textAlign: 'center', lineHeight: 19 },
   emptyAction: { fontFamily: F.bold, fontSize: 13, color: C.gold, marginTop: 12 },
   ackBtn: {
     marginTop: 14, paddingVertical: 11, borderRadius: 12, alignItems: 'center',

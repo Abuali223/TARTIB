@@ -53,8 +53,8 @@ export default function Namoz({ v }) {
 
 const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
-  h2: { fontFamily: F.serif, fontSize: 30, color: C.cream, marginBottom: 6 },
-  sub: { fontFamily: F.regular, fontSize: 14, color: C.sage, marginBottom: 20 },
+  h2: { fontFamily: F.serif, fontSize: 30, color: C.onBg, marginBottom: 6 },
+  sub: { fontFamily: F.regular, fontSize: 14, color: C.onBgDim, marginBottom: 20 },
   locWarn: { fontFamily: F.regular, fontSize: 12, color: C.amber, marginTop: -12, marginBottom: 16 },
   countCard: { borderRadius: 22, borderWidth: 1, borderColor: 'rgba(217,179,106,0.22)', padding: 20, marginBottom: 18, alignItems: 'center' },
   kicker: { fontFamily: F.regular, fontSize: 11, color: C.sage, letterSpacing: 1.1 },

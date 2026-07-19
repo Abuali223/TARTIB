@@ -88,9 +88,9 @@ export function Chip({ label, active, onPress, style, textStyle }) {
   );
 }
 
-export function SectionTitle({ children, style }) {
+export function SectionTitle({ children, style, onBg }) {
   const C = useC();
-  return <Text style={[{ fontFamily: F.serif, fontSize: 19, color: C.cream }, style]}>{children}</Text>;
+  return <Text style={[{ fontFamily: F.serif, fontSize: 19, color: onBg ? C.onBg : C.cream }, style]}>{children}</Text>;
 }
 
 // Status pill for task states

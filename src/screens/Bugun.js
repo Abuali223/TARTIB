@@ -78,8 +78,8 @@ export default function Bugun({ v }) {
 
       {/* today's amals */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 2, marginTop: 4, marginBottom: 12 }}>
-        <SectionTitle>{t('Bugungi amallar')}</SectionTitle>
-        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage }}>{v.goalDone}/{v.goalTotal} {t('bajarildi')}</Text>
+        <SectionTitle onBg>{t('Bugungi amallar')}</SectionTitle>
+        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.onBgDim }}>{v.goalDone}/{v.goalTotal} {t('bajarildi')}</Text>
       </View>
       <View style={st.card}>
         {v.amals.map((a, i) => (
@@ -101,7 +101,7 @@ export default function Bugun({ v }) {
       {v.myTasks.length > 0 && (
         <>
           <View style={{ marginHorizontal: 2, marginTop: 22, marginBottom: 12 }}>
-            <SectionTitle>{t('Menga berilgan vazifalar')}</SectionTitle>
+            <SectionTitle onBg>{t('Menga berilgan vazifalar')}</SectionTitle>
           </View>
           {v.myTasks.map(task => (
             <TouchableOpacity key={task.id} onPress={task.onOpen} activeOpacity={0.85} style={st.taskCard}>
@@ -145,8 +145,8 @@ const mkSt = (C) => StyleSheet.create({
   modeBtnText: { fontFamily: F.bold, fontSize: 12, color: C.gold },
   wsTag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: 'rgba(111,179,224,0.16)' },
   wsTagText: { fontFamily: F.bold, fontSize: 10, color: '#8FC4E8' },
-  date: { fontFamily: F.regular, fontSize: 13, color: C.sage, letterSpacing: 0.3 },
-  greet: { fontFamily: F.serif, fontSize: 25, color: C.cream, marginTop: 3 },
+  date: { fontFamily: F.regular, fontSize: 13, color: C.onBgDim, letterSpacing: 0.3 },
+  greet: { fontFamily: F.serif, fontSize: 25, color: C.onBg, marginTop: 3 },
   hijri: { fontFamily: F.arabic, fontSize: 14, color: C.goldD, marginTop: 3 },
   avatarBtn: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(217,179,106,0.1)',

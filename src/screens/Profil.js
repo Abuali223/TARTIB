@@ -25,8 +25,8 @@ export default function Profil({ v }) {
     <FadeIn style={st.wrap}>
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
         <View style={st.avatar}><Text style={{ fontFamily: F.serif, fontSize: 38, color: C.gold }}>{v.meInitial}</Text></View>
-        <Text style={{ fontFamily: F.serif, fontSize: 24, color: C.cream }}>{v.meName} {v.meLast}</Text>
-        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginTop: 3 }}>{t(v.roleLabel)} · {t(v.meRole)}</Text>
+        <Text style={{ fontFamily: F.serif, fontSize: 24, color: C.onBg }}>{v.meName} {v.meLast}</Text>
+        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.onBgDim, marginTop: 3 }}>{t(v.roleLabel)} · {t(v.meRole)}</Text>
       </View>
 
       <View style={{ flexDirection: 'row', gap: 11, marginBottom: 22 }}>

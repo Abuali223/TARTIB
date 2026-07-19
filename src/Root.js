@@ -871,6 +871,12 @@ export default class Root extends React.Component {
           </View>
         )}
 
+        {/* Status-bar scrim: tab ekranlar tepasida — overlaylar ustidan chizilmasin
+            (shu bois overlaylardan OLDIN, zIndex'siz render qilinadi) */}
+        {Platform.OS === 'android' && !!StatusBar.currentHeight && (
+          <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: StatusBar.currentHeight, backgroundColor: CT.scrim }} />
+        )}
+
         {v.showOnboarding && <Onboarding v={v} />}
         {v.showOnboarding && googleConfigured && (
           <GoogleBridge onReady={this.onGoogleReady} onToken={this.onGoogleToken} onError={this.onGoogleError} />
@@ -895,11 +901,6 @@ export default class Root extends React.Component {
           <View pointerEvents="none" style={st.flash}>
             <Text style={st.flashText}>{v.flash}</Text>
           </View>
-        )}
-
-        {/* Status-bar scrim: edge-to-edge'da skroll qilingan kontent tepadan sizib chiqmasin */}
-        {Platform.OS === 'android' && !!StatusBar.currentHeight && (
-          <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 60, height: StatusBar.currentHeight, backgroundColor: CT.scrim }} />
         )}
 
         {/* Yangi PIN o'rnatish oynasi (Sozlamalardan) */}

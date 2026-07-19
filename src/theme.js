@@ -7,7 +7,8 @@ import { createContext, useContext } from 'react';
 // To'q yashil (asl / standart)
 const dark = {
   gold: '#D9B36A', goldL: '#E8C87E', goldD: '#C79A4E', amber: '#E8B45F', emerald: '#43C08D',
-  cream: '#F2EBD9',            // asosiy matn
+  cream: '#F2EBD9',            // asosiy matn (kartada)
+  onBg: '#F2EBD9', onBgDim: '#A9C0B4',   // fon ustidagi matn (to'qda = kartadagidek)
   sage: '#8CA298', sageMid: '#A9C0B4', sageDim: '#5E7268', sageFaint: '#7E958A',
   red: '#E0785F', blue: '#6FB3E0', blueL: '#8FC4E8', purple: '#A98FE0',
   ink: '#08180F',             // oltin tugma ustidagi matn
@@ -23,23 +24,25 @@ const dark = {
   statusBarStyle: 'light',
 };
 
-// Yorug' (kunduzgi) — brend palitra: teal yashil + oltin, och qog'oz fon
+// Yorug' (kunduzgi) — brend: TO'Q YASHIL fon + OQ kartalar (saytdagidek).
+// Kartalar aniq ajrab turadi; fon ustidagi matn = onBg (och), karta ichidagi = cream (to'q).
 const light = {
   gold: '#CFA24C', goldL: '#E2B562', goldD: '#B98C38', amber: '#C68E2A', emerald: '#236B5D',
-  cream: '#1C2723',           // asosiy matn (och fonda to'q)
+  cream: '#1C2723',           // KARTA ichidagi asosiy matn (oq fonda to'q)
+  onBg: '#F3F7F2', onBgDim: 'rgba(238,244,238,0.74)',  // YASHIL fon ustidagi matn (och)
   sage: '#586459', sageMid: '#45524A', sageDim: '#8A968D', sageFaint: '#6E7C72',
   red: '#C0553F', blue: '#2F7EA6', blueL: '#276487', purple: '#6E52A0',
-  ink: '#173E36',             // oltin tugma ustidagi matn (to'q yashil)
-  card: '#FFFFFF', cardAlt: '#F0F2EC',
+  ink: '#173E36',             // oltin tugma ustidagi matn
+  card: '#FFFFFF', cardAlt: '#F3F5F0',
   border: '#E7EAE6', borderStrong: 'rgba(35,107,93,0.42)',
   hairline: '#EEF0EB',
   overlay1: 'rgba(28,39,35,0.03)', overlay2: 'rgba(28,39,35,0.05)', overlay3: 'rgba(28,39,35,0.08)',
-  bg: ['#F5F6F1', '#F5F6F1', '#F2F3EE'],   // neytral oq (brend --bg), yashil tusdan tozalangan
-  radialTop: ['#FAFBF8', '#F5F6F1', '#F2F3EE'],
-  cardGrad: ['#F0F2EC', '#E8EBE4'],   // yumshoq neytral panel (--border-2), to'q matn o'qiladi
-  sheet: ['#FBFCFA', '#F5F6F1'],
-  scrim: '#F5F6F1',
-  statusBarStyle: 'dark',
+  bg: ['#1A6355', '#155249', '#13483F'],   // to'q yashil sahifa foni (brend hero)
+  radialTop: ['#FAFBF8', '#F5F6F1', '#F1F3EE'],  // overlay/lock/onboarding — och
+  cardGrad: ['#FFFFFF', '#F4F6F1'],   // oq kartalar (feature)
+  sheet: ['#FBFCFA', '#F4F6F1'],
+  scrim: '#175448',
+  statusBarStyle: 'light',
 };
 
 export const THEMES = { dark, light };

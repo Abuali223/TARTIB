@@ -48,7 +48,7 @@ export default function Reja({ v }) {
       </View>
 
       {/* day timeline */}
-      <SectionTitle style={{ marginHorizontal: 2, marginTop: 4, marginBottom: 14 }}>{t('Kun tartibi')}</SectionTitle>
+      <SectionTitle onBg style={{ marginHorizontal: 2, marginTop: 4, marginBottom: 14 }}>{t('Kun tartibi')}</SectionTitle>
       <View style={{ paddingLeft: 6 }}>
         {v.timeline.map((item, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: 14, paddingBottom: 18 }}>
@@ -58,8 +58,8 @@ export default function Reja({ v }) {
               {i < v.timeline.length - 1 && <View style={st.tlLine} />}
             </View>
             <View style={{ flex: 1, paddingBottom: 4 }}>
-              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: item.done ? C.sage : C.cream, textDecorationLine: item.done ? 'line-through' : 'none' }}>{t(item.title)}</Text>
-              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageFaint, marginTop: 2 }}>{t(item.type)}</Text>
+              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: item.done ? C.onBgDim : C.onBg, textDecorationLine: item.done ? 'line-through' : 'none' }}>{t(item.title)}</Text>
+              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.onBgDim, marginTop: 2 }}>{t(item.type)}</Text>
             </View>
           </View>
         ))}
@@ -70,15 +70,15 @@ export default function Reja({ v }) {
 
 const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
-  h2: { fontFamily: F.serif, fontSize: 30, color: C.cream },
-  sub: { fontFamily: F.regular, fontSize: 14, color: C.sage, marginBottom: 18 },
+  h2: { fontFamily: F.serif, fontSize: 30, color: C.onBg },
+  sub: { fontFamily: F.regular, fontSize: 14, color: C.onBgDim, marginBottom: 18 },
   addBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center' },
   calCard: { borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 16, marginBottom: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: CELL_GAP, marginBottom: 8 },
   cellBox: { width: `${100 / 7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
   dayCell: { borderRadius: 11 },
   taskDot: { position: 'absolute', bottom: 5, width: 4, height: 4, borderRadius: 2 },
-  tlTime: { width: 52, textAlign: 'right', fontFamily: F.bold, fontSize: 13, color: C.sage, paddingTop: 1, fontVariant: ['tabular-nums'] },
+  tlTime: { width: 52, textAlign: 'right', fontFamily: F.bold, fontSize: 13, color: C.onBgDim, paddingTop: 1, fontVariant: ['tabular-nums'] },
   tlDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, marginTop: 3 },
   tlLine: { width: 2, flex: 1, backgroundColor: C.overlay3, marginTop: 2 },
 });
