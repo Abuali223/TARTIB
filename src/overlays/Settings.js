@@ -12,13 +12,21 @@ function ToggleRow({ label, on, onToggle, last }) {
   );
 }
 
-function InfoRow({ label, value, gold, last }) {
-  return (
-    <View style={[st.row, !last && st.rowBorder]}>
+function InfoRow({ label, value, gold, last, onPress }) {
+  const body = (
+    <>
       <Text style={st.rowLabel}>{label}</Text>
       <Text style={{ fontFamily: F.regular, fontSize: 14, color: gold ? C.gold : C.sage }}>{value} ›</Text>
-    </View>
+    </>
   );
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={[st.row, !last && st.rowBorder]}>
+        {body}
+      </TouchableOpacity>
+    );
+  }
+  return <View style={[st.row, !last && st.rowBorder]}>{body}</View>;
 }
 
 export default function SettingsOverlay({ v }) {
@@ -35,8 +43,8 @@ export default function SettingsOverlay({ v }) {
 
         <Text style={st.section}>UMUMIY</Text>
         <View style={st.card}>
-          <InfoRow label="Joylashuv" value={v.cityName} />
-          <InfoRow label="Hisoblash usuli" value="Hanafiy" />
+          <InfoRow label="Joylashuv" value={v.isManualCity ? v.cityName : `${v.cityName} (auto)`} onPress={v.openCity} />
+          <InfoRow label="Hisoblash usuli" value={v.madhabName} onPress={v.openMadhab} />
           <InfoRow label="Til" value="O'zbekcha" />
           <InfoRow label="Mavzu" value="To'q yashil" gold last />
         </View>

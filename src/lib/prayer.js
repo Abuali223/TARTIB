@@ -13,21 +13,27 @@ const PRAYER_META = [
   { k: 'isha', name: 'Xufton', ar: 'العشاء' },
 ];
 
-function params() {
+// Mazhab (Asr vaqti): Hanafiy soyani 2 barobar, Shofiy 1 barobar oladi.
+export const MADHABS = [
+  { key: 'hanafi', name: 'Hanafiy' },
+  { key: 'shafi', name: "Shofi'iy" },
+];
+
+function params(madhab = 'hanafi') {
   // Uzbekistan: Fajr/Isha 15° (Markaziy Osiyo — musulmonlar idorasi an'anasi;
   // aladhan "method 14" mintaqasi). MWL'ning 18°/17° Bomdodni ~24 daqiqa erta beradi.
-  // Hanafiy Asr. Shom — haqiqiy quyosh botishida qoldiriladi (rasmiy islom.uz taqvimi
+  // Shom — haqiqiy quyosh botishida qoldiriladi (rasmiy islom.uz taqvimi
   // ~20 daqiqalik ihtiyot qo'shadi — buni faqat tayyor jadval bilan takrorlash mumkin).
   const p = new CalculationParameters('Uzbekistan', 15, 15);
-  p.madhab = Madhab.Hanafi;
+  p.madhab = madhab === 'shafi' ? Madhab.Shafi : Madhab.Hanafi;
   p.methodAdjustments.dhuhr = 1;
   p.highLatitudeRule = HighLatitudeRule.MiddleOfTheNight; // default; kenglik < 48 — ta'sirsiz
   p.rounding = Rounding.Nearest;
   return p;
 }
 
-function timesFor(coords, date) {
-  return new PrayerTimes(new Coordinates(coords.latitude, coords.longitude), date, params());
+function timesFor(coords, date, madhab) {
+  return new PrayerTimes(new Coordinates(coords.latitude, coords.longitude), date, params(madhab));
 }
 
 export function pad2(n) { return String(n).padStart(2, '0'); }
@@ -40,23 +46,23 @@ export function fmtClock(date, use24h = true) {
 }
 
 // Today's prayer list: [{k, name, ar, info, date}]
-export function prayerList(coords, date = new Date()) {
-  const pt = timesFor(coords, date);
+export function prayerList(coords, date = new Date(), madhab) {
+  const pt = timesFor(coords, date, madhab);
   return PRAYER_META.map(meta => ({ ...meta, date: pt[meta.k] }));
 }
 
 // Next prayer (sunrise excluded). Rolls over to tomorrow's Fajr after Isha.
-export function nextPrayer(coords, now = new Date()) {
-  const today = prayerList(coords, now).filter(p => !p.info);
+export function nextPrayer(coords, now = new Date(), madhab) {
+  const today = prayerList(coords, now, madhab).filter(p => !p.info);
   for (const p of today) { if (p.date > now) return p; }
   const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
-  const t = prayerList(coords, tomorrow).filter(p => !p.info);
+  const t = prayerList(coords, tomorrow, madhab).filter(p => !p.info);
   return t[0];
 }
 
 // Currently active prayer period (sunrise excluded)
-export function currentPrayer(coords, now = new Date()) {
-  const today = prayerList(coords, now).filter(p => !p.info);
+export function currentPrayer(coords, now = new Date(), madhab) {
+  const today = prayerList(coords, now, madhab).filter(p => !p.info);
   let cur = null;
   for (const p of today) { if (p.date <= now) cur = p; }
   if (cur) return cur;

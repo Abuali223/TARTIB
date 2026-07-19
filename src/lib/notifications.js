@@ -32,7 +32,7 @@ export async function ensurePermission() {
 }
 
 // Har namoz vaqtiga lokal bildirishnoma rejalashtiradi. enabled=false bo'lsa tozalaydi.
-export async function schedulePrayerReminders(coords, { enabled = true, sound = true } = {}) {
+export async function schedulePrayerReminders(coords, { enabled = true, sound = true, madhab } = {}) {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
     if (!enabled) return 0;
@@ -53,7 +53,7 @@ export async function schedulePrayerReminders(coords, { enabled = true, sound = 
     let count = 0;
     for (let day = 0; day < DAYS_AHEAD; day++) {
       const d = new Date(now); d.setDate(d.getDate() + day);
-      const list = prayerList(coords, d).filter(p => !p.info);
+      const list = prayerList(coords, d, madhab).filter(p => !p.info);
       for (const p of list) {
         if (p.date <= now) continue; // o'tib ketgan vaqtni o'tkazib yuborish
         await Notifications.scheduleNotificationAsync({

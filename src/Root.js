@@ -3,7 +3,8 @@ import { ActivityIndicator, Platform, ScrollView, StatusBar, StyleSheet, Text, V
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F } from './theme';
-import { DEFAULT_CITY, DEFAULT_COORDS, fmtClock, nextPrayer, currentPrayer, pad2, prayerList, qiblaBearing } from './lib/prayer';
+import { DEFAULT_CITY, DEFAULT_COORDS, MADHABS, fmtClock, nextPrayer, currentPrayer, pad2, prayerList, qiblaBearing } from './lib/prayer';
+import { CITIES } from './lib/cities';
 import { hijriLabel, hijriMonthLabel } from './lib/hijri';
 import { loadState, saveState, todayKey } from './lib/storage';
 import { ensureUserDoc, mapAuthError, signInEmail, signInWithGoogleIdToken, signOutUser, signUpEmail, watchAuth } from './lib/auth';
@@ -32,6 +33,7 @@ import TaskOverlay from './overlays/Task';
 import AssignOverlay from './overlays/Assign';
 import AddMemberOverlay from './overlays/AddMember';
 import WorkspaceSheet from './overlays/Workspace';
+import PickerOverlay from './overlays/Picker';
 
 const USE_24H = true;
 const SHOW_SECONDS = true;
@@ -39,7 +41,7 @@ const SHOW_SECONDS = true;
 // Faqat shaxsiy/lokal qism saqlanadi. Jamoa (makon/a'zo/vazifa) Firestore'da.
 const PERSIST_KEYS = [
   'activeWorkspaceId', 'settings', 'amals', 'amalsDate', 'habits',
-  'tasbehCount', 'tasbehTarget', 'dhikrIdx',
+  'tasbehCount', 'tasbehTarget', 'dhikrIdx', 'madhab', 'manualCity',
 ];
 
 export const STATUS_META = {
@@ -68,6 +70,7 @@ export default class Root extends React.Component {
     tab: 'bugun', overlay: null,
     now: Date.now(),
     coords: DEFAULT_COORDS, cityName: DEFAULT_CITY, locStatus: 'default',
+    madhab: 'hanafi', manualCity: null,
     selMember: null, selTask: null, selDay: new Date().getDate(),
     tasbehCount: 0, tasbehTarget: 33, dhikrIdx: 0,
     settings: { namoz: true, azon: true, zikr: false, jamoa: true },
@@ -141,19 +144,22 @@ export default class Root extends React.Component {
     }
     // Faol makon o'zgarsa — a'zolar/vazifalarga obuna
     if (prev.activeWorkspaceId !== this.state.activeWorkspaceId) this.syncActive();
-    // Koordinata yoki namoz/azon sozlamasi o'zgarsa — bildirishnomalarni qayta rejalash
+    // Koordinata, shahar, mazhab yoki namoz/azon sozlamasi o'zgarsa — qayta rejalash
     if (this.state.hydrated && (
       prev.coords !== this.state.coords ||
+      prev.manualCity !== this.state.manualCity ||
+      prev.madhab !== this.state.madhab ||
       prev.settings.namoz !== this.state.settings.namoz ||
       prev.settings.azon !== this.state.settings.azon
     )) this.syncNotifications();
   }
 
   syncNotifications() {
-    const key = `${this.state.coords.latitude.toFixed(3)},${this.state.coords.longitude.toFixed(3)}|${this.state.settings.namoz}|${this.state.settings.azon}`;
+    const c = this.effCoords();
+    const key = `${c.latitude.toFixed(3)},${c.longitude.toFixed(3)}|${this.state.madhab}|${this.state.settings.namoz}|${this.state.settings.azon}`;
     if (this._notifKey === key) return;
     this._notifKey = key;
-    schedulePrayerReminders(this.state.coords, { enabled: this.state.settings.namoz, sound: this.state.settings.azon }).catch(() => {});
+    schedulePrayerReminders(c, { enabled: this.state.settings.namoz, sound: this.state.settings.azon, madhab: this.state.madhab }).catch(() => {});
   }
 
   schedulePersist() {
@@ -256,6 +262,15 @@ export default class Root extends React.Component {
   };
 
   // ————— helpers —————
+  // Qo'lda shahar tanlangan bo'lsa — o'sha, aks holda GPS (yoki default)
+  effCoords() {
+    const m = this.state.manualCity;
+    return m ? { latitude: m.latitude, longitude: m.longitude } : this.state.coords;
+  }
+  effCity() {
+    const m = this.state.manualCity;
+    return m ? m.name : this.state.cityName;
+  }
   activeWs() { return this.state.activeWorkspaceId ? this.state.myWorkspaces[this.state.activeWorkspaceId] : null; }
   myMembershipOf(wid) { return this.state.myMemberships.find(m => m.workspaceId === wid); }
   canIn(ws, cap) {
@@ -380,6 +395,10 @@ export default class Root extends React.Component {
     try { await setTaskStatus(id, status); } catch (e) { this.flash("Holatni o'zgartirib bo'lmadi"); }
   };
   toggleSetting = (k) => this.setState(s => ({ settings: { ...s.settings, [k]: !s.settings[k] } }));
+  setMadhab = (key) => this.setState({ madhab: key, overlay: 'settings' });
+  setManualCity = (city) => this.setState({ manualCity: city, overlay: 'settings' }); // city=null → GPS
+  openPicker = (which) => this.setState({ overlay: which }); // 'madhab' | 'city'
+  backToSettings = () => this.setState({ overlay: 'settings' });
   onDraftTitle = (v) => this.setState(s => ({ draft: { ...s.draft, title: v } }));
   pickAssignee = (id) => this.setState(s => ({ draft: { ...s.draft, assigneeId: id } }));
   pickCat = (c) => this.setState(s => ({ draft: { ...s.draft, category: c } }));
@@ -422,16 +441,19 @@ export default class Root extends React.Component {
     const S = this.state;
     const me = this.uid;
     const now = new Date(S.now);
-    const coords = S.coords;
+    const coords = this.effCoords();
+    const cityName = this.effCity();
+    const madhab = S.madhab;
+    const madhabName = (MADHABS.find(m => m.key === madhab) || MADHABS[0]).name;
     const wd = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
     const mo = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
     const gregDate = now.getDate() + ' ' + mo[now.getMonth()] + ' · ' + wd[now.getDay()];
     const h = now.getHours();
     const greet = h >= 5 && h < 11 ? 'Xayrli tong' : h >= 11 && h < 17 ? 'Xayrli kun' : h >= 17 && h < 22 ? 'Xayrli kech' : 'Xayrli tun';
 
-    const list = prayerList(coords, now);
-    const nextP = nextPrayer(coords, now);
-    const curP = currentPrayer(coords, now);
+    const list = prayerList(coords, now, madhab);
+    const nextP = nextPrayer(coords, now, madhab);
+    const curP = currentPrayer(coords, now, madhab);
     const diff = Math.max(0, nextP.date - now);
     const dh = Math.floor(diff / 3600000), dm = Math.floor(diff % 3600000 / 60000), ds = Math.floor(diff % 60000 / 1000);
     const countdown = SHOW_SECONDS ? `${pad2(dh)}:${pad2(dm)}:${pad2(ds)}` : `${dh} soat ${dm} daq`;
@@ -613,7 +635,36 @@ export default class Root extends React.Component {
       targets: [33, 99, 100].map(n => ({ n, active: n === S.tasbehTarget, onPick: () => this.setTarget(n) })),
     };
 
-    const qibla = { bearing: Math.round(qiblaBearing(coords)), cityName: S.cityName, locStatus: S.locStatus };
+    const qibla = { bearing: Math.round(qiblaBearing(coords)), cityName, locStatus: S.locStatus };
+
+    // Sozlamalar tanlov ro'yxatlari (mazhab / shahar)
+    const madhabPicker = {
+      title: 'Hisoblash usuli',
+      note: 'Mazhab Asr namozi vaqtiga ta’sir qiladi.',
+      options: MADHABS.map(m => ({
+        label: m.name,
+        sub: m.key === 'hanafi' ? "Asr — soya 2 barobar (O'zbekistonda keng tarqalgan)" : 'Asr — soya 1 barobar',
+        active: madhab === m.key,
+        onPick: () => this.setMadhab(m.key),
+      })),
+    };
+    const cityPicker = {
+      title: 'Joylashuv',
+      note: 'Namoz vaqtlari tanlangan shaharga moslanadi.',
+      options: [
+        {
+          label: 'Avtomatik (GPS)',
+          sub: S.locStatus === 'granted' ? `Aniqlangan: ${S.cityName}` : 'Joylashuvdan aniqlash',
+          active: !S.manualCity,
+          onPick: () => this.setManualCity(null),
+        },
+        ...CITIES.map(c => ({
+          label: c.name,
+          active: !!S.manualCity && S.manualCity.name === c.name,
+          onPick: () => this.setManualCity(c),
+        })),
+      ],
+    };
 
     const cats = ['Namoz', "Qur'on", 'Dars', 'Imtihon', 'Ish', 'Sadaqa'];
     const dues = ['Bugun', 'Ertaga', 'Bu hafta', 'Juma'];
@@ -649,7 +700,7 @@ export default class Root extends React.Component {
       startGoogle: this.startGoogle,
       greet, meName: first, meLast: last, meInitial: (first[0] || 'F'),
       meRole: isChild ? 'Farzand' : (activeWs ? (myMem ? myMem.role : '—') : 'Shaxsiy'),
-      cityName: S.cityName, locStatus: S.locStatus, account: acc, isChild, mode: wsType, modeLabel, canManage,
+      cityName, locStatus: S.locStatus, account: acc, isChild, mode: wsType, modeLabel, canManage,
       isShaxsiy, isChildTeam,
       jamoaSub, membersLabel, roleLabel, myTotal, myDone, myPct,
       hijriDate: hijriLabel(now), gregDate, monthLabel,
@@ -667,10 +718,14 @@ export default class Root extends React.Component {
       inviteCode, canInvite: this.canIn(activeWs, CAP.MANAGE_MEMBERS),
       settings: S.settings,
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
+      // Sozlamalar tanlovlari
+      madhabName, isManualCity: !!S.manualCity,
+      openMadhab: () => this.openPicker('madhab'), openCity: () => this.openPicker('city'),
+      madhabPicker, cityPicker,
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
       open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
-      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace' },
+      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city' },
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
@@ -715,6 +770,8 @@ export default class Root extends React.Component {
         {v.ov.stats && <StatsOverlay v={v} />}
         {v.ov.habits && <HabitsOverlay v={v} />}
         {v.ov.settings && <SettingsOverlay v={v} />}
+        {v.ov.madhab && <PickerOverlay picker={v.madhabPicker} onClose={this.backToSettings} />}
+        {v.ov.city && <PickerOverlay picker={v.cityPicker} onClose={this.backToSettings} />}
         {v.ov.member && v.selMemberObj && <MemberOverlay v={v} />}
         {v.ov.task && v.selTaskObj && <TaskOverlay v={v} />}
         {v.ov.assign && <AssignOverlay v={v} />}
