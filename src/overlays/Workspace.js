@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, F } from '../theme';
 import { BriefcaseIcon, CheckIcon, ChevronRight, GradCapIcon, PersonIcon, UsersIcon } from '../components/icons';
@@ -29,7 +29,7 @@ export default function WorkspaceSheet({ v }) {
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 32 }]}>
       <Pressable onPress={v.close} style={st.backdrop} />
-      <View style={st.sheetWrap} pointerEvents="box-none">
+      <KeyboardAvoidingView style={st.sheetWrap} pointerEvents="box-none" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <LinearGradient colors={['#102c22', '#0a1f18']} style={st.sheet}>
           <View style={st.grabber} />
 
@@ -118,7 +118,7 @@ export default function WorkspaceSheet({ v }) {
             </View>
           )}
         </LinearGradient>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

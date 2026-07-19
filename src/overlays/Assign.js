@@ -1,11 +1,12 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { Avatar, Chip, OverlayShell, PrimaryBtn } from '../components/ui';
 
 export default function AssignOverlay({ v }) {
   return (
     <OverlayShell title="Topshiriq yuborish" onClose={v.close}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Text style={st.label}>Turi</Text>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
@@ -51,6 +52,7 @@ export default function AssignOverlay({ v }) {
 
         <PrimaryBtn label="Yuborish" onPress={v.onSubmitAssign} style={{ paddingVertical: 16 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </OverlayShell>
   );
 }
