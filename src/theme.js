@@ -28,19 +28,19 @@ const dark = {
 // Kartalar fon bilan uyg'un (fon ko'rinib turadi), oltin chegara bilan ajraladi.
 // Matn — OCH (ko'rinadi), qorong'i rejimdagidek.
 const light = {
-  gold: '#E2B562', goldL: '#EFCB80', goldD: '#CFA24C', amber: '#E8B45F', emerald: '#43C08D',
-  cream: '#F3EEE1',           // asosiy matn — och (glassy karta va fon ustida ko'rinadi)
-  onBg: '#F3EEE1', onBgDim: '#BCCFC5',
-  sage: '#A7BCB0', sageMid: '#C2D2C8', sageDim: '#7E948A', sageFaint: '#95A99E',
-  red: '#E88C74', blue: '#7FBEE6', blueL: '#9BCDEE', purple: '#B39BE6',
+  gold: '#EEC271', goldL: '#F3D089', goldD: '#DDB055', amber: '#F0BE6A', emerald: '#5CD3A2',
+  cream: '#FCFAF4',           // asosiy matn — yorqin oq (to'liq ko'rinadi)
+  onBg: '#FCFAF4', onBgDim: '#D4E0D9',
+  sage: '#C6D6CC', sageMid: '#DBE6DF', sageDim: '#A6B8AE', sageFaint: '#B6C6BD',
+  red: '#F09A82', blue: '#8FC8EC', blueL: '#A8D4F0', purple: '#C0AAEC',
   ink: '#123A31',             // oltin tugma ustidagi matn (to'q)
-  card: 'rgba(255,255,255,0.07)', cardAlt: 'rgba(255,255,255,0.045)',
-  border: 'rgba(226,181,98,0.30)', borderStrong: 'rgba(226,181,98,0.45)',
-  hairline: 'rgba(255,255,255,0.09)',
-  overlay1: 'rgba(255,255,255,0.05)', overlay2: 'rgba(255,255,255,0.08)', overlay3: 'rgba(255,255,255,0.12)',
+  card: 'rgba(255,255,255,0.10)', cardAlt: 'rgba(255,255,255,0.06)',
+  border: 'rgba(238,194,113,0.34)', borderStrong: 'rgba(238,194,113,0.5)',
+  hairline: 'rgba(255,255,255,0.11)',
+  overlay1: 'rgba(255,255,255,0.06)', overlay2: 'rgba(255,255,255,0.09)', overlay3: 'rgba(255,255,255,0.13)',
   bg: ['#1A6355', '#155249', '#123F37'],   // brend teal-yashil fon
   radialTop: ['#1A6355', '#134139', '#0E332C'],  // overlay/lock/onboarding — teal
-  cardGrad: ['rgba(255,255,255,0.10)', 'rgba(255,255,255,0.05)'],   // glassy feature kartalar
+  cardGrad: ['rgba(255,255,255,0.13)', 'rgba(255,255,255,0.07)'],   // glassy feature kartalar
   sheet: ['#175448', '#123F37'],
   scrim: '#1A6355',
   statusBarStyle: 'light',
