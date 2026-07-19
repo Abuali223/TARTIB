@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a1f18",
+    "platforms": ["android", "ios"],
     "icon": "./assets/icon.png",
     "runtimeVersion": { "policy": "appVersion" },
     "updates": {
