@@ -24,25 +24,25 @@ const dark = {
   statusBarStyle: 'light',
 };
 
-// Yorug' (kunduzgi) — brend: TO'Q YASHIL fon + OQ kartalar (saytdagidek).
-// Kartalar aniq ajrab turadi; fon ustidagi matn = onBg (och), karta ichidagi = cream (to'q).
+// Yorug' (kunduzgi) — qorong'i rejimdek UYG'UN: och sage-yashil fon + oq kartalar.
+// Bir yashil oila (fon ozgina to'qroq, kartalar ochroq); teal chegara bilan ajraladi.
 const light = {
-  gold: '#CFA24C', goldL: '#E2B562', goldD: '#B98C38', amber: '#C68E2A', emerald: '#236B5D',
-  cream: '#1C2723',           // KARTA ichidagi asosiy matn (oq fonda to'q)
-  onBg: '#F3F7F2', onBgDim: 'rgba(238,244,238,0.74)',  // YASHIL fon ustidagi matn (och)
+  gold: '#B98C38', goldL: '#CFA24C', goldD: '#9C7328', amber: '#B9822B', emerald: '#236B5D',
+  cream: '#1C2723',           // asosiy matn (och fonda to'q) — karta va fon ikkalasi och
+  onBg: '#22312A', onBgDim: 'rgba(34,49,42,0.60)',  // fon (sage) ustidagi matn — to'q
   sage: '#586459', sageMid: '#45524A', sageDim: '#8A968D', sageFaint: '#6E7C72',
   red: '#C0553F', blue: '#2F7EA6', blueL: '#276487', purple: '#6E52A0',
   ink: '#173E36',             // oltin tugma ustidagi matn
-  card: '#FFFFFF', cardAlt: '#F3F5F0',
-  border: '#E7EAE6', borderStrong: 'rgba(35,107,93,0.42)',
-  hairline: '#EEF0EB',
+  card: '#FFFFFF', cardAlt: '#EEF3EF',
+  border: 'rgba(35,107,93,0.20)', borderStrong: 'rgba(35,107,93,0.42)',
+  hairline: 'rgba(28,39,35,0.08)',
   overlay1: 'rgba(28,39,35,0.03)', overlay2: 'rgba(28,39,35,0.05)', overlay3: 'rgba(28,39,35,0.08)',
-  bg: ['#1A6355', '#155249', '#13483F'],   // to'q yashil sahifa foni (brend hero)
-  radialTop: ['#FAFBF8', '#F5F6F1', '#F1F3EE'],  // overlay/lock/onboarding — och
-  cardGrad: ['#FFFFFF', '#F4F6F1'],   // oq kartalar (feature)
-  sheet: ['#FBFCFA', '#F4F6F1'],
-  scrim: '#175448',
-  statusBarStyle: 'light',
+  bg: ['#DAE5DF', '#D0DDD6', '#C7D6CE'],    // yumshoq sage-yashil sahifa foni
+  radialTop: ['#F7FAF8', '#EFF4F1', '#E8EFEA'],  // overlay/lock/onboarding — ochroq
+  cardGrad: ['#FFFFFF', '#F5F9F6'],   // oq kartalar (feature)
+  sheet: ['#FBFCFA', '#F2F6F3'],
+  scrim: '#D0DDD6',
+  statusBarStyle: 'dark',
 };
 
 export const THEMES = { dark, light };

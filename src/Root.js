@@ -41,6 +41,7 @@ import PickerOverlay from './overlays/Picker';
 
 const USE_24H = true;
 const SHOW_SECONDS = true;
+const LOCK_GRACE_MS = 60000; // fonda shu muddatdan uzoq turса — qaytganda qulf so'raydi (1 daqiqa)
 
 // Faqat shaxsiy/lokal qism saqlanadi. Jamoa (makon/a'zo/vazifa) Firestore'da.
 const PERSIST_KEYS = [
@@ -130,12 +131,19 @@ export default class Root extends React.Component {
     this.locate();
     this._backSub = BackHandler.addEventListener('hardwareBackPress', this.onHardwareBack);
     biometricAvailable().then(a => this.setState({ bioAvailable: a })).catch(() => {});
-    // Ilova fonga ketib qaytsa — qulflansin
+    // Ilova fonda LOCK_GRACE_MS'dan uzoq turса — qaytganda qulflanadi.
+    // Qisqa o'tishlar (boshqa ilovaga bir zumга) qulflamaydi.
     this._appStateSub = AppState.addEventListener('change', (s) => {
-      if (s === 'active') { this._bg = false; return; }
-      if ((s === 'background' || s === 'inactive') && this.state.lockEnabled && this.state.pinHash) {
-        this._bg = true;
-        this.setState({ locked: true });
+      if (s === 'active') {
+        if (this._bgAt && this.state.lockEnabled && this.state.pinHash &&
+            (Date.now() - this._bgAt) > LOCK_GRACE_MS) {
+          this.setState({ locked: true });
+        }
+        this._bgAt = null;
+        return;
+      }
+      if ((s === 'background' || s === 'inactive') && !this._bgAt) {
+        this._bgAt = Date.now(); // fonga o'tgan vaqtni belgilaymiz
       }
     });
     this._unsubAuth = watchAuth(async (user) => {
