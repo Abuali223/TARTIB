@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { BackIcon } from './icons';
 import { C, F } from '../theme';
+import { t } from '../lib/i18n';
 
 // Mount fade-in, mirrors the design's `tartibFade` keyframe
 export function FadeIn({ style, children, duration = 350 }) {
@@ -95,7 +96,7 @@ export function SectionTitle({ children, style }) {
 export function StatusPill({ meta }) {
   return (
     <View style={{ paddingVertical: 5, paddingHorizontal: 11, borderRadius: 99, backgroundColor: meta.bg, flexShrink: 0 }}>
-      <Text style={{ fontFamily: F.bold, fontSize: 11, color: meta.color }} numberOfLines={1}>{meta.label}</Text>
+      <Text style={{ fontFamily: F.bold, fontSize: 11, color: meta.color }} numberOfLines={1}>{t(meta.label)}</Text>
     </View>
   );
 }
@@ -105,7 +106,7 @@ export function TypeBadge({ type }) {
   const isR = type === 'eslatma';
   return (
     <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: isR ? 'rgba(111,179,224,0.18)' : 'rgba(217,179,106,0.16)', alignSelf: 'flex-start' }}>
-      <Text style={{ fontFamily: F.extrabold, fontSize: 10, letterSpacing: 0.3, color: isR ? C.blueL : C.gold }}>{isR ? 'Eslatma' : 'Vazifa'}</Text>
+      <Text style={{ fontFamily: F.extrabold, fontSize: 10, letterSpacing: 0.3, color: isR ? C.blueL : C.gold }}>{isR ? t('Eslatma') : t('Vazifa')}</Text>
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { FadeIn } from '../components/ui';
 import { BigCheckIcon, ChevronRight, GearIcon, SmallUsersIcon, StatsIcon } from '../components/icons';
+import { t } from '../lib/i18n';
 
 function Row({ onPress, iconBg, icon, label, last }) {
   return (
@@ -21,20 +22,20 @@ export default function Profil({ v }) {
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
         <View style={st.avatar}><Text style={{ fontFamily: F.serif, fontSize: 38, color: C.gold }}>{v.meInitial}</Text></View>
         <Text style={{ fontFamily: F.serif, fontSize: 24, color: C.cream }}>{v.meName} {v.meLast}</Text>
-        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginTop: 3 }}>{v.roleLabel} · {v.meRole}</Text>
+        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginTop: 3 }}>{t(v.roleLabel)} · {t(v.meRole)}</Text>
       </View>
 
       <View style={{ flexDirection: 'row', gap: 11, marginBottom: 22 }}>
-        <View style={st.stat}><Text style={[st.statNum, { color: C.gold }]}>{v.overallPct}%</Text><Text style={st.statLabel}>Haftalik</Text></View>
-        <View style={st.stat}><Text style={[st.statNum, { color: C.emerald }]}>21</Text><Text style={st.statLabel}>Kun streak</Text></View>
-        <View style={st.stat}><Text style={[st.statNum, { color: C.blue }]}>148</Text><Text style={st.statLabel}>Namoz</Text></View>
+        <View style={st.stat}><Text style={[st.statNum, { color: C.gold }]}>{v.overallPct}%</Text><Text style={st.statLabel}>{t('Haftalik')}</Text></View>
+        <View style={st.stat}><Text style={[st.statNum, { color: C.emerald }]}>21</Text><Text style={st.statLabel}>{t('Kun streak')}</Text></View>
+        <View style={st.stat}><Text style={[st.statNum, { color: C.blue }]}>148</Text><Text style={st.statLabel}>{t('Namoz')}</Text></View>
       </View>
 
       <View style={st.menu}>
-        <Row onPress={v.open.stats} iconBg="rgba(217,179,106,0.14)" icon={<StatsIcon />} label="Statistika" />
-        <Row onPress={v.open.habits} iconBg="rgba(67,192,141,0.14)" icon={<BigCheckIcon />} label="Odatlar" />
-        <Row onPress={v.go.jamoa} iconBg="rgba(111,179,224,0.14)" icon={<SmallUsersIcon />} label={v.roleLabel + ' boshqaruvi'} />
-        <Row onPress={v.open.settings} iconBg="rgba(255,255,255,0.06)" icon={<GearIcon />} label="Sozlamalar" last />
+        <Row onPress={v.open.stats} iconBg="rgba(217,179,106,0.14)" icon={<StatsIcon />} label={t('Statistika')} />
+        <Row onPress={v.open.habits} iconBg="rgba(67,192,141,0.14)" icon={<BigCheckIcon />} label={t('Odatlar')} />
+        <Row onPress={v.go.jamoa} iconBg="rgba(111,179,224,0.14)" icon={<SmallUsersIcon />} label={t(v.roleLabel + ' boshqaruvi')} />
+        <Row onPress={v.open.settings} iconBg="rgba(255,255,255,0.06)" icon={<GearIcon />} label={t('Sozlamalar')} last />
       </View>
     </FadeIn>
   );

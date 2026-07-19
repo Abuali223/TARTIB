@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, F } from '../theme';
 import { FadeIn } from '../components/ui';
 import { GoogleIcon, LogoMark } from '../components/icons';
+import { t } from '../lib/i18n';
 
 function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, autoCapitalize }) {
   return (
@@ -42,57 +43,57 @@ export default function Onboarding({ v }) {
                 <Text style={st.bismillah}>بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْم</Text>
                 <Text style={st.brand}>TARTIB</Text>
                 <View style={st.rule} />
-                <Text style={st.lede}>Ibodat, niyat va tartib — barchasi bir joyda.</Text>
+                <Text style={st.lede}>{t('Ibodat, niyat va tartib — barchasi bir joyda.')}</Text>
               </View>
 
               {/* Kirish / Ro'yxatdan o'tish toggle */}
               <View style={st.tabs}>
                 <TouchableOpacity onPress={v.setAuthMode.signup} activeOpacity={0.8} style={[st.tab, signup && st.tabActive]}>
-                  <Text style={[st.tabText, signup && st.tabTextActive]}>Ro'yxatdan o'tish</Text>
+                  <Text style={[st.tabText, signup && st.tabTextActive]}>{t("Ro'yxatdan o'tish")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={v.setAuthMode.signin} activeOpacity={0.8} style={[st.tab, !signup && st.tabActive]}>
-                  <Text style={[st.tabText, !signup && st.tabTextActive]}>Kirish</Text>
+                  <Text style={[st.tabText, !signup && st.tabTextActive]}>{t('Kirish')}</Text>
                 </TouchableOpacity>
               </View>
 
               {signup && (
-                <Field label="Ism" value={f.name} onChangeText={v.onAuthField.name} placeholder="To'liq ismingiz" autoCapitalize="words" />
+                <Field label={t('Ism')} value={f.name} onChangeText={v.onAuthField.name} placeholder={t("To'liq ismingiz")} autoCapitalize="words" />
               )}
-              <Field label="Email" value={f.email} onChangeText={v.onAuthField.email} placeholder="siz@example.com" keyboardType="email-address" />
-              <Field label="Parol" value={f.password} onChangeText={v.onAuthField.password} placeholder="Kamida 6 belgi" secureTextEntry />
+              <Field label={t('Email')} value={f.email} onChangeText={v.onAuthField.email} placeholder="siz@example.com" keyboardType="email-address" />
+              <Field label={t('Parol')} value={f.password} onChangeText={v.onAuthField.password} placeholder={t('Kamida 6 belgi')} secureTextEntry />
               {signup && (
-                <Field label="Tug'ilgan yil" value={f.birthYear} onChangeText={v.onAuthField.birthYear} placeholder="Masalan: 1998" keyboardType="number-pad" />
+                <Field label={t("Tug'ilgan yil")} value={f.birthYear} onChangeText={v.onAuthField.birthYear} placeholder={t('Masalan: 1998')} keyboardType="number-pad" />
               )}
 
               <TouchableOpacity onPress={v.submitAuth} activeOpacity={0.85} disabled={v.authBusy}
                 style={[st.primary, v.authBusy && { opacity: 0.7 }]}>
                 {v.authBusy
                   ? <ActivityIndicator color={C.ink} />
-                  : <Text style={st.primaryText}>{signup ? "Ro'yxatdan o'tish" : 'Kirish'}</Text>}
+                  : <Text style={st.primaryText}>{signup ? t("Ro'yxatdan o'tish") : t('Kirish')}</Text>}
               </TouchableOpacity>
 
               {/* Google / Telefon (SMS) */}
               <View style={st.divider}>
-                <View style={st.hr} /><Text style={st.dividerText}>yoki</Text><View style={st.hr} />
+                <View style={st.hr} /><Text style={st.dividerText}>{t('yoki')}</Text><View style={st.hr} />
               </View>
               {v.googleEnabled ? (
                 <TouchableOpacity onPress={v.startGoogle} activeOpacity={0.85} disabled={v.googleBusy}
                   style={[st.googleBtn, v.googleBusy && { opacity: 0.7 }]}>
                   {v.googleBusy
                     ? <ActivityIndicator color={C.cream} />
-                    : (<><GoogleIcon size={18} /><Text style={st.googleText}>Google bilan kirish</Text></>)}
+                    : (<><GoogleIcon size={18} /><Text style={st.googleText}>{t('Google bilan kirish')}</Text></>)}
                 </TouchableOpacity>
               ) : (
                 <View style={st.soonBtn}>
                   <GoogleIcon size={18} />
-                  <Text style={st.soonText}>Google · tez orada</Text>
+                  <Text style={st.soonText}>{t('Google · tez orada')}</Text>
                 </View>
               )}
               <View style={st.soonBtn}>
-                <Text style={[st.soonText, { marginLeft: 0 }]}>Telefon (SMS) · tez orada</Text>
+                <Text style={[st.soonText, { marginLeft: 0 }]}>{t('Telefon (SMS) · tez orada')}</Text>
               </View>
 
-              <Text style={st.note}>Ro'yxatdan o'tib, shaxsiy, oila, ta'lim va ishxona makonlaridan foydalaning</Text>
+              <Text style={st.note}>{t("Ro'yxatdan o'tib, shaxsiy, oila, ta'lim va ishxona makonlaridan foydalaning")}</Text>
             </FadeIn>
           </ScrollView>
         </KeyboardAvoidingView>

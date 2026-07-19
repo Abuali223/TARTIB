@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, F } from '../theme';
 import { FadeIn, ProgressRing, SectionTitle, StatusPill } from '../components/ui';
 import { BeadsIcon, CheckIcon, ChevronDown, CompassIcon } from '../components/icons';
+import { t } from '../lib/i18n';
 
 export default function Bugun({ v }) {
   return (
@@ -16,7 +17,7 @@ export default function Bugun({ v }) {
             <ChevronDown />
           </TouchableOpacity>
           <Text style={st.date}>{v.gregDate}</Text>
-          <Text style={st.greet}>{v.greet}, {v.meName}</Text>
+          <Text style={st.greet}>{t(v.greet)}, {v.meName}</Text>
           <Text style={st.hijri}>۩ {v.hijriDate}</Text>
         </View>
         <TouchableOpacity onPress={v.open.settings} activeOpacity={0.8} style={st.avatarBtn}>
@@ -29,20 +30,20 @@ export default function Bugun({ v }) {
         <Text style={st.crescentWatermark}>☾</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View>
-            <Text style={st.kicker}>KEYINGI NAMOZ</Text>
+            <Text style={st.kicker}>{t('KEYINGI NAMOZ')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 9, marginTop: 7 }}>
-              <Text style={{ fontFamily: F.serif, fontSize: 30, color: C.cream }}>{v.next.name}</Text>
+              <Text style={{ fontFamily: F.serif, fontSize: 30, color: C.cream }}>{t(v.next.name)}</Text>
               <Text style={{ fontFamily: F.arabic, fontSize: 20, color: C.gold }}>{v.next.ar}</Text>
             </View>
-            <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginTop: 3 }}>Vaqti · {v.next.time}</Text>
+            <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage, marginTop: 3 }}>{t('Vaqti')} · {v.next.time}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ fontFamily: F.regular, fontSize: 11, color: C.sage }}>qoldi</Text>
+            <Text style={{ fontFamily: F.regular, fontSize: 11, color: C.sage }}>{t('qoldi')}</Text>
             <Text style={{ fontFamily: F.extrabold, fontSize: 22, color: C.gold, marginTop: 2, fontVariant: ['tabular-nums'] }}>{v.next.countdown}</Text>
           </View>
         </View>
         <TouchableOpacity onPress={v.go.namoz} activeOpacity={0.85} style={st.prayerCta}>
-          <Text style={{ fontFamily: F.bold, fontSize: 14, color: C.goldL }}>Barcha vaqtlar va Qibla →</Text>
+          <Text style={{ fontFamily: F.bold, fontSize: 14, color: C.goldL }}>{t('Barcha vaqtlar va Qibla')} →</Text>
         </TouchableOpacity>
       </LinearGradient>
 
@@ -53,21 +54,21 @@ export default function Bugun({ v }) {
             <Text style={{ fontFamily: F.extrabold, fontSize: 24, color: C.cream }}>{v.goalPct}%</Text>
             <Text style={{ fontFamily: F.regular, fontSize: 10, color: C.sage }}>{v.goalDone}/{v.goalTotal}</Text>
           </ProgressRing>
-          <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.cream, marginTop: 10 }}>Kunlik maqsad</Text>
+          <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.cream, marginTop: 10 }}>{t('Kunlik maqsad')}</Text>
         </View>
         <View style={{ flex: 1, gap: 13 }}>
           <TouchableOpacity onPress={v.open.tasbeh} activeOpacity={0.85} style={st.quickBtn}>
             <View style={[st.quickIcon, { backgroundColor: 'rgba(217,179,106,0.14)' }]}><BeadsIcon /></View>
             <View>
-              <Text style={st.quickTitle}>Tasbeh</Text>
-              <Text style={st.quickSub}>Zikr sanagich</Text>
+              <Text style={st.quickTitle}>{t('Tasbeh')}</Text>
+              <Text style={st.quickSub}>{t('Zikr sanagich')}</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={v.open.qibla} activeOpacity={0.85} style={st.quickBtn}>
             <View style={[st.quickIcon, { backgroundColor: 'rgba(67,192,141,0.14)' }]}><CompassIcon /></View>
             <View>
-              <Text style={st.quickTitle}>Qibla</Text>
-              <Text style={st.quickSub}>Yo'nalish</Text>
+              <Text style={st.quickTitle}>{t('Qibla')}</Text>
+              <Text style={st.quickSub}>{t("Yo'nalish")}</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -75,8 +76,8 @@ export default function Bugun({ v }) {
 
       {/* today's amals */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 2, marginTop: 4, marginBottom: 12 }}>
-        <SectionTitle>Bugungi amallar</SectionTitle>
-        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage }}>{v.goalDone}/{v.goalTotal} bajarildi</Text>
+        <SectionTitle>{t('Bugungi amallar')}</SectionTitle>
+        <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sage }}>{v.goalDone}/{v.goalTotal} {t('bajarildi')}</Text>
       </View>
       <View style={st.card}>
         {v.amals.map((a, i) => (
@@ -86,8 +87,8 @@ export default function Bugun({ v }) {
               {a.done && <CheckIcon />}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: a.done ? C.sage : C.cream, textDecorationLine: a.done ? 'line-through' : 'none' }}>{a.name}</Text>
-              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageFaint, marginTop: 2 }}>{a.sub}</Text>
+              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: a.done ? C.sage : C.cream, textDecorationLine: a.done ? 'line-through' : 'none' }}>{t(a.name)}</Text>
+              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageFaint, marginTop: 2 }}>{t(a.sub)}</Text>
             </View>
             {!!a.ar && <Text style={{ fontFamily: F.arabic, fontSize: 17, color: C.goldD }}>{a.ar}</Text>}
           </TouchableOpacity>
@@ -98,29 +99,29 @@ export default function Bugun({ v }) {
       {v.myTasks.length > 0 && (
         <>
           <View style={{ marginHorizontal: 2, marginTop: 22, marginBottom: 12 }}>
-            <SectionTitle>Menga berilgan vazifalar</SectionTitle>
+            <SectionTitle>{t('Menga berilgan vazifalar')}</SectionTitle>
           </View>
-          {v.myTasks.map(t => (
-            <TouchableOpacity key={t.id} onPress={t.onOpen} activeOpacity={0.85} style={st.taskCard}>
+          {v.myTasks.map(task => (
+            <TouchableOpacity key={task.id} onPress={task.onOpen} activeOpacity={0.85} style={st.taskCard}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t.title}</Text>
+                  <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t(task.title)}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                    {!!t.wsLabel && (
-                      <View style={st.wsTag}><Text style={st.wsTagText}>{t.wsLabel}</Text></View>
+                    {!!task.wsLabel && (
+                      <View style={st.wsTag}><Text style={st.wsTagText}>{t(task.wsLabel)}</Text></View>
                     )}
-                    <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage }}>{t.assignerName} · {t.due}</Text>
+                    <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage }}>{task.assignerName} · {t(task.due)}</Text>
                   </View>
                 </View>
-                <StatusPill meta={t.statusMeta} />
+                <StatusPill meta={task.statusMeta} />
               </View>
-              {t.isPending && (
+              {task.isPending && (
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                  <TouchableOpacity onPress={t.onAccept} activeOpacity={0.85} style={st.acceptBtn}>
-                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>Qabul qilish</Text>
+                  <TouchableOpacity onPress={task.onAccept} activeOpacity={0.85} style={st.acceptBtn}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>{t('Qabul qilish')}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={t.onReject} activeOpacity={0.85} style={st.rejectBtn}>
-                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.red }}>Rad etish</Text>
+                  <TouchableOpacity onPress={task.onReject} activeOpacity={0.85} style={st.rejectBtn}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.red }}>{t('Rad etish')}</Text>
                   </TouchableOpacity>
                 </View>
               )}

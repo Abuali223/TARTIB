@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { OverlayShell, Toggle } from '../components/ui';
+import { t } from '../lib/i18n';
 
 function ToggleRow({ label, on, onToggle, last }) {
   return (
@@ -31,26 +32,26 @@ function InfoRow({ label, value, gold, last, onPress }) {
 
 export default function SettingsOverlay({ v }) {
   return (
-    <OverlayShell title="Sozlamalar" onClose={v.close}>
+    <OverlayShell title={t('Sozlamalar')} onClose={v.close}>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <Text style={st.section}>ESLATMALAR</Text>
+        <Text style={st.section}>{t('ESLATMALAR')}</Text>
         <View style={st.card}>
-          <ToggleRow label="Namoz eslatmalari" on={v.settings.namoz} onToggle={v.toggleSetting.namoz} />
-          <ToggleRow label="Azon ovozi" on={v.settings.azon} onToggle={v.toggleSetting.azon} />
-          <ToggleRow label="Zikr eslatmasi" on={v.settings.zikr} onToggle={v.toggleSetting.zikr} />
-          <ToggleRow label="Vazifa bildirishnomalari" on={v.settings.jamoa} onToggle={v.toggleSetting.jamoa} last />
+          <ToggleRow label={t('Namoz eslatmalari')} on={v.settings.namoz} onToggle={v.toggleSetting.namoz} />
+          <ToggleRow label={t('Azon ovozi')} on={v.settings.azon} onToggle={v.toggleSetting.azon} />
+          <ToggleRow label={t('Zikr eslatmasi')} on={v.settings.zikr} onToggle={v.toggleSetting.zikr} />
+          <ToggleRow label={t('Vazifa bildirishnomalari')} on={v.settings.jamoa} onToggle={v.toggleSetting.jamoa} last />
         </View>
 
-        <Text style={st.section}>UMUMIY</Text>
+        <Text style={st.section}>{t('UMUMIY')}</Text>
         <View style={st.card}>
-          <InfoRow label="Joylashuv" value={v.isManualCity ? v.cityName : `${v.cityName} (auto)`} onPress={v.openCity} />
-          <InfoRow label="Hisoblash usuli" value={v.madhabName} onPress={v.openMadhab} />
-          <InfoRow label="Til" value="O'zbekcha" />
-          <InfoRow label="Mavzu" value="To'q yashil" gold last />
+          <InfoRow label={t('Joylashuv')} value={v.isManualCity ? t(v.cityName) : `${t(v.cityName)} (auto)`} onPress={v.openCity} />
+          <InfoRow label={t('Hisoblash usuli')} value={t(v.madhabName)} onPress={v.openMadhab} />
+          <InfoRow label={t('Til')} value={v.langName} onPress={v.openLang} />
+          <InfoRow label={t('Mavzu')} value={t("To'q yashil")} gold last />
         </View>
 
         <TouchableOpacity onPress={v.logout} activeOpacity={0.85} style={st.logoutBtn}>
-          <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.red }}>Chiqish</Text>
+          <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.red }}>{t('Chiqish')}</Text>
         </TouchableOpacity>
         <Text style={st.footer}>TARTIB · v1.0 · بارك الله فيكم</Text>
       </ScrollView>

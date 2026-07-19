@@ -4,11 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, F } from '../theme';
 import { Avatar, FadeIn, PrimaryBtn, ProgressRing, SectionTitle, StatusPill, TypeBadge } from '../components/ui';
 import { ChevronDown, ChevronRight, PersonIcon } from '../components/icons';
+import { t } from '../lib/i18n';
 
 function RoleBadge({ role, isMgr }) {
   return (
     <View style={{ paddingVertical: 3, paddingHorizontal: 9, borderRadius: 7, backgroundColor: isMgr ? 'rgba(217,179,106,0.16)' : 'rgba(111,179,224,0.15)' }}>
-      <Text style={{ fontFamily: F.bold, fontSize: 11, color: isMgr ? C.gold : C.blueL }}>{role}</Text>
+      <Text style={{ fontFamily: F.bold, fontSize: 11, color: isMgr ? C.gold : C.blueL }}>{t(role)}</Text>
     </View>
   );
 }
@@ -19,11 +20,11 @@ export default function Jamoa({ v }) {
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
         <View>
           <TouchableOpacity onPress={v.open.workspace} activeOpacity={0.8} style={st.modeBtn}>
-            <Text style={{ fontFamily: F.bold, fontSize: 12, color: C.gold }}>Makon almashtirish</Text>
+            <Text style={{ fontFamily: F.bold, fontSize: 12, color: C.gold }}>{t('Makon almashtirish')}</Text>
             <ChevronDown />
           </TouchableOpacity>
-          <Text style={st.h2}>{v.modeLabel}</Text>
-          <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, marginTop: 2 }}>{v.jamoaSub}</Text>
+          <Text style={st.h2}>{t(v.modeLabel)}</Text>
+          <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, marginTop: 2 }}>{t(v.jamoaSub)}</Text>
         </View>
         {v.canManage && (
           <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.addBtn}>
@@ -35,9 +36,9 @@ export default function Jamoa({ v }) {
       {v.isShaxsiy && (
         <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.shaxsiyCard}>
           <View style={st.shaxsiyIcon}><PersonIcon size={30} /></View>
-          <Text style={{ fontFamily: F.serif, fontSize: 20, color: C.cream }}>Shaxsiy makon</Text>
-          <Text style={st.shaxsiyText}>Bu yerda faqat o'zingiz uchun ibodat, zikr va odatlaringizni yuritasiz. Jamoa bilan ishlash uchun oila, ta'lim yoki ishxona makonini tanlang.</Text>
-          <PrimaryBtn label="Makon tanlash" onPress={v.open.workspace} style={{ width: '100%', paddingVertical: 14 }} />
+          <Text style={{ fontFamily: F.serif, fontSize: 20, color: C.cream }}>{t('Shaxsiy makon')}</Text>
+          <Text style={st.shaxsiyText}>{t("Bu yerda faqat o'zingiz uchun ibodat, zikr va odatlaringizni yuritasiz. Jamoa bilan ishlash uchun oila, ta'lim yoki ishxona makonini tanlang.")}</Text>
+          <PrimaryBtn label={t('Makon tanlash')} onPress={v.open.workspace} style={{ width: '100%', paddingVertical: 14 }} />
         </LinearGradient>
       )}
 
@@ -46,26 +47,26 @@ export default function Jamoa({ v }) {
           {/* board summary */}
           <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.boardCard}>
             <View style={{ flexDirection: 'row', marginBottom: 14 }}>
-              <View style={st.boardCol}><Text style={[st.boardNum, { color: C.gold }]}>{v.board.send}</Text><Text style={st.boardLabel}>Yuborildi</Text></View>
+              <View style={st.boardCol}><Text style={[st.boardNum, { color: C.gold }]}>{v.board.send}</Text><Text style={st.boardLabel}>{t('Yuborildi')}</Text></View>
               <View style={st.vr} />
-              <View style={st.boardCol}><Text style={[st.boardNum, { color: C.amber }]}>{v.board.prog}</Text><Text style={st.boardLabel}>Jarayonda</Text></View>
+              <View style={st.boardCol}><Text style={[st.boardNum, { color: C.amber }]}>{v.board.prog}</Text><Text style={st.boardLabel}>{t('Jarayonda')}</Text></View>
               <View style={st.vr} />
-              <View style={st.boardCol}><Text style={[st.boardNum, { color: C.emerald }]}>{v.board.done}</Text><Text style={st.boardLabel}>Bajarildi</Text></View>
+              <View style={st.boardCol}><Text style={[st.boardNum, { color: C.emerald }]}>{v.board.done}</Text><Text style={st.boardLabel}>{t('Bajarildi')}</Text></View>
             </View>
             <View style={st.barTrack}>
               <LinearGradient colors={[C.gold, C.emerald]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: '100%', borderRadius: 99, width: `${v.board.pct}%` }} />
             </View>
-            <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageMid, marginTop: 8, textAlign: 'center' }}>Umumiy bajarilish: {v.board.pct}%</Text>
+            <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageMid, marginTop: 8, textAlign: 'center' }}>{t('Umumiy bajarilish')}: {v.board.pct}%</Text>
           </LinearGradient>
-          <PrimaryBtn label="+ Eslatma yoki vazifa yuborish" onPress={v.open.assign} style={{ marginBottom: 22 }} />
+          <PrimaryBtn label={t('+ Eslatma yoki vazifa yuborish')} onPress={v.open.assign} style={{ marginBottom: 22 }} />
 
           {/* members */}
-          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{v.membersLabel}</SectionTitle>
+          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{t(v.membersLabel)}</SectionTitle>
           {v.members.length === 0 && (
             <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.emptyCard}>
-              <Text style={st.emptyTitle}>Hali a'zo yo'q</Text>
-              <Text style={st.emptyText}>Taklif kodini ulashing — a'zolar qo'shilgach shu yerda ko'rinadi.</Text>
-              <Text style={st.emptyAction}>+ Taklif kodini olish</Text>
+              <Text style={st.emptyTitle}>{t("Hali a'zo yo'q")}</Text>
+              <Text style={st.emptyText}>{t("Taklif kodini ulashing — a'zolar qo'shilgach shu yerda ko'rinadi.")}</Text>
+              <Text style={st.emptyAction}>{t('+ Taklif kodini olish')}</Text>
             </TouchableOpacity>
           )}
           <View style={{ gap: 11, marginBottom: 24 }}>
@@ -78,7 +79,7 @@ export default function Jamoa({ v }) {
                     {m.online && <View style={st.onlineDot} />}
                     <RoleBadge role={m.role} isMgr={m.isMgr} />
                   </View>
-                  <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 1 }}>{m.label} · {m.doneCount}/{m.totalCount} vazifa</Text>
+                  <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 1 }}>{t(m.label)} · {m.doneCount}/{m.totalCount} {t('vazifa')}</Text>
                   <View style={st.memberBarTrack}>
                     <View style={{ height: '100%', borderRadius: 99, width: `${m.pct}%`, backgroundColor: m.color }} />
                   </View>
@@ -89,24 +90,24 @@ export default function Jamoa({ v }) {
           </View>
 
           {/* recent assignments */}
-          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>So'nggi topshiriqlar</SectionTitle>
+          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{t("So'nggi topshiriqlar")}</SectionTitle>
           {v.jamoaTasks.length === 0 && (
             <View style={st.emptyCard}>
-              <Text style={st.emptyText}>Hali topshiriq yuborilmagan. Yuqoridagi tugma orqali vazifa yoki eslatma yuboring.</Text>
+              <Text style={st.emptyText}>{t('Hali topshiriq yuborilmagan. Yuqoridagi tugma orqali vazifa yoki eslatma yuboring.')}</Text>
             </View>
           )}
           <View style={{ gap: 11 }}>
-            {v.jamoaTasks.map(t => (
-              <TouchableOpacity key={t.id} onPress={t.onOpen} activeOpacity={0.85} style={st.taskRow}>
-                <Avatar name={t.assigneeName} color={t.assigneeColor} size={40} radius={12} fontSize={15} />
+            {v.jamoaTasks.map(task => (
+              <TouchableOpacity key={task.id} onPress={task.onOpen} activeOpacity={0.85} style={st.taskRow}>
+                <Avatar name={task.assigneeName} color={task.assigneeColor} size={40} radius={12} fontSize={15} />
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <TypeBadge type={t.type} />
-                    <Text numberOfLines={1} style={{ flex: 1, fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t.title}</Text>
+                    <TypeBadge type={task.type} />
+                    <Text numberOfLines={1} style={{ flex: 1, fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t(task.title)}</Text>
                   </View>
-                  <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 2 }}>{t.assigneeName} · {t.due}</Text>
+                  <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 2 }}>{task.assigneeName} · {t(task.due)}</Text>
                 </View>
-                <StatusPill meta={t.statusMeta} />
+                <StatusPill meta={task.statusMeta} />
               </TouchableOpacity>
             ))}
           </View>
@@ -121,46 +122,46 @@ export default function Jamoa({ v }) {
                 <Text style={{ fontFamily: F.extrabold, fontSize: 15, color: C.cream }}>{v.myPct}%</Text>
               </ProgressRing>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.cream }}>Sizning natijangiz</Text>
-                <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sageMid, marginTop: 3 }}>{v.myDone}/{v.myTotal} topshiriq bajarildi. Barakalla!</Text>
+                <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.cream }}>{t('Sizning natijangiz')}</Text>
+                <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sageMid, marginTop: 3 }}>{v.myDone}/{v.myTotal} {t('topshiriq bajarildi. Barakalla!')}</Text>
               </View>
             </View>
           </LinearGradient>
-          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>Sizga berilgan topshiriqlar</SectionTitle>
+          <SectionTitle style={{ marginHorizontal: 2, marginBottom: 12 }}>{t('Sizga berilgan topshiriqlar')}</SectionTitle>
           <View style={{ gap: 11 }}>
-            {v.myTasks.map(t => (
-              <View key={t.id} style={st.taskCard}>
+            {v.myTasks.map(task => (
+              <View key={task.id} style={st.taskCard}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={{ marginBottom: 5 }}><TypeBadge type={t.type} /></View>
-                    <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t.title}</Text>
-                    <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 3 }}>{t.assignerName} · {t.due}</Text>
+                    <View style={{ marginBottom: 5 }}><TypeBadge type={task.type} /></View>
+                    <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.cream }}>{t(task.title)}</Text>
+                    <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 3 }}>{task.assignerName} · {t(task.due)}</Text>
                   </View>
-                  <StatusPill meta={t.statusMeta} />
+                  <StatusPill meta={task.statusMeta} />
                 </View>
-                {t.isReminder && t.notDone && (
-                  <TouchableOpacity onPress={t.onComplete} activeOpacity={0.85} style={st.ackBtn}>
-                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.blue }}>Tushunarli ✓</Text>
+                {task.isReminder && task.notDone && (
+                  <TouchableOpacity onPress={task.onComplete} activeOpacity={0.85} style={st.ackBtn}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.blue }}>{t('Tushunarli')} ✓</Text>
                   </TouchableOpacity>
                 )}
-                {t.isPending && (
+                {task.isPending && (
                   <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                    <TouchableOpacity onPress={t.onAccept} activeOpacity={0.85} style={st.acceptBtn}>
-                      <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>Qabul qilish</Text>
+                    <TouchableOpacity onPress={task.onAccept} activeOpacity={0.85} style={st.acceptBtn}>
+                      <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>{t('Qabul qilish')}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={t.onReject} activeOpacity={0.85} style={st.rejectBtn}>
-                      <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.red }}>Rad etish</Text>
+                    <TouchableOpacity onPress={task.onReject} activeOpacity={0.85} style={st.rejectBtn}>
+                      <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.red }}>{t('Rad etish')}</Text>
                     </TouchableOpacity>
                   </View>
                 )}
-                {t.canStart && (
-                  <TouchableOpacity onPress={t.onStart} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.amber }]}>
-                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>Boshlash</Text>
+                {task.canStart && (
+                  <TouchableOpacity onPress={task.onStart} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.amber }]}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>{t('Boshlash')}</Text>
                   </TouchableOpacity>
                 )}
-                {t.canComplete && (
-                  <TouchableOpacity onPress={t.onComplete} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.emerald }]}>
-                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>Bajarildi ✓</Text>
+                {task.canComplete && (
+                  <TouchableOpacity onPress={task.onComplete} activeOpacity={0.85} style={[st.fullBtn, { backgroundColor: C.emerald }]}>
+                    <Text style={{ fontFamily: F.bold, fontSize: 13, color: C.ink }}>{t('Bajarildi')} ✓</Text>
                   </TouchableOpacity>
                 )}
               </View>

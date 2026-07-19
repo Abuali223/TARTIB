@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
 import { FadeIn, SectionTitle } from '../components/ui';
+import { t } from '../lib/i18n';
 
 const CELL_GAP = 4;
 
@@ -9,19 +10,19 @@ export default function Reja({ v }) {
   return (
     <FadeIn style={st.wrap}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-        <Text style={st.h2}>Reja</Text>
+        <Text style={st.h2}>{t('Reja')}</Text>
         <TouchableOpacity onPress={v.open.assign} activeOpacity={0.85} style={st.addBtn}>
           <Text style={{ fontFamily: F.bold, fontSize: 24, color: C.ink, lineHeight: 28 }}>+</Text>
         </TouchableOpacity>
       </View>
-      <Text style={st.sub}>{v.monthLabel}</Text>
+      <Text style={st.sub}>{t(v.monthLabel)}</Text>
 
       {/* calendar */}
       <View style={st.calCard}>
         <View style={st.grid}>
           {v.daysUz.map((d, i) => (
             <View key={i} style={st.cellBox}>
-              <Text style={{ fontFamily: F.bold, fontSize: 11, color: C.sageFaint }}>{d}</Text>
+              <Text style={{ fontFamily: F.bold, fontSize: 11, color: C.sageFaint }}>{t(d)}</Text>
             </View>
           ))}
         </View>
@@ -45,18 +46,18 @@ export default function Reja({ v }) {
       </View>
 
       {/* day timeline */}
-      <SectionTitle style={{ marginHorizontal: 2, marginTop: 4, marginBottom: 14 }}>Kun tartibi</SectionTitle>
+      <SectionTitle style={{ marginHorizontal: 2, marginTop: 4, marginBottom: 14 }}>{t('Kun tartibi')}</SectionTitle>
       <View style={{ paddingLeft: 6 }}>
-        {v.timeline.map((t, i) => (
+        {v.timeline.map((item, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: 14, paddingBottom: 18 }}>
-            <Text style={st.tlTime}>{t.time}</Text>
+            <Text style={st.tlTime}>{item.time}</Text>
             <View style={{ alignItems: 'center' }}>
-              <View style={[st.tlDot, { borderColor: t.color, backgroundColor: t.done ? t.color : 'transparent' }]} />
+              <View style={[st.tlDot, { borderColor: item.color, backgroundColor: item.done ? item.color : 'transparent' }]} />
               {i < v.timeline.length - 1 && <View style={st.tlLine} />}
             </View>
             <View style={{ flex: 1, paddingBottom: 4 }}>
-              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: t.done ? C.sage : C.cream, textDecorationLine: t.done ? 'line-through' : 'none' }}>{t.title}</Text>
-              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageFaint, marginTop: 2 }}>{t.type}</Text>
+              <Text style={{ fontFamily: F.semibold, fontSize: 15, color: item.done ? C.sage : C.cream, textDecorationLine: item.done ? 'line-through' : 'none' }}>{t(item.title)}</Text>
+              <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sageFaint, marginTop: 2 }}>{t(item.type)}</Text>
             </View>
           </View>
         ))}
