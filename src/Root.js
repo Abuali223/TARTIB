@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F } from './theme';
@@ -726,6 +726,11 @@ export default class Root extends React.Component {
             <Text style={st.flashText}>{v.flash}</Text>
           </View>
         )}
+
+        {/* Status-bar scrim: edge-to-edge'da skroll qilingan kontent tepadan sizib chiqmasin */}
+        {Platform.OS === 'android' && !!StatusBar.currentHeight && (
+          <View pointerEvents="none" style={[st.topScrim, { height: StatusBar.currentHeight }]} />
+        )}
       </LinearGradient>
     );
   }
@@ -739,4 +744,5 @@ const st = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 15, shadowOffset: { width: 0, height: 12 }, elevation: 8,
   },
   flashText: { fontFamily: F.bold, fontSize: 14, color: C.cream },
+  topScrim: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: '#0a1f18', zIndex: 60 },
 });

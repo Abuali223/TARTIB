@@ -1,6 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { C, F } from '../theme';
+
+// Edge-to-edge (SDK 54) tufayli ilova tizim panellari ostiga chiziladi.
+// react-native-safe-area-context native modul — OTA'da eski APK'ni buzadi,
+// shu bois tizim navigatsiya paneli balandligini xavfsiz zaxira bilan qoplaymiz.
+const NAV_INSET = Platform.OS === 'android' ? 46 : 34;
 import { CalendarIcon, CrescentIcon, HomeIcon, ProfileTabIcon, UsersIcon } from '../components/icons';
 
 function Tab({ onPress, active, label, Icon }) {
@@ -28,7 +33,7 @@ export default function TabBar({ v }) {
 const st = StyleSheet.create({
   bar: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingTop: 8, paddingHorizontal: 6, paddingBottom: 26,
+    paddingTop: 8, paddingHorizontal: 6, paddingBottom: NAV_INSET,
     backgroundColor: 'rgba(6,18,13,0.96)',
     borderTopWidth: 1, borderTopColor: 'rgba(217,179,106,0.12)',
   },
