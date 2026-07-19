@@ -19,7 +19,19 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
   const [step, setStep] = useState('enter');   // set rejimi: enter -> confirm
   const [firstPin, setFirstPin] = useState('');
   const [err, setErr] = useState('');
+  const [attempts, setAttempts] = useState(0);
+  const [remain, setRemain] = useState(0);      // cooldown soniyalari
   const shake = useRef(new Animated.Value(0)).current;
+
+  // Cooldown taymeri
+  useEffect(() => {
+    if (remain <= 0) return;
+    const id = setInterval(() => setRemain(r => Math.max(0, r - 1)), 1000);
+    return () => clearInterval(id);
+  }, [remain > 0]);
+
+  // Ketma-ket xato urinishlar → kutish (brute-force'ga qarshi)
+  const coolFor = (a) => (a >= 10 ? 300 : a >= 8 ? 120 : a >= 5 ? 30 : 0);
 
   const doShake = () => {
     Animated.sequence([
@@ -41,7 +53,14 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
   const submit = async (pin) => {
     if (mode === 'unlock') {
       const ok = await onUnlock(pin);
-      if (!ok) { setErr(t("Noto'g'ri PIN")); setEntered(''); doShake(); }
+      if (ok) { setAttempts(0); return; }   // ochildi
+      const a = attempts + 1;
+      setAttempts(a);
+      setEntered('');
+      doShake();
+      const cd = coolFor(a);
+      if (cd > 0) { setRemain(cd); setErr(''); }
+      else setErr(t("Noto'g'ri PIN"));
     } else {
       if (step === 'enter') { setFirstPin(pin); setEntered(''); setStep('confirm'); setErr(''); }
       else {
@@ -52,6 +71,7 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
   };
 
   const press = (d) => {
+    if (remain > 0) return;                 // kutish davomida bloklangan
     if (entered.length >= LEN) return;
     const next = entered + d;
     setEntered(next);
@@ -73,7 +93,9 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
         <View style={st.wrap}>
           <View style={st.logo}><LogoMark size={64} /></View>
           <Text style={st.title}>{title}</Text>
-          <Text style={st.sub}>{err ? err : sub}</Text>
+          <Text style={[st.sub, remain > 0 && { color: C.red }]}>
+            {remain > 0 ? t('Ko‘p urinish. {n} soniyadan keyin qayta urining').replace('{n}', String(remain)) : (err ? err : sub)}
+          </Text>
 
           <Animated.View style={[st.dots, { transform: [{ translateX: shake }] }]}>
             {Array.from({ length: LEN }).map((_, i) => (
@@ -81,7 +103,7 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
             ))}
           </Animated.View>
 
-          <View style={st.pad}>
+          <View style={[st.pad, remain > 0 && { opacity: 0.4 }]} pointerEvents={remain > 0 ? 'none' : 'auto'}>
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(d => (
               <TouchableOpacity key={d} onPress={() => press(d)} activeOpacity={0.6} style={st.key}>
                 <Text style={st.keyT}>{d}</Text>

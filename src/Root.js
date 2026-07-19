@@ -12,7 +12,7 @@ import { ensureUserDoc, mapAuthError, signInEmail, signInWithGoogleIdToken, sign
 import { googleConfigured } from './lib/googleAuth';
 import GoogleBridge from './components/GoogleBridge';
 import LockScreen from './screens/LockScreen';
-import { verifyPin, hashPin, biometricAvailable, biometricAuth } from './lib/lock';
+import { setSecurePin, verifySecurePin, clearSecurePin, hashPin, verifyLegacyPin, biometricAvailable, biometricAuth } from './lib/lock';
 import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
 import { schedulePrayerReminders } from './lib/notifications';
@@ -465,12 +465,21 @@ export default class Root extends React.Component {
   cancelSetPin = () => this.setState({ pinSetup: false });
   onSetPin = async (pin) => {
     try {
-      const h = await hashPin(pin);
-      this.setState({ pinHash: h, lockEnabled: true, pinSetup: false, locked: false });
+      const secure = await setSecurePin(pin);   // yangi APK: SecureStore
+      if (secure) {
+        this.setState({ pinHash: null, lockEnabled: true, pinSetup: false, locked: false });
+      } else {
+        // eski APK (SecureStore yo'q) — legacy hash (OTA'da ham ishlaydi)
+        const h = await hashPin(pin);
+        this.setState({ pinHash: h, lockEnabled: true, pinSetup: false, locked: false });
+      }
       this.flash('Ilova qulfi yoqildi');
     } catch (e) { this.flash('Xatolik — qaytadan urining'); }
   };
-  disableLock = () => this.setState({ lockEnabled: false, biometricEnabled: false, pinHash: null, locked: false });
+  disableLock = () => {
+    clearSecurePin().catch(() => {});
+    this.setState({ lockEnabled: false, biometricEnabled: false, pinHash: null, locked: false });
+  };
   toggleLock = () => {
     if (this.state.lockEnabled) this.disableLock();
     else this.startSetPin();
@@ -482,7 +491,15 @@ export default class Root extends React.Component {
     if (ok) { this.setState({ biometricEnabled: true }); this.flash('Barmoq izi yoqildi'); }
   };
   unlockWithPin = async (pin) => {
-    const ok = await verifyPin(pin, this.state.pinHash);
+    let ok = await verifySecurePin(pin);           // yangi: SecureStore
+    if (!ok && this.state.pinHash) {
+      // legacy (eski statik-tuz) — muvaffaqiyatli bo'lsa SecureStore'ga ko'chiramiz
+      ok = await verifyLegacyPin(pin, this.state.pinHash);
+      if (ok) {
+        const migrated = await setSecurePin(pin);
+        if (migrated) this.setState({ pinHash: null });
+      }
+    }
     if (ok) this.setState({ locked: false });
     return ok;
   };
