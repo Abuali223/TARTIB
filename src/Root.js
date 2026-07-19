@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F } from './theme';
@@ -120,6 +120,7 @@ export default class Root extends React.Component {
       this.setState({ hydrated: true }, () => this.syncNotifications());
     }
     this.locate();
+    this._backSub = BackHandler.addEventListener('hardwareBackPress', this.onHardwareBack);
     this._unsubAuth = watchAuth(async (user) => {
       if (user) {
         let userDoc = null;
@@ -135,8 +136,27 @@ export default class Root extends React.Component {
   componentWillUnmount() {
     clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st);
     if (this._unsubAuth) this._unsubAuth();
+    if (this._backSub) this._backSub.remove();
     this.stopSync();
   }
+
+  // Android "ortga" tugmasi: ilovadan chiqib ketmasin — avval oyna/tabni yopsin
+  onHardwareBack = () => {
+    const { overlay, tab, fbUser } = this.state;
+    if (overlay) {
+      // Sozlamalar ichidagi tanlovlar — Sozlamalarga qaytadi, aks holda yopiladi
+      if (overlay === 'madhab' || overlay === 'city' || overlay === 'lang') this.setState({ overlay: 'settings' });
+      else this.setState({ overlay: null });
+      return true;
+    }
+    if (!fbUser) return false;          // onboarding — chiqishga ruxsat
+    if (tab !== 'bugun') { this.go('bugun'); return true; }
+    // Bosh ekranda — ikki marta bosilsa chiqadi
+    if (this._backExitAt && Date.now() - this._backExitAt < 2000) return false;
+    this._backExitAt = Date.now();
+    this.flash('Chiqish uchun yana bir marta bosing');
+    return true;
+  };
 
   componentDidUpdate(_, prev) {
     if (this.state.hydrated) {
