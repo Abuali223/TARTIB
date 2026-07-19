@@ -1,10 +1,12 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { Avatar, OverlayShell } from '../components/ui';
 import { t } from '../lib/i18n';
 
 export default function StatsOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <OverlayShell title={t('Statistika')} onClose={v.close}>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -58,7 +60,7 @@ export default function StatsOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   card: { borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, marginBottom: 16 },
-  barTrack: { height: 5, borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginTop: 6 },
+  barTrack: { height: 5, borderRadius: 99, backgroundColor: C.overlay2, overflow: 'hidden', marginTop: 6 },
 });

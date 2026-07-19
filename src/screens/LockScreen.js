@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { LogoMark } from '../components/icons';
 import { t } from '../lib/i18n';
 
@@ -13,6 +13,8 @@ const LEN = 4;
 // biometricEnabled, onBiometric() -> Promise<bool>
 // onForgot() -> chiqish (PIN esdan chiqsa)
 export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biometricEnabled, onBiometric, onForgot }) {
+  const C = useC();
+  const st = mkSt(C);
   const [entered, setEntered] = useState('');
   const [step, setStep] = useState('enter');   // set rejimi: enter -> confirm
   const [firstPin, setFirstPin] = useState('');
@@ -67,7 +69,7 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <LinearGradient colors={['#12402d', '#0a2117', '#050f0a']} locations={[0, 0.55, 1]} style={{ flex: 1 }}>
+      <LinearGradient colors={C.radialTop} locations={[0, 0.55, 1]} style={{ flex: 1 }}>
         <View style={st.wrap}>
           <View style={st.logo}><LogoMark size={64} /></View>
           <Text style={st.title}>{title}</Text>
@@ -110,7 +112,7 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, paddingBottom: 20 },
   logo: { marginBottom: 20, opacity: 0.95 },
   title: { fontFamily: F.serif, fontSize: 24, color: C.cream, textAlign: 'center' },
@@ -121,7 +123,7 @@ const st = StyleSheet.create({
   pad: { width: 260, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
   key: {
     width: 74, height: 74, borderRadius: 37, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.overlay3,
   },
   keyT: { fontFamily: F.semibold, fontSize: 28, color: C.cream },
   del: { fontFamily: F.regular, fontSize: 24, color: C.sageMid },

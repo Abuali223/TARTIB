@@ -1,11 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { FadeIn } from '../components/ui';
 import { BigCheckIcon, ChevronRight, GearIcon, SmallUsersIcon, StatsIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 function Row({ onPress, iconBg, icon, label, last }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.75}
       style={[st.row, !last && { borderBottomWidth: 1, borderBottomColor: C.hairline }]}>
@@ -17,6 +19,8 @@ function Row({ onPress, iconBg, icon, label, last }) {
 }
 
 export default function Profil({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <FadeIn style={st.wrap}>
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
@@ -35,13 +39,13 @@ export default function Profil({ v }) {
         <Row onPress={v.open.stats} iconBg="rgba(217,179,106,0.14)" icon={<StatsIcon />} label={t('Statistika')} />
         <Row onPress={v.open.habits} iconBg="rgba(67,192,141,0.14)" icon={<BigCheckIcon />} label={t('Odatlar')} />
         <Row onPress={v.go.jamoa} iconBg="rgba(111,179,224,0.14)" icon={<SmallUsersIcon />} label={t(v.roleLabel + ' boshqaruvi')} />
-        <Row onPress={v.open.settings} iconBg="rgba(255,255,255,0.06)" icon={<GearIcon />} label={t('Sozlamalar')} last />
+        <Row onPress={v.open.settings} iconBg={C.overlay2} icon={<GearIcon />} label={t('Sozlamalar')} last />
       </View>
     </FadeIn>
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
   avatar: {
     width: 88, height: 88, borderRadius: 28, backgroundColor: 'rgba(217,179,106,0.14)',

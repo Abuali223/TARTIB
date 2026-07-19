@@ -1,10 +1,12 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { Avatar, Chip, OverlayShell, PrimaryBtn, SectionTitle, StatusPill } from '../components/ui';
 import { t } from '../lib/i18n';
 
 export default function MemberOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   const m = v.selMemberObj;
   return (
     <OverlayShell title={t("A'zo profili")} onClose={v.close}>
@@ -54,9 +56,9 @@ export default function MemberOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   progressCard: { borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 18, marginBottom: 18 },
-  barTrack: { height: 8, borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.07)', overflow: 'hidden' },
+  barTrack: { height: 8, borderRadius: 99, backgroundColor: C.overlay2, overflow: 'hidden' },
   label: { fontFamily: F.bold, fontSize: 13, color: C.sageMid, marginHorizontal: 2, marginBottom: 10 },
   taskRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16,

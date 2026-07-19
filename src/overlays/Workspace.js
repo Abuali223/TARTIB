@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { BriefcaseIcon, CheckIcon, ChevronRight, GradCapIcon, PersonIcon, UsersIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
@@ -12,6 +12,8 @@ const TYPE_ICON = {
 };
 
 function Row({ active, onPress, iconBg, icon, title, sub, showCheck = true }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={[st.row, active ? st.rowActive : st.rowIdle]}>
       <View style={[st.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
@@ -25,13 +27,15 @@ function Row({ active, onPress, iconBg, icon, title, sub, showCheck = true }) {
 }
 
 export default function WorkspaceSheet({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   const [screen, setScreen] = useState('list'); // list | create | join
 
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 32 }]}>
       <Pressable onPress={v.close} style={st.backdrop} />
       <KeyboardAvoidingView style={st.sheetWrap} pointerEvents="box-none" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <LinearGradient colors={['#102c22', '#0a1f18']} style={st.sheet}>
+        <LinearGradient colors={C.sheet} style={st.sheet}>
           <View style={st.grabber} />
 
           {screen === 'list' && (
@@ -124,21 +128,21 @@ export default function WorkspaceSheet({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4,12,8,0.6)' },
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, borderTopWidth: 1, borderTopColor: 'rgba(217,179,106,0.22)', paddingTop: 12, paddingHorizontal: 20, paddingBottom: 42 },
-  grabber: { width: 40, height: 4, borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginBottom: 18 },
+  grabber: { width: 40, height: 4, borderRadius: 99, backgroundColor: C.overlay3, alignSelf: 'center', marginBottom: 18 },
   title: { fontFamily: F.serif, fontSize: 22, color: C.cream, marginBottom: 3 },
   sub: { fontFamily: F.regular, fontSize: 13, color: C.sage, marginBottom: 18 },
   empty: { fontFamily: F.regular, fontSize: 13, color: C.sageFaint, textAlign: 'center', paddingVertical: 10, lineHeight: 19 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%', paddingVertical: 15, paddingHorizontal: 16, borderRadius: 16, marginBottom: 10, borderWidth: 1 },
   rowActive: { backgroundColor: 'rgba(217,179,106,0.12)', borderColor: 'rgba(217,179,106,0.4)' },
-  rowIdle: { backgroundColor: '#0b241b', borderColor: 'rgba(255,255,255,0.06)' },
+  rowIdle: { backgroundColor: C.cardAlt, borderColor: C.hairline },
   rowIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  dashed: { flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%', paddingVertical: 15, paddingHorizontal: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderStyle: 'dashed' },
+  dashed: { flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%', paddingVertical: 15, paddingHorizontal: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: C.overlay3, borderStyle: 'dashed' },
   label: { fontFamily: F.bold, fontSize: 13, color: C.sageMid, marginBottom: 10, marginHorizontal: 2 },
-  typeChip: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: 'rgba(255,255,255,0.03)' },
+  typeChip: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: C.overlay1 },
   input: { paddingVertical: 15, paddingHorizontal: 16, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: 'rgba(217,179,106,0.18)', color: C.cream, fontFamily: F.medium, fontSize: 15, marginBottom: 20 },
   primary: { paddingVertical: 16, borderRadius: 16, backgroundColor: C.gold, alignItems: 'center' },
   primaryText: { fontFamily: F.extrabold, fontSize: 16, color: C.ink },

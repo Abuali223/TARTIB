@@ -1,12 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { FadeIn, ProgressRing, SectionTitle, StatusPill } from '../components/ui';
 import { BeadsIcon, CheckIcon, ChevronDown, CompassIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 export default function Bugun({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <FadeIn style={st.wrap}>
       {/* header */}
@@ -26,7 +28,7 @@ export default function Bugun({ v }) {
       </View>
 
       {/* next prayer card */}
-      <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.prayerCard}>
+      <LinearGradient colors={C.cardGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.prayerCard}>
         <Text style={st.crescentWatermark}>☾</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View>
@@ -83,7 +85,7 @@ export default function Bugun({ v }) {
         {v.amals.map((a, i) => (
           <TouchableOpacity key={a.id} onPress={a.onToggle} activeOpacity={0.7}
             style={[st.amalRow, i < v.amals.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.hairline }]}>
-            <View style={[st.amalBox, a.done ? { borderColor: C.emerald, backgroundColor: C.emerald } : { borderColor: 'rgba(242,235,217,0.28)' }]}>
+            <View style={[st.amalBox, a.done ? { borderColor: C.emerald, backgroundColor: C.emerald } : { borderColor: C.borderStrong }]}>
               {a.done && <CheckIcon />}
             </View>
             <View style={{ flex: 1 }}>
@@ -133,7 +135,7 @@ export default function Bugun({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
   modeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',

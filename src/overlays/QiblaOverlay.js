@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { OverlayShell } from '../components/ui';
 import { t } from '../lib/i18n';
 
@@ -14,6 +14,8 @@ function smoothHeading(prev, next, alpha = 0.25) {
 }
 
 export default function QiblaOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   const bearing = v.qibla.bearing; // haqiqiy shimoldan Qibla burchagi
   const [heading, setHeading] = useState(0);
   const [hasSensor, setHasSensor] = useState(null); // null=aniqlanmoqda, true, false
@@ -117,7 +119,7 @@ export default function QiblaOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   pointer: {
     position: 'absolute', top: -4, alignSelf: 'center', zIndex: 5,
     width: 0, height: 0, borderLeftWidth: 9, borderRightWidth: 9, borderTopWidth: 14,
@@ -125,7 +127,7 @@ const st = StyleSheet.create({
   },
   rose: {
     ...StyleSheet.absoluteFillObject, borderRadius: SIZE / 2,
-    backgroundColor: '#0b241b', borderWidth: 1, borderColor: 'rgba(217,179,106,0.25)',
+    backgroundColor: C.cardAlt, borderWidth: 1, borderColor: C.borderStrong,
   },
   cardinal: { position: 'absolute', fontFamily: F.bold, fontSize: 14, color: C.sage },
   kaabaWrap: { position: 'absolute', top: 34, alignSelf: 'center', alignItems: 'center', gap: 5 },

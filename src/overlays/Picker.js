@@ -1,11 +1,13 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { OverlayShell } from '../components/ui';
 
 // Umumiy tanlov ro'yxati (mazhab / shahar uchun).
 // picker = { title, note?, options: [{ label, sub?, active, onPick }] }
 export default function PickerOverlay({ picker, onClose }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <OverlayShell title={picker.title} onClose={onClose}>
       <ScrollView contentContainerStyle={{ paddingTop: 8, paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
@@ -30,7 +32,7 @@ export default function PickerOverlay({ picker, onClose }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   note: { fontFamily: F.regular, fontSize: 13, color: C.sageMid, marginHorizontal: 4, marginTop: 6, marginBottom: 14, lineHeight: 19 },
   card: { borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 },

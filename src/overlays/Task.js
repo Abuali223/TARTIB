@@ -1,10 +1,12 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { Avatar, OverlayShell, StatusPill } from '../components/ui';
 import { t } from '../lib/i18n';
 
 function InfoRow({ label, children, last }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <View style={[st.infoRow, !last && { borderBottomWidth: 1, borderBottomColor: C.hairline }]}>
       <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.sage, width: 90 }}>{label}</Text>
@@ -14,6 +16,8 @@ function InfoRow({ label, children, last }) {
 }
 
 export default function TaskOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   const task = v.selTaskObj;
   return (
     <OverlayShell title={t('Vazifa')} onClose={v.close}>
@@ -65,7 +69,7 @@ export default function TaskOverlay({ v }) {
           </TouchableOpacity>
         )}
         {task.isFinal && (
-          <TouchableOpacity onPress={task.onReopen} activeOpacity={0.85} style={[st.fullBtn, { borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)' }]}>
+          <TouchableOpacity onPress={task.onReopen} activeOpacity={0.85} style={[st.fullBtn, { borderWidth: 1, borderColor: C.overlay3 }]}>
             <Text style={[st.fullBtnText, { color: C.sageMid, fontFamily: F.bold }]}>{t('Qayta ochish')}</Text>
           </TouchableOpacity>
         )}
@@ -74,7 +78,7 @@ export default function TaskOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   title: { fontFamily: F.serif, fontSize: 26, color: C.cream, marginTop: 14, marginBottom: 6, lineHeight: 33 },
   desc: { fontFamily: F.regular, fontSize: 15, color: C.sageMid, lineHeight: 23, marginBottom: 22 },
   infoCard: { borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden', marginBottom: 24 },

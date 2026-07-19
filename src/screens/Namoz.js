@@ -1,12 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { FadeIn } from '../components/ui';
 import { ChevronRight, CompassIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 export default function Namoz({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <FadeIn style={st.wrap}>
       <Text style={st.h2}>{t('Namoz vaqtlari')}</Text>
@@ -15,7 +17,7 @@ export default function Namoz({ v }) {
         <Text style={st.locWarn}>{t('Joylashuvga ruxsat berilmadi — vaqtlar')} {t(v.cityName)} {t("bo'yicha taxminiy hisoblanmoqda")}</Text>
       )}
 
-      <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.countCard}>
+      <LinearGradient colors={C.cardGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.countCard}>
         <Text style={st.kicker}>{t(v.next.name.toUpperCase())} {t('NAMOZIGACHA')}</Text>
         <Text style={st.countdown}>{v.next.countdown}</Text>
         <Text style={{ fontFamily: F.regular, fontSize: 13, color: C.sageMid }}>{t('Hozir')}: {t(v.curName)} {t('vaqti')}</Text>
@@ -49,7 +51,7 @@ export default function Namoz({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
   h2: { fontFamily: F.serif, fontSize: 30, color: C.cream, marginBottom: 6 },
   sub: { fontFamily: F.regular, fontSize: 14, color: C.sage, marginBottom: 20 },

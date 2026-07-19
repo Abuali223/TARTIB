@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { CalendarIcon, CrescentIcon, HomeIcon, ProfileTabIcon, UsersIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
@@ -11,6 +11,8 @@ const NAV_INSET = Platform.OS === 'android' ? 46 : 34;
 const ICON_SIZE = 28;
 
 function Tab({ onPress, active, label, Icon }) {
+  const C = useC();
+  const st = mkSt(C);
   const color = active ? C.gold : C.sage;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={st.tab}>
@@ -21,6 +23,8 @@ function Tab({ onPress, active, label, Icon }) {
 }
 
 export default function TabBar({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <View style={st.bar}>
       <Tab onPress={v.go.bugun} active={v.tab === 'bugun'} label={t('Bugun')} Icon={HomeIcon} />
@@ -32,12 +36,12 @@ export default function TabBar({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   bar: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingTop: 8, paddingHorizontal: 6, paddingBottom: NAV_INSET,
-    backgroundColor: 'rgba(6,18,13,0.96)',
-    borderTopWidth: 1, borderTopColor: 'rgba(217,179,106,0.12)',
+    backgroundColor: C.card,
+    borderTopWidth: 1, borderTopColor: C.border,
   },
   tab: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 6 },
   label: { fontFamily: F.semibold, fontSize: 11 },

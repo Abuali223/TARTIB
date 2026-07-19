@@ -1,10 +1,12 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { OverlayShell, Toggle } from '../components/ui';
 import { t } from '../lib/i18n';
 
 function ToggleRow({ label, on, onToggle, last }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <View style={[st.row, !last && st.rowBorder]}>
       <Text style={st.rowLabel}>{label}</Text>
@@ -14,6 +16,8 @@ function ToggleRow({ label, on, onToggle, last }) {
 }
 
 function InfoRow({ label, value, gold, last, onPress }) {
+  const C = useC();
+  const st = mkSt(C);
   const body = (
     <>
       <Text style={st.rowLabel}>{label}</Text>
@@ -31,6 +35,8 @@ function InfoRow({ label, value, gold, last, onPress }) {
 }
 
 export default function SettingsOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <OverlayShell title={t('Sozlamalar')} onClose={v.close}>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -47,7 +53,7 @@ export default function SettingsOverlay({ v }) {
           <InfoRow label={t('Joylashuv')} value={v.isManualCity ? t(v.cityName) : `${t(v.cityName)} (auto)`} onPress={v.openCity} />
           <InfoRow label={t('Hisoblash usuli')} value={t(v.madhabName)} onPress={v.openMadhab} />
           <InfoRow label={t('Til')} value={v.langName} onPress={v.openLang} />
-          <InfoRow label={t('Mavzu')} value={t("To'q yashil")} gold last />
+          <InfoRow label={t('Mavzu')} value={v.themeName} gold last onPress={v.openTheme} />
         </View>
 
         <Text style={st.section}>{t('XAVFSIZLIK')}</Text>
@@ -74,7 +80,7 @@ export default function SettingsOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   section: { fontFamily: F.regular, fontSize: 12, color: C.sageFaint, letterSpacing: 1, marginHorizontal: 4, marginTop: 4, marginBottom: 8 },
   card: { borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden', marginBottom: 22 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 16 },

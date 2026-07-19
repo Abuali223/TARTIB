@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityIndicator, AppState, BackHandler, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
-import { C, F } from './theme';
+import { C, F, THEMES, ThemeProvider } from './theme';
 import { DEFAULT_CITY, DEFAULT_COORDS, MADHABS, fmtClock, nextPrayer, currentPrayer, pad2, prayerList, qiblaBearing } from './lib/prayer';
 import { CITIES } from './lib/cities';
 import { LANGS, setLang, t } from './lib/i18n';
@@ -46,7 +46,7 @@ const SHOW_SECONDS = true;
 const PERSIST_KEYS = [
   'activeWorkspaceId', 'settings', 'amals', 'amalsDate', 'habits',
   'tasbehCount', 'tasbehTarget', 'dhikrIdx', 'madhab', 'manualCity', 'lang',
-  'lockEnabled', 'pinHash', 'biometricEnabled',
+  'lockEnabled', 'pinHash', 'biometricEnabled', 'theme',
 ];
 
 export const STATUS_META = {
@@ -75,7 +75,7 @@ export default class Root extends React.Component {
     tab: 'bugun', overlay: null,
     now: Date.now(),
     coords: DEFAULT_COORDS, cityName: DEFAULT_CITY, locStatus: 'default',
-    madhab: 'hanafi', manualCity: null, lang: 'lotin',
+    madhab: 'hanafi', manualCity: null, lang: 'lotin', theme: 'dark',
     lockEnabled: false, pinHash: null, biometricEnabled: false,
     locked: false, pinSetup: false, // pinSetup: yangi PIN o'rnatish oynasi
     bioAvailable: false,
@@ -440,6 +440,7 @@ export default class Root extends React.Component {
   setMadhab = (key) => this.setState({ madhab: key, overlay: 'settings' });
   setManualCity = (city) => this.setState({ manualCity: city, overlay: 'settings' }); // city=null → GPS
   setAppLang = (key) => { setLang(key); this.setState({ lang: key, overlay: 'settings' }); };
+  setTheme = (key) => this.setState({ theme: key === 'light' ? 'light' : 'dark', overlay: 'settings' });
   openPicker = (which) => this.setState({ overlay: which }); // 'madhab' | 'city' | 'lang'
   backToSettings = () => this.setState({ overlay: 'settings' });
 
@@ -756,6 +757,18 @@ export default class Root extends React.Component {
       note: t("Ilova tili. Kirill — matnlar avtomatik o'giriladi."),
       options: LANGS.map(l => ({ label: l.name, active: S.lang === l.key, onPick: () => this.setAppLang(l.key) })),
     };
+    const THEME_OPTS = [{ key: 'dark', name: t("To'q yashil") }, { key: 'light', name: t("Yorug'") }];
+    const themeName = (THEME_OPTS.find(o => o.key === S.theme) || THEME_OPTS[0]).name;
+    const themePicker = {
+      title: t('Mavzu'),
+      note: t('Ilova ko’rinishi.'),
+      options: THEME_OPTS.map(o => ({
+        label: o.name,
+        sub: o.key === 'dark' ? t('Standart — to‘q yashil') : t('Yorug‘ — issiq krem'),
+        active: S.theme === o.key,
+        onPick: () => this.setTheme(o.key),
+      })),
+    };
 
     const cats = ['Namoz', "Qur'on", 'Dars', 'Imtihon', 'Ish', 'Sadaqa'];
     const dues = ['Bugun', 'Ertaga', 'Bu hafta', 'Juma'];
@@ -811,8 +824,8 @@ export default class Root extends React.Component {
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
       // Sozlamalar tanlovlari
       madhabName, isManualCity: !!S.manualCity, langName,
-      openMadhab: () => this.openPicker('madhab'), openCity: () => this.openPicker('city'), openLang: () => this.openPicker('lang'),
-      madhabPicker, cityPicker, langPicker,
+      openMadhab: () => this.openPicker('madhab'), openCity: () => this.openPicker('city'), openLang: () => this.openPicker('lang'), openTheme: () => this.openPicker('theme'),
+      madhabPicker, cityPicker, langPicker, themePicker, themeName,
       // Qulf + ulashish
       lockEnabled: S.lockEnabled, biometricEnabled: S.biometricEnabled, bioAvailable: S.bioAvailable,
       locked: S.locked, pinSetup: S.pinSetup,
@@ -821,7 +834,7 @@ export default class Root extends React.Component {
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
       open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
-      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang' },
+      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme' },
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
@@ -833,16 +846,18 @@ export default class Root extends React.Component {
   }
 
   render() {
+    const CT = THEMES[this.state.theme] || THEMES.dark;
     if (!this.state.hydrated || !this.state.authReady) {
       return (
-        <LinearGradient colors={['#0a1f18', '#071510', '#050f0b']} locations={[0, 0.62, 1]} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={C.gold} size="large" />
+        <LinearGradient colors={CT.bg} locations={[0, 0.62, 1]} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={CT.gold} size="large" />
         </LinearGradient>
       );
     }
     const v = this.vals();
     return (
-      <LinearGradient colors={['#0a1f18', '#071510', '#050f0b']} locations={[0, 0.62, 1]} style={{ flex: 1 }}>
+      <ThemeProvider value={CT}>
+      <LinearGradient colors={CT.bg} locations={[0, 0.62, 1]} style={{ flex: 1 }}>
         {v.booted && (
           <View style={{ flex: 1 }}>
             <ScrollView ref={v.setScroll} style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -869,6 +884,7 @@ export default class Root extends React.Component {
         {v.ov.madhab && <PickerOverlay picker={v.madhabPicker} onClose={this.backToSettings} />}
         {v.ov.city && <PickerOverlay picker={v.cityPicker} onClose={this.backToSettings} />}
         {v.ov.lang && <PickerOverlay picker={v.langPicker} onClose={this.backToSettings} />}
+        {v.ov.theme && <PickerOverlay picker={v.themePicker} onClose={this.backToSettings} />}
         {v.ov.member && v.selMemberObj && <MemberOverlay v={v} />}
         {v.ov.task && v.selTaskObj && <TaskOverlay v={v} />}
         {v.ov.assign && <AssignOverlay v={v} />}
@@ -883,7 +899,7 @@ export default class Root extends React.Component {
 
         {/* Status-bar scrim: edge-to-edge'da skroll qilingan kontent tepadan sizib chiqmasin */}
         {Platform.OS === 'android' && !!StatusBar.currentHeight && (
-          <View pointerEvents="none" style={[st.topScrim, { height: StatusBar.currentHeight }]} />
+          <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 60, height: StatusBar.currentHeight, backgroundColor: CT.scrim }} />
         )}
 
         {/* Yangi PIN o'rnatish oynasi (Sozlamalardan) */}
@@ -901,6 +917,7 @@ export default class Root extends React.Component {
           />
         )}
       </LinearGradient>
+      </ThemeProvider>
     );
   }
 }

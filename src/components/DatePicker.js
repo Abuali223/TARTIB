@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { t } from '../lib/i18n';
 
 const DOW = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
@@ -9,6 +9,8 @@ const MO = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust'
 // JS-only oy kalendar tanlagich (native modul kerak emas — Expo Go'da ishlaydi).
 // value: Date|null, onPick: (Date) => void. O'tgan kunlar tanlab bo'lmaydi.
 export default function DatePicker({ value, onPick }) {
+  const C = useC();
+  const st = mkSt(C);
   const base = value || new Date();
   const [ym, setYm] = useState({ y: base.getFullYear(), m: base.getMonth() });
   const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -57,10 +59,10 @@ export default function DatePicker({ value, onPick }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   card: { borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 20 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  nav: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
+  nav: { width: 36, height: 36, borderRadius: 10, backgroundColor: C.overlay2, alignItems: 'center', justifyContent: 'center' },
   navT: { fontFamily: F.bold, fontSize: 22, color: C.gold, lineHeight: 24 },
   month: { fontFamily: F.bold, fontSize: 15, color: C.cream },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },

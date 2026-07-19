@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { Avatar, Chip, OverlayShell, PrimaryBtn } from '../components/ui';
 import DatePicker from '../components/DatePicker';
 import { t } from '../lib/i18n';
@@ -9,6 +9,8 @@ const MO = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust'
 const dueLabel = (d) => `${d.getDate()} ${t(MO[d.getMonth()])}`;
 
 export default function AssignOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   const [showCal, setShowCal] = useState(false);
   return (
     <OverlayShell title={t('Topshiriq yuborish')} onClose={v.close}>
@@ -75,11 +77,11 @@ export default function AssignOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   label: { fontFamily: F.bold, fontSize: 13, color: C.sageMid, marginHorizontal: 2, marginTop: 4, marginBottom: 10 },
   memberChip: {
     alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, minWidth: 78,
-    borderWidth: 2, borderColor: 'transparent', backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 2, borderColor: 'transparent', backgroundColor: C.overlay1,
   },
   input: {
     paddingVertical: 15, paddingHorizontal: 16, borderRadius: 14, backgroundColor: C.card,

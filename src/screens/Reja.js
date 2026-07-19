@@ -1,12 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { FadeIn, SectionTitle } from '../components/ui';
 import { t } from '../lib/i18n';
 
 const CELL_GAP = 4;
 
 export default function Reja({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <FadeIn style={st.wrap}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -66,7 +68,7 @@ export default function Reja({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
   h2: { fontFamily: F.serif, fontSize: 30, color: C.cream },
   sub: { fontFamily: F.regular, fontSize: 14, color: C.sage, marginBottom: 18 },
@@ -78,5 +80,5 @@ const st = StyleSheet.create({
   taskDot: { position: 'absolute', bottom: 5, width: 4, height: 4, borderRadius: 2 },
   tlTime: { width: 52, textAlign: 'right', fontFamily: F.bold, fontSize: 13, color: C.sage, paddingTop: 1, fontVariant: ['tabular-nums'] },
   tlDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, marginTop: 3 },
-  tlLine: { width: 2, flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginTop: 2 },
+  tlLine: { width: 2, flex: 1, backgroundColor: C.overlay3, marginTop: 2 },
 });

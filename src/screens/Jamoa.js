@@ -1,12 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { Avatar, FadeIn, PrimaryBtn, ProgressRing, SectionTitle, StatusPill, TypeBadge } from '../components/ui';
 import { ChevronDown, ChevronRight, PersonIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 function RoleBadge({ role, isMgr }) {
+  const C = useC();
   return (
     <View style={{ paddingVertical: 3, paddingHorizontal: 9, borderRadius: 7, backgroundColor: isMgr ? 'rgba(217,179,106,0.16)' : 'rgba(111,179,224,0.15)' }}>
       <Text style={{ fontFamily: F.bold, fontSize: 11, color: isMgr ? C.gold : C.blueL }}>{t(role)}</Text>
@@ -15,6 +16,8 @@ function RoleBadge({ role, isMgr }) {
 }
 
 export default function Jamoa({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   return (
     <FadeIn style={st.wrap}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
@@ -34,7 +37,7 @@ export default function Jamoa({ v }) {
       </View>
 
       {v.isShaxsiy && (
-        <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.shaxsiyCard}>
+        <LinearGradient colors={C.cardGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.shaxsiyCard}>
           <View style={st.shaxsiyIcon}><PersonIcon size={30} /></View>
           <Text style={{ fontFamily: F.serif, fontSize: 20, color: C.cream }}>{t('Shaxsiy makon')}</Text>
           <Text style={st.shaxsiyText}>{t("Bu yerda faqat o'zingiz uchun ibodat, zikr va odatlaringizni yuritasiz. Jamoa bilan ishlash uchun oila, ta'lim yoki ishxona makonini tanlang.")}</Text>
@@ -45,7 +48,7 @@ export default function Jamoa({ v }) {
       {v.canManage && (
         <>
           {/* board summary */}
-          <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.boardCard}>
+          <LinearGradient colors={C.cardGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.boardCard}>
             <View style={{ flexDirection: 'row', marginBottom: 14 }}>
               <View style={st.boardCol}><Text style={[st.boardNum, { color: C.gold }]}>{v.board.send}</Text><Text style={st.boardLabel}>{t('Yuborildi')}</Text></View>
               <View style={st.vr} />
@@ -116,9 +119,9 @@ export default function Jamoa({ v }) {
 
       {v.isChildTeam && (
         <>
-          <LinearGradient colors={['#14402f', '#0b2a1f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.boardCard}>
+          <LinearGradient colors={C.cardGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.boardCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <ProgressRing size={64} strokeWidth={12} progress={v.myTotal ? v.myDone / v.myTotal : 0} color={C.emerald} track="rgba(255,255,255,0.08)">
+              <ProgressRing size={64} strokeWidth={12} progress={v.myTotal ? v.myDone / v.myTotal : 0} color={C.emerald} track={C.overlay3}>
                 <Text style={{ fontFamily: F.extrabold, fontSize: 15, color: C.cream }}>{v.myPct}%</Text>
               </ProgressRing>
               <View style={{ flex: 1 }}>
@@ -173,7 +176,7 @@ export default function Jamoa({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
   h2: { fontFamily: F.serif, fontSize: 30, color: C.cream },
   modeBtn: {
@@ -192,20 +195,20 @@ const st = StyleSheet.create({
   boardCol: { flex: 1, alignItems: 'center' },
   boardNum: { fontFamily: F.extrabold, fontSize: 26 },
   boardLabel: { fontFamily: F.regular, fontSize: 11, color: C.sage, marginTop: 2 },
-  vr: { width: 1, backgroundColor: 'rgba(255,255,255,0.08)' },
-  barTrack: { height: 8, borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+  vr: { width: 1, backgroundColor: C.overlay3 },
+  barTrack: { height: 8, borderRadius: 99, backgroundColor: C.overlay3, overflow: 'hidden' },
   memberRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16,
     borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
   },
   onlineDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.emerald },
-  memberBarTrack: { height: 5, borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginTop: 8 },
+  memberBarTrack: { height: 5, borderRadius: 99, backgroundColor: C.overlay2, overflow: 'hidden', marginTop: 8 },
   taskRow: {
     flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 14, paddingHorizontal: 16,
     borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
   },
   taskCard: { borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 16 },
-  emptyCard: { borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderStyle: 'dashed', padding: 18, marginBottom: 20, alignItems: 'center' },
+  emptyCard: { borderRadius: 18, backgroundColor: C.overlay1, borderWidth: 1, borderColor: C.overlay3, borderStyle: 'dashed', padding: 18, marginBottom: 20, alignItems: 'center' },
   emptyTitle: { fontFamily: F.bold, fontSize: 15, color: C.cream, marginBottom: 6 },
   emptyText: { fontFamily: F.regular, fontSize: 13, color: C.sageMid, textAlign: 'center', lineHeight: 19 },
   emptyAction: { fontFamily: F.bold, fontSize: 13, color: C.gold, marginTop: 12 },

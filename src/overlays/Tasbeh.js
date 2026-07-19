@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { C, F } from '../theme';
+import { F, useC } from '../theme';
 import { OverlayShell, ProgressRing } from '../components/ui';
 import { t } from '../lib/i18n';
 
 function PulsingCount({ count }) {
+  const C = useC();
   const scale = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     scale.setValue(1);
@@ -21,6 +22,8 @@ function PulsingCount({ count }) {
 }
 
 export default function TasbehOverlay({ v }) {
+  const C = useC();
+  const st = mkSt(C);
   const tb = v.tasbeh;
   return (
     <OverlayShell title={t('Tasbeh')} onClose={v.close} radial>
@@ -62,16 +65,16 @@ export default function TasbehOverlay({ v }) {
   );
 }
 
-const st = StyleSheet.create({
+const mkSt = (C) => StyleSheet.create({
   body: { alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 40 },
   dhikrChip: {
     paddingVertical: 9, paddingHorizontal: 15, borderRadius: 99,
-    backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: C.overlay1, borderWidth: 1, borderColor: C.overlay3,
   },
   dhikrChipActive: { backgroundColor: 'rgba(217,179,106,0.16)', borderColor: 'rgba(217,179,106,0.5)' },
   targetBtn: {
     width: 52, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1, borderColor: C.overlay3,
   },
-  resetBtn: { paddingVertical: 12, paddingHorizontal: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)' },
+  resetBtn: { paddingVertical: 12, paddingHorizontal: 28, borderRadius: 14, borderWidth: 1, borderColor: C.overlay3 },
 });
