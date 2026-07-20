@@ -17,7 +17,7 @@ import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
 import { schedulePrayerReminders } from './lib/notifications';
 import {
-  addTask, createWorkspace, fetchUser, joinByCode, setTaskStatus, updateMemberRole,
+  addTask, createWorkspace, ensureJoinCode, fetchUser, joinByCode, setTaskStatus, updateMemberRole,
   subscribeInbox, subscribeMyMemberships, subscribeWorkspace, subscribeWorkspaceMembers, subscribeWorkspaceTasks,
 } from './lib/db';
 import Onboarding from './screens/Onboarding';
@@ -234,6 +234,11 @@ export default class Root extends React.Component {
           this._subs.ws.set(wid, subscribeWorkspace(wid, (ws) => {
             // Vaqtinchalik null/xatoni e'tiborsiz qoldiramiz (avvalgi qiymatni saqlaymiz)
             this.setState(s => (ws ? { myWorkspaces: { ...s.myWorkspaces, [wid]: ws } } : {}));
+            // Eski makon: kod→makon xaritasi yo'q bo'lsa ega uni tiklaydi (bir marta)
+            if (ws && ws.ownerUserId === this.uid && ws.code) {
+              this._healed = this._healed || new Set();
+              if (!this._healed.has(ws.code)) { this._healed.add(ws.code); ensureJoinCode(ws); }
+            }
           }));
         }
       }

@@ -49,9 +49,22 @@ export async function createWorkspace(uid, { type, name }) {
   return { wid, code };
 }
 
+// Self-heal: eski makonlarda (joinCodes xaritasi yozila boshlashidan oldin
+// yaratilgan) kod→makon hujjati bo'lmasligi mumkin — shunda "Bunday kod topilmadi"
+// chiqadi. Ega makonini ochganda yetishmayotgan xaritani yozib qo'yadi.
+// FAQAT ega chaqirishi kerak (qoida: create if isOwner). Xato bo'lsa jim o'tadi.
+export async function ensureJoinCode(ws) {
+  if (!ws || !ws.code || !ws.id) return;
+  try {
+    const ref = doc(db, 'joinCodes', ws.code);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) await setDoc(ref, { workspaceId: ws.id, type: ws.type });
+  } catch (e) { /* ega emas yoki tarmoq — jimgina */ }
+}
+
 // Kod bilan qo'shilish — joinCodes orqali (makonni to'g'ridan-to'g'ri o'qimaydi).
 export async function joinByCode(uid, code, { restricted = false } = {}) {
-  const clean = (code || '').trim().toUpperCase();
+  const clean = (code || '').replace(/\s+/g, '').toUpperCase();
   if (!clean) throw new Error('empty-code');
   const jc = await getDoc(doc(db, 'joinCodes', clean));
   if (!jc.exists()) { const e = new Error('not-found'); e.code = 'ws/not-found'; throw e; }
