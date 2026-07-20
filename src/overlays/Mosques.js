@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import { F, useC } from '../theme';
 import { OverlayShell } from '../components/ui';
 import { MosqueIcon } from '../components/icons';
-import { fetchNearbyMosques, fmtDistance, mapUrl } from '../lib/mosques';
+import { fetchNearbyMosques, fmtDistance, mapUrl, mapsSearchUrl } from '../lib/mosques';
 import { t } from '../lib/i18n';
 
 // Eng yaqin masjidlar ro'yxati (OpenStreetMap). Joylashuvni oladi, izlaydi,
@@ -13,6 +13,7 @@ export default function MosquesOverlay({ v }) {
   const C = useC();
   const st = mkSt(C);
   const [state, setState] = useState({ phase: 'loading', list: [], msg: '' });
+  const [coords, setCoords] = useState(null);
 
   const load = async () => {
     setState({ phase: 'loading', list: [], msg: '' });
@@ -24,6 +25,7 @@ export default function MosquesOverlay({ v }) {
       }
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const { latitude, longitude } = pos.coords;
+      setCoords({ lat: latitude, lon: longitude });
       let list = await fetchNearbyMosques(latitude, longitude, 5000);
       if (!list.length) list = await fetchNearbyMosques(latitude, longitude, 15000);  // radiusni kengaytirish
       setState({ phase: list.length ? 'ok' : 'empty', list, msg: '' });
@@ -35,6 +37,12 @@ export default function MosquesOverlay({ v }) {
   useEffect(() => { load(); }, []);
 
   const openMap = (m) => { Linking.openURL(mapUrl(m)).catch(() => {}); };
+  const openMaps = () => { Linking.openURL(mapsSearchUrl(coords && coords.lat, coords && coords.lon)).catch(() => {}); };
+  const MapsBtn = () => (
+    <TouchableOpacity onPress={openMaps} activeOpacity={0.85} style={st.mapsBtn} accessibilityRole="button" accessibilityLabel={t('Google Maps’da masjidlarni ochish')}>
+      <Text style={st.mapsBtnT}>🗺  {t('Google Maps’da ochish')}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <OverlayShell title={t('Yaqin masjidlar')} onClose={v.close}>
@@ -52,6 +60,7 @@ export default function MosquesOverlay({ v }) {
             <TouchableOpacity onPress={load} activeOpacity={0.85} style={st.btn}>
               <Text style={st.btnT}>{t('Ruxsat berish')}</Text>
             </TouchableOpacity>
+            <MapsBtn />
           </View>
         )}
 
@@ -59,18 +68,20 @@ export default function MosquesOverlay({ v }) {
           <View style={st.center}>
             <Text style={st.msg}>
               {state.phase === 'empty'
-                ? t('Yaqin atrofda masjid topilmadi.')
-                : t('Internet yoki xizmatda muammo. Qaytadan urining.')}
+                ? t('Yaqin atrofda ma’lumot topilmadi. Google Maps’da qidiring:')
+                : t('Internet yoki xizmatda muammo. Google Maps’da qidiring:')}
             </Text>
-            <TouchableOpacity onPress={load} activeOpacity={0.85} style={st.btn}>
-              <Text style={st.btnT}>{t('Qaytadan')}</Text>
+            <MapsBtn />
+            <TouchableOpacity onPress={load} activeOpacity={0.85} style={st.linkBtn}>
+              <Text style={st.linkBtnT}>{t('Qaytadan urinish')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {state.phase === 'ok' && (
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-            <Text style={st.hint}>{t('Sizga eng yaqin masjidlar (OpenStreetMap). Bosib xaritada oching.')}</Text>
+            <Text style={st.hint}>{t('Sizga eng yaqin masjidlar. Bosib xaritada oching.')}</Text>
+            <MapsBtn />
             {state.list.map((m) => (
               <TouchableOpacity key={m.id} onPress={() => openMap(m)} activeOpacity={0.85} style={st.row}
                 accessibilityRole="button" accessibilityLabel={m.name + ', ' + fmtDistance(m.km)}>
@@ -93,6 +104,10 @@ const mkSt = (C) => StyleSheet.create({
   msg: { fontFamily: F.regular, fontSize: 15, color: C.sageMid, textAlign: 'center', lineHeight: 22, marginTop: 14 },
   btn: { marginTop: 18, paddingVertical: 13, paddingHorizontal: 26, borderRadius: 14, backgroundColor: C.gold },
   btnT: { fontFamily: F.extrabold, fontSize: 15, color: C.ink },
+  mapsBtn: { marginTop: 16, marginBottom: 14, paddingVertical: 14, paddingHorizontal: 22, borderRadius: 14, backgroundColor: C.blue, alignItems: 'center' },
+  mapsBtnT: { fontFamily: F.extrabold, fontSize: 15, color: C.ink },
+  linkBtn: { marginTop: 4, paddingVertical: 8 },
+  linkBtnT: { fontFamily: F.medium, fontSize: 14, color: C.sageFaint, textDecorationLine: 'underline' },
   hint: { fontFamily: F.regular, fontSize: 13, color: C.sage, marginBottom: 14, lineHeight: 19 },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16,

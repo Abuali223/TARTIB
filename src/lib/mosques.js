@@ -36,10 +36,13 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 // lat/lon atrofidan masjidlarni qaytaradi: [{ id, name, lat, lon, km }]
 // radiusM — qidiruv radiusi (metr). Topilmasa chaqiruvchi radiusni oshirishi mumkin.
 export async function fetchNearbyMosques(lat, lon, radiusM = 5000, limit = 25) {
+  // Kengroq qidiruv: religion=muslim, building=mosque, va nomi "masjid/мечеть"
+  // bo'lgan joylar (OSM'da har xil teglangan bo'lishi mumkin). nwr = node+way+relation.
   const q = `[out:json][timeout:20];(` +
-    `node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lon});` +
-    `way["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lon});` +
-    `);out center ${limit * 4};`;
+    `nwr["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusM},${lat},${lon});` +
+    `nwr["building"="mosque"](around:${radiusM},${lat},${lon});` +
+    `nwr["amenity"="place_of_worship"]["name"~"[Mm]asjid|[Мм]ечеть|[Mm]osque"](around:${radiusM},${lat},${lon});` +
+    `);out center ${limit * 5};`;
 
   const body = 'data=' + encodeURIComponent(q);
   let json = null, lastErr = null;
@@ -76,8 +79,16 @@ export function fmtDistance(km) {
   return km.toFixed(km < 10 ? 1 : 0) + ' km';
 }
 
-// Xaritada ochish uchun havola (Google Maps — barcha qurilmalarda ishlaydi)
+// Bitta masjidni xaritada ochish (Google Maps — barcha qurilmalarda)
 export function mapUrl(m) {
-  const label = encodeURIComponent(m.name || 'Masjid');
-  return `https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lon}&query_place_id=${label}`;
+  return `https://www.google.com/maps/search/?api=1&query=${m.lat},${m.lon}`;
+}
+
+// Google Maps'da "masjid" qidiruvini ochadi — Google'ning to'liq bazasi,
+// API kalit shart emas. Koordinata bo'lsa o'sha atrofga markazlaydi.
+export function mapsSearchUrl(lat, lon) {
+  if (lat != null && lon != null) {
+    return `https://www.google.com/maps/search/masjid/@${lat},${lon},14z`;
+  }
+  return 'https://www.google.com/maps/search/masjid';
 }
