@@ -78,6 +78,30 @@ export async function schedulePrayerReminders(coords, { enabled = true, sound = 
   }
 }
 
+// Test bildirishnoma — darrov (2s) yuboradi. Ikonка/ovoz/kanalni tekshirish uchun.
+export async function sendTestNotification() {
+  try {
+    const ok = await ensurePermission();
+    if (!ok) return false;
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('prayer', {
+        name: 'Namoz eslatmalari',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#D9B36A',
+      });
+    }
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'TARTIB — test bildirishnoma',
+        body: 'Bildirishnoma ishlayapti ✓ Allohu akbar.',
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 2, channelId: 'prayer' },
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
 export async function cancelAll() {
   try { await Notifications.cancelAllScheduledNotificationsAsync(); } catch (e) { /* noop */ }
 }

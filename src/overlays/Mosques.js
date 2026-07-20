@@ -23,11 +23,24 @@ export default function MosquesOverlay({ v }) {
         setState({ phase: 'noperm', list: [], msg: '' });
         return;
       }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      // Joylashuv: avval oxirgi ma'lum (tez), keyin joriy (timeout bilan — osilib qolmasin)
+      let pos = await Location.getLastKnownPositionAsync().catch(() => null);
+      if (!pos) {
+        pos = await Promise.race([
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
+          new Promise((res) => setTimeout(() => res(null), 12000)),
+        ]).catch(() => null);
+      }
+      if (!pos || !pos.coords) { setState({ phase: 'error', list: [], msg: '' }); return; }
+
       const { latitude, longitude } = pos.coords;
       setCoords({ lat: latitude, lon: longitude });
-      let list = await fetchNearbyMosques(latitude, longitude, 5000);
-      if (!list.length) list = await fetchNearbyMosques(latitude, longitude, 15000);  // radiusni kengaytirish
+
+      let list = [];
+      try {
+        list = await fetchNearbyMosques(latitude, longitude, 6000);
+        if (!list.length) list = await fetchNearbyMosques(latitude, longitude, 15000);
+      } catch (e) { list = []; }
       setState({ phase: list.length ? 'ok' : 'empty', list, msg: '' });
     } catch (e) {
       setState({ phase: 'error', list: [], msg: '' });
@@ -51,6 +64,7 @@ export default function MosquesOverlay({ v }) {
           <View style={st.center}>
             <ActivityIndicator color={C.gold} size="large" />
             <Text style={st.msg}>{t('Yaqin masjidlar qidirilmoqda…')}</Text>
+            <MapsBtn />
           </View>
         )}
 

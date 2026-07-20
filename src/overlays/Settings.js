@@ -48,6 +48,12 @@ export default function SettingsOverlay({ v }) {
           <ToggleRow label={t('Zikr eslatmasi')} on={v.settings.zikr} onToggle={v.toggleSetting.zikr} />
           <ToggleRow label={t('Vazifa bildirishnomalari')} on={v.settings.jamoa} onToggle={v.toggleSetting.jamoa} last />
         </View>
+        {v.testNotification && (
+          <TouchableOpacity onPress={v.testNotification} activeOpacity={0.85} style={st.testBtn}
+            accessibilityRole="button" accessibilityLabel={t('Test bildirishnoma yuborish')}>
+            <Text style={st.testBtnT}>{t('🔔 Test bildirishnoma yuborish')}</Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={st.section}>{t('UMUMIY')}</Text>
         <View style={st.card}>
@@ -90,4 +96,6 @@ const mkSt = (C) => StyleSheet.create({
   shareBtn: { paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,179,106,0.4)', backgroundColor: 'rgba(217,179,106,0.08)', alignItems: 'center', marginBottom: 12 },
   logoutBtn: { paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(224,120,95,0.4)', alignItems: 'center' },
   footer: { textAlign: 'center', fontFamily: F.regular, fontSize: 12, color: C.sageDim, marginTop: 18 },
+  testBtn: { marginTop: 10, paddingVertical: 13, borderRadius: 14, alignItems: 'center', backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.border },
+  testBtnT: { fontFamily: F.bold, fontSize: 14, color: C.gold },
 });

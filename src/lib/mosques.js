@@ -10,7 +10,7 @@ const OVERPASS_ENDPOINTS = [
 ];
 
 // Bitta so'rovni vaqt chegarasi bilan bajaradi (osilib qolmasin)
-async function postWithTimeout(url, body, ms = 20000) {
+async function postWithTimeout(url, body, ms = 10000) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms);
   try {

@@ -15,7 +15,7 @@ import LockScreen from './screens/LockScreen';
 import { setSecurePin, verifySecurePin, clearSecurePin, hashPin, verifyLegacyPin, biometricAvailable, biometricAuth } from './lib/lock';
 import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
-import { schedulePrayerReminders } from './lib/notifications';
+import { schedulePrayerReminders, sendTestNotification } from './lib/notifications';
 import {
   addTask, createWorkspace, ensureJoinCode, fetchUser, joinByCode, setTaskStatus, updateMemberRole,
   subscribeInbox, subscribeMyMemberships, subscribeWorkspace, subscribeWorkspaceMembers, subscribeWorkspaceTasks,
@@ -478,6 +478,10 @@ export default class Root extends React.Component {
     try { await setTaskStatus(id, status); } catch (e) { this.flash("Holatni o'zgartirib bo'lmadi"); }
   };
   toggleSetting = (k) => this.setState(s => ({ settings: { ...s.settings, [k]: !s.settings[k] } }));
+  testNotification = async () => {
+    const ok = await sendTestNotification();
+    this.flash(ok ? 'Test bildirishnoma yuborildi (2s)' : 'Bildirishnoma ruxsati yo‘q');
+  };
   setMadhab = (key) => this.setState({ madhab: key, overlay: 'settings' });
   setManualCity = (city) => this.setState({ manualCity: city, overlay: 'settings' }); // city=null → GPS
   setAppLang = (key) => { setLang(key); this.setState({ lang: key, overlay: 'settings' }); };
@@ -883,6 +887,7 @@ export default class Root extends React.Component {
       openScan: this.openScan, onScanned: this.onScanned,
       settings: S.settings,
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
+      testNotification: this.testNotification,
       // Sozlamalar tanlovlari
       madhabName, isManualCity: !!S.manualCity, langName,
       openMadhab: () => this.openPicker('madhab'), openCity: () => this.openPicker('city'), openLang: () => this.openPicker('lang'), openTheme: () => this.openPicker('theme'),
