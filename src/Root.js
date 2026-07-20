@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, AppState, BackHandler, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, BackHandler, Linking, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F, THEMES, ThemeProvider } from './theme';
@@ -37,6 +37,7 @@ import TaskOverlay from './overlays/Task';
 import AssignOverlay from './overlays/Assign';
 import AddMemberOverlay from './overlays/AddMember';
 import WorkspaceSheet from './overlays/Workspace';
+import { cameraAvailable, parseJoinCode } from './lib/native';
 import PickerOverlay from './overlays/Picker';
 
 const USE_24H = true;
@@ -130,6 +131,9 @@ export default class Root extends React.Component {
     }
     this.locate();
     this._backSub = BackHandler.addEventListener('hardwareBackPress', this.onHardwareBack);
+    // Chuqur havola (tartib://join/CODE) — tizim kamerasi QR skaner qilganda
+    this._linkSub = Linking.addEventListener('url', ({ url }) => this.handleDeepLink(url));
+    Linking.getInitialURL().then((u) => { if (u) this.handleDeepLink(u); }).catch(() => {});
     biometricAvailable().then(a => this.setState({ bioAvailable: a })).catch(() => {});
     // Ilova fonda LOCK_GRACE_MS'dan uzoq turса — qaytganda qulflanadi.
     // Qisqa o'tishlar (boshqa ilovaga bir zumга) qulflamaydi.
@@ -150,7 +154,10 @@ export default class Root extends React.Component {
       if (user) {
         let userDoc = null;
         try { userDoc = await ensureUserDoc(user, {}); } catch (e) { /* offline */ }
-        this.setState({ fbUser: { uid: user.uid, email: user.email, displayName: user.displayName }, userDoc, authReady: true }, () => this.startSync(user.uid));
+        this.setState({ fbUser: { uid: user.uid, email: user.email, displayName: user.displayName }, userDoc, authReady: true }, () => {
+          this.startSync(user.uid);
+          if (this._pendingJoin) { const c = this._pendingJoin; this._pendingJoin = null; this.setState({ joinCode: c, tab: 'jamoa' }, () => this.submitJoin()); }
+        });
       } else {
         this.stopSync();
         this.setState({ fbUser: null, userDoc: null, authReady: true, myMemberships: [], myWorkspaces: {}, activeMembers: [], activeTasks: [], inboxTasks: [] });
@@ -162,6 +169,7 @@ export default class Root extends React.Component {
     clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st);
     if (this._unsubAuth) this._unsubAuth();
     if (this._backSub) this._backSub.remove();
+    if (this._linkSub) this._linkSub.remove();
     if (this._appStateSub) this._appStateSub.remove();
     this.stopSync();
   }
@@ -422,7 +430,7 @@ export default class Root extends React.Component {
       this.flash('Makon yaratildi ✓');
     } catch (e) { this.flash('Xatolik: makon yaratilmadi'); }
   };
-  onJoinCode = (v) => this.setState({ joinCode: (v + '').toUpperCase() });
+  onJoinCode = (v) => this.setState({ joinCode: (v + '').replace(/[^A-Za-z0-9-]/g, '').toUpperCase() });
   submitJoin = async () => {
     if (this.state.joinBusy) return;
     const code = this.state.joinCode.trim();
@@ -437,6 +445,22 @@ export default class Root extends React.Component {
     } finally {
       this.setState({ joinBusy: false });
     }
+  };
+
+  // QR skaner ochish / natijani qabul qilish
+  openScan = () => this.setState({ overlay: 'scanqr' });
+  onScanned = (raw) => {
+    const code = parseJoinCode(raw);
+    if (!code) { this.setState({ overlay: null }); this.flash('QR o‘qilmadi'); return; }
+    this.setState({ overlay: null, joinCode: code }, () => this.submitJoin());
+  };
+
+  // Chuqur havola: tartib://join/CODE — tizim kamerasi skaner qilganda ham qo'shadi
+  handleDeepLink = (url) => {
+    const code = parseJoinCode(url);
+    if (!code || !/join\//i.test(String(url || ''))) return;
+    if (this.uid) this.setState({ joinCode: code, overlay: null, tab: 'jamoa' }, () => this.submitJoin());
+    else this._pendingJoin = code;   // login'dan keyin
   };
 
   // ————— a'zolar —————
@@ -853,6 +877,9 @@ export default class Root extends React.Component {
       onDraftTitle: this.onDraftTitle, onSubmitAssign: this.submitAssign,
       // taklif
       inviteCode, canInvite: this.canIn(activeWs, CAP.MANAGE_MEMBERS),
+      // QR skaner
+      canScan: (this._canScan === undefined ? (this._canScan = cameraAvailable()) : this._canScan),
+      openScan: this.openScan, onScanned: this.onScanned,
       settings: S.settings,
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
       // Sozlamalar tanlovlari
@@ -867,7 +894,7 @@ export default class Root extends React.Component {
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
       open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
-      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme' },
+      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr' },
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
@@ -929,6 +956,7 @@ export default class Root extends React.Component {
         {v.ov.assign && <AssignOverlay v={v} />}
         {v.ov.addmember && <AddMemberOverlay v={v} />}
         {v.ov.workspace && <WorkspaceSheet v={v} />}
+        {v.ov.scanqr && v.canScan && (() => { const ScanQROverlay = require('./overlays/ScanQR').default; return <ScanQROverlay v={v} />; })()}
 
         {!!v.flash && (
           <View pointerEvents="none" style={st.flash}>

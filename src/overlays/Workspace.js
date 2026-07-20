@@ -123,6 +123,18 @@ export default function WorkspaceSheet({ v }) {
               <TouchableOpacity onPress={v.submitJoin} activeOpacity={0.85} disabled={v.joinBusy} style={[st.primary, v.joinBusy && { opacity: 0.7 }]}>
                 {v.joinBusy ? <ActivityIndicator color={C.ink} /> : <Text style={st.primaryText}>{t("Qo'shilish")}</Text>}
               </TouchableOpacity>
+              {v.canScan && (
+                <>
+                  <View style={st.orRow}>
+                    <View style={st.orLine} />
+                    <Text style={st.orText}>{t('yoki')}</Text>
+                    <View style={st.orLine} />
+                  </View>
+                  <TouchableOpacity onPress={v.openScan} activeOpacity={0.85} style={st.scanBtn}>
+                    <Text style={st.scanText}>⛶  {t('QR kodni skanerlash')}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
               <TouchableOpacity onPress={() => setScreen('list')} activeOpacity={0.8} style={st.back}>
                 <Text style={st.backText}>← {t('Orqaga')}</Text>
               </TouchableOpacity>
@@ -154,4 +166,9 @@ const mkSt = (C) => StyleSheet.create({
   primaryText: { fontFamily: F.extrabold, fontSize: 16, color: C.ink },
   back: { paddingVertical: 12, alignItems: 'center' },
   backText: { fontFamily: F.medium, fontSize: 14, color: C.sageFaint },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, marginBottom: 14 },
+  orLine: { flex: 1, height: 1, backgroundColor: C.hairline },
+  orText: { fontFamily: F.regular, fontSize: 12, color: C.sageFaint },
+  scanBtn: { paddingVertical: 15, borderRadius: 16, alignItems: 'center', backgroundColor: C.overlay2, borderWidth: 1, borderColor: 'rgba(217,179,106,0.35)' },
+  scanText: { fontFamily: F.bold, fontSize: 15, color: C.gold },
 });

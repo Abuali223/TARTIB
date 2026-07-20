@@ -6,11 +6,20 @@ import { OverlayShell } from '../components/ui';
 import { UsersIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
+// QR — react-native-svg ustida ishlaydi (u allaqachon mavjud). Eski APK'da ham
+// xatosiz yuklanishi uchun himoyalab chaqiramiz.
+let QRCode = null;
+try { QRCode = require('react-native-qrcode-svg').default; } catch (e) { QRCode = null; }
+
+// QR ichiga yoziladigan chuqur havola — boshqa telefon skaner qilsa kod chiqadi.
+export const joinLinkFor = (code) => `tartib://join/${code}`;
+
 export default function AddMemberOverlay({ v }) {
   const C = useC();
   const st = mkSt(C);
   const [copied, setCopied] = useState(false);
   const code = v.inviteCode || '—';
+  const hasCode = !!v.inviteCode;
 
   const copy = async () => {
     try {
@@ -33,6 +42,12 @@ export default function AddMemberOverlay({ v }) {
         <View style={st.codeCard}>
           <Text style={st.codeLabel}>{t('TAKLIF KODI')}</Text>
           <Text style={st.code}>{code}</Text>
+          {QRCode && hasCode && (
+            <View style={st.qrWrap}>
+              <QRCode value={joinLinkFor(code)} size={168} color="#123F37" backgroundColor="#FCFAF4" />
+            </View>
+          )}
+          {QRCode && hasCode && <Text style={st.qrHint}>{t('Yoki bu QR kodni skanerlab qo‘shilsin')}</Text>}
         </View>
 
         <TouchableOpacity onPress={copy} activeOpacity={0.85} style={st.copyBtn}>
@@ -59,6 +74,8 @@ const mkSt = (C) => StyleSheet.create({
   },
   codeLabel: { fontFamily: F.regular, fontSize: 11, color: C.sage, letterSpacing: 1.2, marginBottom: 8 },
   code: { fontFamily: F.extrabold, fontSize: 34, color: C.gold, letterSpacing: 2 },
+  qrWrap: { marginTop: 18, padding: 14, borderRadius: 16, backgroundColor: '#FCFAF4' },
+  qrHint: { fontFamily: F.regular, fontSize: 12, color: C.sageMid, marginTop: 12, textAlign: 'center' },
   copyBtn: { paddingVertical: 15, borderRadius: 16, backgroundColor: C.gold, alignItems: 'center', marginBottom: 22 },
   copyText: { fontFamily: F.extrabold, fontSize: 15, color: C.ink },
   note: { borderRadius: 14, backgroundColor: C.overlay1, borderWidth: 1, borderColor: C.overlay2, padding: 14 },

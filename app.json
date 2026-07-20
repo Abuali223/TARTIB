@@ -16,14 +16,15 @@
     },
     "android": {
       "package": "uz.tartib.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a2016"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
       ]
     },
     "ios": {
@@ -40,6 +41,12 @@
         }
       ],
       "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "QR taklif kodini skanerlab jamoaga qo'shilish uchun kamera ishlatiladi."
+        }
+      ],
       [
         "expo-local-authentication",
         {
