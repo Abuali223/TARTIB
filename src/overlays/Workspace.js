@@ -112,6 +112,12 @@ export default function WorkspaceSheet({ v }) {
                 placeholderTextColor={C.sageDim}
                 autoCapitalize="characters"
                 autoCorrect={false}
+                autoComplete="off"
+                spellCheck={false}
+                importantForAutofill="no"
+                textContentType="none"
+                keyboardType={Platform.OS === 'android' ? 'visible-password' : 'default'}
+                maxLength={14}
                 style={[st.input, { textAlign: 'center', fontFamily: F.extrabold, fontSize: 18, letterSpacing: 2 }]}
               />
               <TouchableOpacity onPress={v.submitJoin} activeOpacity={0.85} disabled={v.joinBusy} style={[st.primary, v.joinBusy && { opacity: 0.7 }]}>
