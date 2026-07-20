@@ -3,7 +3,7 @@
     "name": "TARTIB",
     "slug": "tartib",
     "version": "1.0.0",
-    "scheme": "tartib",
+    "scheme": ["tartib", "com.googleusercontent.apps.235775173531-67u89ltba3gdedj1eptv526r5ps0jm32"],
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a1f18",
@@ -16,7 +16,7 @@
     },
     "android": {
       "package": "uz.tartib.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a2016"

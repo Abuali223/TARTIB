@@ -17,7 +17,7 @@
 // deb ogohlantiradi. Email/parol usuli esa hozir to'liq ishlaydi.
 
 export const GOOGLE_WEB_CLIENT_ID = '235775173531-k2j4kkftbal79g3ejpq2g649c252madk.apps.googleusercontent.com';
-export const GOOGLE_ANDROID_CLIENT_ID = '';  // ...apps.googleusercontent.com (ixtiyoriy — standalone APK uchun)
+export const GOOGLE_ANDROID_CLIENT_ID = '235775173531-67u89ltba3gdedj1eptv526r5ps0jm32.apps.googleusercontent.com';
 export const GOOGLE_IOS_CLIENT_ID = '';      // ...apps.googleusercontent.com (ixtiyoriy)
 
 // Kamida Web yoki Android client ID bo'lsa — Google yoqilgan hisoblanadi.
