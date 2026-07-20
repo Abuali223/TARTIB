@@ -16,7 +16,7 @@
     },
     "android": {
       "package": "uz.tartib.app",
-      "versionCode": 5,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a2016"
@@ -40,7 +40,13 @@
           "locationWhenInUsePermission": "Namoz vaqtlari va Qibla yo'nalishini aniqlash uchun joylashuvingiz ishlatiladi."
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#EEC271"
+        }
+      ],
       "@react-native-google-signin/google-signin",
       [
         "expo-camera",
