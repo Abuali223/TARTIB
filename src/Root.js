@@ -10,7 +10,7 @@ import { hijriLabel, hijriMonthLabel } from './lib/hijri';
 import { loadState, saveState, todayKey } from './lib/storage';
 import { ensureUserDoc, mapAuthError, signInEmail, signInWithGoogleIdToken, signOutUser, signUpEmail, watchAuth } from './lib/auth';
 import { googleConfigured } from './lib/googleAuth';
-import GoogleBridge from './components/GoogleBridge';
+import { googleSignInIdToken } from './lib/googleSignin';
 import LockScreen from './screens/LockScreen';
 import { setSecurePin, verifySecurePin, clearSecurePin, hashPin, verifyLegacyPin, biometricAvailable, biometricAuth } from './lib/lock';
 import { appShareMessage } from './lib/appMeta';
@@ -377,38 +377,26 @@ export default class Root extends React.Component {
     try { await signOutUser(); } catch (e) { this.flash(mapAuthError(e)); }
   };
 
-  // ————— Google bilan kirish (expo-auth-session ko'prigi orqali) —————
-  _googlePrompt = null;
-  onGoogleReady = (promptAsync) => {
-    this._googlePrompt = promptAsync;
-    const ready = !!promptAsync;
-    if (this.state.googleReady !== ready) this.setState({ googleReady: ready });
-  };
+  // ————— Google bilan kirish (native @react-native-google-signin) —————
   startGoogle = async () => {
     if (this.state.googleBusy) return;
     if (!googleConfigured) { this.flash('Google hali sozlanmagan — email bilan kiring'); return; }
-    if (!this._googlePrompt) { this.flash('Google tayyorlanmoqda, biroz kuting'); return; }
     this.setState({ googleBusy: true });
     try {
-      await this._googlePrompt();  // natija GoogleBridge → onGoogleToken orqali keladi
-    } catch (e) {
-      this.flash('Google oynasi ochilmadi');
-      this.setState({ googleBusy: false });
-    }
-  };
-  onGoogleToken = async (idToken) => {
-    try {
-      await signInWithGoogleIdToken(idToken);  // watchAuth qolganini bajaradi
+      const idToken = await googleSignInIdToken();      // Google oynasi
+      if (!idToken) { this.setState({ googleBusy: false }); return; }  // bekor qilindi
+      await signInWithGoogleIdToken(idToken);           // watchAuth qolganini bajaradi
       this.flash('Xush kelibsiz!');
     } catch (e) {
-      this.flash(mapAuthError(e));
+      const m = e && e.message;
+      this.flash(
+        m === 'google-native-missing' ? 'Google faqat yangi APK’da — ilovani yangilang'
+        : m === 'no-idtoken' ? 'Google token bermadi, qaytadan urining'
+        : 'Google bilan kirishda xatolik'
+      );
     } finally {
       this.setState({ googleBusy: false });
     }
-  };
-  onGoogleError = (msg) => {
-    this.setState({ googleBusy: false });
-    if (msg) this.flash('Google: ' + msg);
   };
 
   // ————— navigatsiya —————
@@ -938,9 +926,6 @@ export default class Root extends React.Component {
         )}
 
         {v.showOnboarding && <Onboarding v={v} />}
-        {v.showOnboarding && googleConfigured && (
-          <GoogleBridge onReady={this.onGoogleReady} onToken={this.onGoogleToken} onError={this.onGoogleError} />
-        )}
 
         {v.ov.tasbeh && <TasbehOverlay v={v} />}
         {v.ov.qibla && <QiblaOverlay v={v} />}
