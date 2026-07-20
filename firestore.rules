@@ -12,6 +12,9 @@ service cloud.firestore {
       return /databases/$(database)/documents/memberships/$(wid + '_' + uid());
     }
     function isMember(wid) { return exists(membershipPath(wid)); }
+    function isMemberOf(wid, u) {
+      return exists(/databases/$(database)/documents/memberships/$(wid + '_' + u));
+    }
     function myMembership(wid) { return get(membershipPath(wid)).data; }
     function wsOwner(wid) {
       return get(/databases/$(database)/documents/workspaces/$(wid)).data.ownerUserId;
@@ -30,7 +33,10 @@ service cloud.firestore {
     // Foydalanuvchilar — ko'rsatiladigan ma'lumot (ism/rang) a'zolarga ko'rinadi.
     // Email Firestore'da SAQLANMAYDI (u Auth'da). O'z hujjatini o'zi yozadi.
     match /users/{u} {
-      allow read: if signedIn();
+      // get: aniq uid bo'yicha (a'zolar ismini ko'rsatish uchun). LIST taqiqlangan —
+      // begona butun bazani ro'yxatlab ism/yosh yig'a olmasin (enumeration'ga qarshi).
+      allow get: if signedIn();
+      allow list: if false;
       allow create, update: if signedIn() && u == uid();
       allow delete: if false;
     }
@@ -75,10 +81,15 @@ service cloud.firestore {
       // Yangilash: FAQAT egasi yoki MANAGE_MEMBERS ruxsatli.
       // O'zini o'zi tahrirlash (rol/ruxsat oshirish) MUMKIN EMAS.
       // Makon va foydalanuvchi o'zgармaydi.
+      // Ega hammani; MANAGE_MEMBERS ruxsatli BOSHQALARNI (o'zini EMAS —
+      // o'z ruxsatini oshira olmasin). Makon/foydalanuvchi o'zgarmaydi.
       allow update: if signedIn()
         && request.resource.data.workspaceId == resource.data.workspaceId
         && request.resource.data.userId == resource.data.userId
-        && (isOwner(resource.data.workspaceId) || hasPerm(resource.data.workspaceId, 'MANAGE_MEMBERS'));
+        && (
+          isOwner(resource.data.workspaceId)
+          || (hasPerm(resource.data.workspaceId, 'MANAGE_MEMBERS') && resource.data.userId != uid())
+        );
 
       allow delete: if signedIn() && (
         resource.data.userId == uid() || isOwner(resource.data.workspaceId)
@@ -91,10 +102,12 @@ service cloud.firestore {
         resource.data.assigneeUserId == uid() || isMember(resource.data.workspaceId)
       );
 
-      // Yaratish: beruvchi = o'zim, va ASSIGN_TASKS ruxsatim bor.
+      // Yaratish: beruvchi = o'zim, ASSIGN_TASKS ruxsatim bor, VA mas'ul shu
+      // makon a'zosi (begonaning inbox'iga spam yubora olmaslik uchun).
       allow create: if signedIn()
         && request.resource.data.assignerUserId == uid()
-        && (isOwner(request.resource.data.workspaceId) || hasPerm(request.resource.data.workspaceId, 'ASSIGN_TASKS'));
+        && (isOwner(request.resource.data.workspaceId) || hasPerm(request.resource.data.workspaceId, 'ASSIGN_TASKS'))
+        && isMemberOf(request.resource.data.workspaceId, request.resource.data.assigneeUserId);
 
       // Yangilash: makon/beruvchi/mas'ul o'zgармaydi (faqat holat va shu kabi).
       allow update: if signedIn()

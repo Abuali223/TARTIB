@@ -10,10 +10,11 @@ export function cameraAvailable() {
   }
 }
 
-// QR/matn'dan taklif kodini ajratib oladi: "tartib://join/OILA-XXXX" yoki xom kod.
+// QR/havoladan taklif kodini ajratadi. FAQAT "…join/OILA-XXXX" ko'rinishini
+// qabul qiladi — begona QR (Wi-Fi, veb-havola) rad etiladi (bo'sh qaytadi),
+// shunda foydalanuvchi chalg'ituvchi xato o'rniga "QR o'qilmadi" oladi.
 export function parseJoinCode(raw) {
-  const s = String(raw || '').trim();
-  const m = s.match(/join\/([A-Za-z0-9-]+)/i);
-  const code = (m ? m[1] : s).replace(/\s+/g, '').toUpperCase();
-  return code;
+  const m = String(raw || '').match(/join\/([A-Za-z0-9-]+)/i);
+  if (!m) return '';
+  return m[1].replace(/[^A-Za-z0-9-]/g, '').toUpperCase();
 }

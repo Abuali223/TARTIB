@@ -22,6 +22,8 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
   const [attempts, setAttempts] = useState(0);
   const [remain, setRemain] = useState(0);      // cooldown soniyalari
   const shake = useRef(new Animated.Value(0)).current;
+  const submitTimer = useRef(null);
+  useEffect(() => () => clearTimeout(submitTimer.current), []);  // unmount'da tozalash
 
   // Cooldown taymeri
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function LockScreen({ mode = 'unlock', onUnlock, onSetPin, biomet
     const next = entered + d;
     setEntered(next);
     setErr('');
-    if (next.length === LEN) setTimeout(() => submit(next), 90);
+    if (next.length === LEN) submitTimer.current = setTimeout(() => submit(next), 90);
   };
   const del = () => setEntered(e => e.slice(0, -1));
 

@@ -71,12 +71,14 @@ export function isMinorAge(birthYear, now = new Date()) {
   return (now.getFullYear() - birthYear) < MINOR_AGE;
 }
 
-// Qisqa taklif kodi (masalan "ISH-7QK2")
+// Taklif kodi (masalan "ISH-7QK2MP"). 6 belgi × 32 alifbo = ~2^30 —
+// brute-force'ga qarshi (avvalgi 4 belgidan ~1000 barobar kuchliroq).
+// Har belgi 32-bit CSPRNG urug'ining alohida 5 bitidan olinadi (to'liq entropiya).
 export function makeJoinCode(type, seed) {
   const prefix = type === 'ishxona' ? 'ISH' : type === 'talim' ? 'EDU' : 'OILA';
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 32 belgi (I, O, 0, 1 yo'q)
   let s = '';
-  let n = Math.abs(seed || 1);
-  for (let i = 0; i < 4; i++) { s += chars[n % chars.length]; n = Math.floor(n / chars.length) + 7 * (i + 1); }
+  let n = (seed >>> 0);
+  for (let i = 0; i < 6; i++) { s += chars[n & 31]; n = n >>> 5; }
   return prefix + '-' + s;
 }

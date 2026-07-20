@@ -30,7 +30,7 @@ export function OverlayShell({ title, onClose, radial = false, children }) {
           style={{ flex: 1 }}
         >
           <View style={shHeader}>
-            <TouchableOpacity onPress={onClose} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.7}>
+            <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Yopish" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.7}>
               <BackIcon color={C.gold} />
             </TouchableOpacity>
             <Text style={{ fontFamily: F.serif, fontSize: 22, color: C.cream }}>{title}</Text>

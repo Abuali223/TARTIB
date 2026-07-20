@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { F, useC } from '../theme';
@@ -12,9 +12,11 @@ export default function ScanQROverlay({ v }) {
   const st = mkSt(C);
   const [perm, requestPerm] = useCameraPermissions();
   const [done, setDone] = useState(false);
+  const doneRef = useRef(false);   // sinxron guard — bir necha freym ikki marta chaqirmasin
 
   const onBarcode = ({ data }) => {
-    if (done) return;
+    if (doneRef.current) return;
+    doneRef.current = true;
     setDone(true);
     v.onScanned && v.onScanned(data);
   };
@@ -48,7 +50,7 @@ export default function ScanQROverlay({ v }) {
           </View>
         )}
 
-        <Text style={st.hint}>{t('Yoki oldingi ekranда kodni qo‘lда kiriting.')}</Text>
+        <Text style={st.hint}>{t('Yoki oldingi ekranda kodni qo‘lda kiriting.')}</Text>
       </View>
     </OverlayShell>
   );

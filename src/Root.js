@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, AppState, BackHandler, Linking, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, AppState, BackHandler, Linking, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F, THEMES, ThemeProvider } from './theme';
@@ -124,7 +124,7 @@ export default class Root extends React.Component {
         patch.amalsDate = todayKey();
       }
       if (patch.lang) setLang(patch.lang); // i18n modulini saqlangan tilga moslash
-      if (patch.lockEnabled && patch.pinHash) patch.locked = true; // ochilishda qulflangan
+      if (patch.lockEnabled) patch.locked = true; // ochilishda qulflangan (SecureStore yoki legacy)
       this.setState({ ...patch, hydrated: true }, () => this.syncNotifications());
     } else {
       this.setState({ hydrated: true }, () => this.syncNotifications());
@@ -139,7 +139,7 @@ export default class Root extends React.Component {
     // Qisqa o'tishlar (boshqa ilovaga bir zumга) qulflamaydi.
     this._appStateSub = AppState.addEventListener('change', (s) => {
       if (s === 'active') {
-        if (this._bgAt && this.state.lockEnabled && this.state.pinHash &&
+        if (this._bgAt && this.state.lockEnabled &&
             (Date.now() - this._bgAt) > LOCK_GRACE_MS) {
           this.setState({ locked: true });
         }
@@ -156,7 +156,7 @@ export default class Root extends React.Component {
         try { userDoc = await ensureUserDoc(user, {}); } catch (e) { /* offline */ }
         this.setState({ fbUser: { uid: user.uid, email: user.email, displayName: user.displayName }, userDoc, authReady: true }, () => {
           this.startSync(user.uid);
-          if (this._pendingJoin) { const c = this._pendingJoin; this._pendingJoin = null; this.setState({ joinCode: c, tab: 'jamoa' }, () => this.submitJoin()); }
+          if (this._pendingJoin) { const c = this._pendingJoin; this._pendingJoin = null; this.confirmJoin(c); }
         });
       } else {
         this.stopSync();
@@ -429,6 +429,7 @@ export default class Root extends React.Component {
       this.setState({ joinCode: '', overlay: null, activeWorkspaceId: ws.id, tab: 'jamoa' });
       this.flash('Makonga qo\'shildingiz ✓');
     } catch (e) {
+      if (e.code === 'ws/not-found') this.setState({ joinCode: '' });  // junk/eskirgan kod qolmasin
       this.flash(e.code === 'ws/not-found' ? 'Bunday kod topilmadi' : e.code === 'ws/already-member' ? 'Siz allaqachon a\'zosiz' : 'Qo\'shilishda xatolik');
     } finally {
       this.setState({ joinBusy: false });
@@ -443,12 +444,23 @@ export default class Root extends React.Component {
     this.setState({ overlay: null, joinCode: code }, () => this.submitJoin());
   };
 
-  // Chuqur havola: tartib://join/CODE — tizim kamerasi skaner qilganda ham qo'shadi
+  // Chuqur havola: tartib://join/CODE — tizim kamerasi skaner qilganda ham.
+  // Tashqi havola bo'lgani uchun AVTOMATIK qo'shmaymiz — tasdiq so'raymiz.
+  confirmJoin = (code) => {
+    Alert.alert(
+      'Jamoaga qo‘shilish',
+      `“${code}” taklif kodi bilan jamoaga qo‘shilasizmi?`,
+      [
+        { text: 'Bekor', style: 'cancel' },
+        { text: 'Qo‘shilish', onPress: () => this.setState({ joinCode: code, overlay: null, tab: 'jamoa' }, () => this.submitJoin()) },
+      ],
+    );
+  };
   handleDeepLink = (url) => {
     const code = parseJoinCode(url);
-    if (!code || !/join\//i.test(String(url || ''))) return;
-    if (this.uid) this.setState({ joinCode: code, overlay: null, tab: 'jamoa' }, () => this.submitJoin());
-    else this._pendingJoin = code;   // login'dan keyin
+    if (!code) return;                 // faqat to'g'ri join havolasi
+    if (this.uid) this.confirmJoin(code);
+    else this._pendingJoin = code;     // login'dan keyin
   };
 
   // ————— a'zolar —————

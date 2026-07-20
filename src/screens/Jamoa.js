@@ -21,16 +21,16 @@ export default function Jamoa({ v }) {
   return (
     <FadeIn style={st.wrap}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
-        <View>
-          <TouchableOpacity onPress={v.open.workspace} activeOpacity={0.8} style={st.modeBtn}>
+        <View style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
+          <TouchableOpacity onPress={v.open.workspace} activeOpacity={0.8} style={st.modeBtn} accessibilityRole="button" accessibilityLabel={t('Makon almashtirish')}>
             <Text style={{ fontFamily: F.bold, fontSize: 12, color: C.gold }}>{t('Makon almashtirish')}</Text>
             <ChevronDown />
           </TouchableOpacity>
-          <Text style={st.h2}>{t(v.modeLabel)}</Text>
-          <Text style={{ fontFamily: F.regular, fontSize: 14, color: C.onBgDim, marginTop: 2 }}>{t(v.jamoaSub)}</Text>
+          <Text numberOfLines={1} style={st.h2}>{t(v.modeLabel)}</Text>
+          <Text numberOfLines={2} style={{ fontFamily: F.regular, fontSize: 14, color: C.onBgDim, marginTop: 2 }}>{t(v.jamoaSub)}</Text>
         </View>
         {v.canManage && (
-          <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.addBtn}>
+          <TouchableOpacity onPress={v.open.addmember} activeOpacity={0.85} style={st.addBtn} accessibilityRole="button" accessibilityLabel={t("A'zo qo'shish")}>
             <Text style={{ fontFamily: F.medium, fontSize: 22, color: C.gold, lineHeight: 26 }}>+</Text>
           </TouchableOpacity>
         )}
@@ -185,7 +185,7 @@ const mkSt = (C) => StyleSheet.create({
     backgroundColor: 'rgba(217,179,106,0.12)', borderWidth: 1, borderColor: 'rgba(217,179,106,0.28)', marginBottom: 8,
   },
   addBtn: {
-    width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(217,179,106,0.12)',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(217,179,106,0.12)',
     borderWidth: 1, borderColor: 'rgba(217,179,106,0.3)', alignItems: 'center', justifyContent: 'center',
   },
   shaxsiyCard: { borderRadius: 22, borderWidth: 1, borderColor: 'rgba(217,179,106,0.2)', paddingVertical: 26, paddingHorizontal: 22, alignItems: 'center' },

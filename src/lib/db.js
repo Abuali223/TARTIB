@@ -64,7 +64,7 @@ export async function ensureJoinCode(ws) {
 
 // Kod bilan qo'shilish — joinCodes orqali (makonni to'g'ridan-to'g'ri o'qimaydi).
 export async function joinByCode(uid, code, { restricted = false } = {}) {
-  const clean = (code || '').replace(/\s+/g, '').toUpperCase();
+  const clean = (code || '').replace(/[^A-Za-z0-9-]/g, '').toUpperCase();
   if (!clean) throw new Error('empty-code');
   const jc = await getDoc(doc(db, 'joinCodes', clean));
   if (!jc.exists()) { const e = new Error('not-found'); e.code = 'ws/not-found'; throw e; }

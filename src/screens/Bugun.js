@@ -13,16 +13,16 @@ export default function Bugun({ v }) {
     <FadeIn style={st.wrap}>
       {/* header */}
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-        <View>
-          <TouchableOpacity onPress={v.open.workspace} activeOpacity={0.8} style={st.modeBtn}>
-            <Text style={st.modeBtnText}>{v.modeLabel}</Text>
+        <View style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
+          <TouchableOpacity onPress={v.open.workspace} activeOpacity={0.8} style={st.modeBtn} accessibilityRole="button" accessibilityLabel={t('Makon almashtirish')}>
+            <Text numberOfLines={1} style={st.modeBtnText}>{v.modeLabel}</Text>
             <ChevronDown />
           </TouchableOpacity>
           <Text style={st.date}>{v.gregDate}</Text>
-          <Text style={st.greet}>{t(v.greet)}, {v.meName}</Text>
+          <Text numberOfLines={1} style={st.greet}>{t(v.greet)}, {v.meName}</Text>
           <Text style={st.hijri}>۩ {v.hijriDate}</Text>
         </View>
-        <TouchableOpacity onPress={v.open.settings} activeOpacity={0.8} style={st.avatarBtn}>
+        <TouchableOpacity onPress={v.open.settings} activeOpacity={0.8} style={st.avatarBtn} accessibilityRole="button" accessibilityLabel={t('Sozlamalar')}>
           <Text style={{ fontFamily: F.serif, fontSize: 18, color: C.gold }}>{v.meInitial}</Text>
         </TouchableOpacity>
       </View>

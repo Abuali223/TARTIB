@@ -21,6 +21,8 @@ export default function HabitsOverlay({ v }) {
                   <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.gold, marginTop: 2 }}>🔥 {h.streak} {t('kun ketma-ket')}</Text>
                 </View>
                 <TouchableOpacity onPress={h.onToggleToday} activeOpacity={0.8}
+                  accessibilityRole="button" accessibilityLabel={t(h.name) + (h.today ? ' — bajarildi' : ' — belgilash')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   style={[st.todayBtn, h.today ? { borderColor: C.emerald, backgroundColor: C.emerald } : { borderColor: C.borderStrong }]}>
                   {h.today && <CheckIcon size={16} />}
                 </TouchableOpacity>
@@ -28,7 +30,7 @@ export default function HabitsOverlay({ v }) {
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 {h.weekCells.map((c, i) => (
                   <View key={i} style={[st.weekCell, { backgroundColor: c.on ? C.emerald : C.overlay2 }]}>
-                    <Text style={{ fontFamily: F.bold, fontSize: 10, color: c.on ? C.ink : C.sageDim }}>{t(c.letter)}</Text>
+                    <Text style={{ fontFamily: F.bold, fontSize: 11, color: c.on ? C.ink : C.sageMid }}>{t(c.letter)}</Text>
                   </View>
                 ))}
               </View>

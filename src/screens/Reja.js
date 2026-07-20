@@ -72,7 +72,7 @@ const mkSt = (C) => StyleSheet.create({
   wrap: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 28 },
   h2: { fontFamily: F.serif, fontSize: 30, color: C.onBg },
   sub: { fontFamily: F.regular, fontSize: 14, color: C.onBgDim, marginBottom: 18 },
-  addBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center' },
+  addBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center' },
   calCard: { borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, padding: 16, marginBottom: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: CELL_GAP, marginBottom: 8 },
   cellBox: { width: `${100 / 7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
