@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { F, useC } from '../theme';
 import { FadeIn, ProgressRing, SectionTitle, StatusPill } from '../components/ui';
-import { BeadsIcon, CheckIcon, ChevronDown, CompassIcon, MosqueIcon } from '../components/icons';
+import { BeadsIcon, BellIcon, CheckIcon, ChevronDown, CompassIcon, MosqueIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 export default function Bugun({ v }) {
@@ -22,9 +22,20 @@ export default function Bugun({ v }) {
           <Text numberOfLines={1} style={st.greet}>{t(v.greet)}, {v.meName}</Text>
           <Text style={st.hijri}>۩ {v.hijriDate}</Text>
         </View>
-        <TouchableOpacity onPress={v.open.settings} activeOpacity={0.8} style={st.avatarBtn} accessibilityRole="button" accessibilityLabel={t('Sozlamalar')}>
-          <Text style={{ fontFamily: F.serif, fontSize: 18, color: C.gold }}>{v.meInitial}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity onPress={v.openNotifs} activeOpacity={0.8} style={st.bellBtn}
+            accessibilityRole="button" accessibilityLabel={t('Bildirishnomalar')}>
+            <BellIcon color={C.onBg} size={22} />
+            {v.newTaskCount > 0 && (
+              <View style={st.badge}>
+                <Text style={st.badgeT}>{v.newTaskCount > 9 ? '9+' : v.newTaskCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={v.open.settings} activeOpacity={0.8} style={st.avatarBtn} accessibilityRole="button" accessibilityLabel={t('Sozlamalar')}>
+            <Text style={{ fontFamily: F.serif, fontSize: 18, color: C.gold }}>{v.meInitial}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* next prayer card */}
@@ -159,6 +170,16 @@ const mkSt = (C) => StyleSheet.create({
     width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(217,179,106,0.1)',
     borderWidth: 1, borderColor: 'rgba(217,179,106,0.25)', alignItems: 'center', justifyContent: 'center',
   },
+  bellBtn: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: C.overlay1,
+    borderWidth: 1, borderColor: C.hairline, alignItems: 'center', justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute', top: -3, right: -3, minWidth: 20, height: 20, borderRadius: 10,
+    backgroundColor: C.red, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5,
+    borderWidth: 1.5, borderColor: C.bg[0],
+  },
+  badgeT: { fontFamily: F.extrabold, fontSize: 11, color: '#fff' },
   prayerCard: {
     borderRadius: 22, padding: 22, borderWidth: 1, borderColor: C.border,
     marginBottom: 18, overflow: 'hidden',

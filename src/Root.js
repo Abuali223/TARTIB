@@ -30,6 +30,7 @@ import TabBar from './components/TabBar';
 import TasbehOverlay from './overlays/Tasbeh';
 import QiblaOverlay from './overlays/QiblaOverlay';
 import MosquesOverlay from './overlays/Mosques';
+import NotifsOverlay from './overlays/Notifs';
 import StatsOverlay from './overlays/Stats';
 import HabitsOverlay from './overlays/Habits';
 import SettingsOverlay from './overlays/Settings';
@@ -680,6 +681,7 @@ export default class Root extends React.Component {
     const myAll = S.inboxTasks;
     const myTotal = myAll.length;
     const myDone = myAll.filter(t => t.status === 'bajarildi').length;
+    const newTaskCount = myAll.filter(t => t.status === 'yuborildi').length;  // yangi kelgan (javob berilmagan)
     const myPct = myTotal ? Math.round(myDone / myTotal * 100) : 0;
     const myTasks = myAll.map(t => {
       const isR = t.type === 'eslatma';
@@ -874,6 +876,7 @@ export default class Root extends React.Component {
       curName: curP.name,
       prayers, amals, goalDone, goalTotal, goalPct,
       members, board, jamoaTasks, myTasks, selMemberObj, selTaskObj,
+      newTaskCount, openNotifs: () => this.openOv('notifs'),
       cells, daysUz, timeline,
       habits, prayerWeek, overallPct, leaderboard,
       tasbeh, qibla,
@@ -900,7 +903,7 @@ export default class Root extends React.Component {
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
       open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), mosques: () => this.openOv('mosques'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
-      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', mosques: S.overlay === 'mosques', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr' },
+      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', mosques: S.overlay === 'mosques', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr', notifs: S.overlay === 'notifs' },
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
@@ -948,6 +951,7 @@ export default class Root extends React.Component {
         {v.ov.tasbeh && <TasbehOverlay v={v} />}
         {v.ov.qibla && <QiblaOverlay v={v} />}
         {v.ov.mosques && <MosquesOverlay v={v} />}
+        {v.ov.notifs && <NotifsOverlay v={v} />}
         {v.ov.stats && <StatsOverlay v={v} />}
         {v.ov.habits && <HabitsOverlay v={v} />}
         {v.ov.settings && <SettingsOverlay v={v} />}
