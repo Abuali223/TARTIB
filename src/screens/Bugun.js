@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { F, useC } from '../theme';
 import { FadeIn, ProgressRing, SectionTitle, StatusPill } from '../components/ui';
-import { BeadsIcon, CheckIcon, ChevronDown, CompassIcon } from '../components/icons';
+import { BeadsIcon, CheckIcon, ChevronDown, CompassIcon, MosqueIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 export default function Bugun({ v }) {
@@ -71,6 +71,13 @@ export default function Bugun({ v }) {
             <View>
               <Text style={st.quickTitle}>{t('Qibla')}</Text>
               <Text style={st.quickSub}>{t("Yo'nalish")}</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={v.open.mosques} activeOpacity={0.85} style={st.quickBtn}>
+            <View style={[st.quickIcon, { backgroundColor: 'rgba(111,179,224,0.14)' }]}><MosqueIcon /></View>
+            <View>
+              <Text style={st.quickTitle}>{t('Masjidlar')}</Text>
+              <Text style={st.quickSub}>{t('Eng yaqin')}</Text>
             </View>
           </TouchableOpacity>
         </View>

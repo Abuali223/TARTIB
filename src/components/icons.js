@@ -42,6 +42,19 @@ export const CompassIcon = ({ color = '#43C08D', size = 22, dot = true }) => (
   </Svg>
 );
 
+export const MosqueIcon = ({ color = '#6FB3E0', size = 22 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Circle cx={12} cy={2.6} r={0.9} fill={color} />
+    <Path d="M8 11 a4 3.5 0 0 1 8 0" fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+    <Path d="M7 11 v9 M17 11 v9" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+    <Path d="M3.6 20 h16.8" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+    <Path d="M3.6 20 v-8 M20.4 20 v-8" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+    <Circle cx={3.6} cy={11} r={1} fill={color} />
+    <Circle cx={20.4} cy={11} r={1} fill={color} />
+    <Path d="M10 20 v-3.4 a2 2 0 0 1 4 0 V20" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
 export const PersonIcon = ({ color = '#D9B36A', size = 22 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Circle cx={12} cy={8} r={3.6} fill="none" stroke={color} strokeWidth={1.8} />

@@ -29,6 +29,7 @@ import Profil from './screens/Profil';
 import TabBar from './components/TabBar';
 import TasbehOverlay from './overlays/Tasbeh';
 import QiblaOverlay from './overlays/QiblaOverlay';
+import MosquesOverlay from './overlays/Mosques';
 import StatsOverlay from './overlays/Stats';
 import HabitsOverlay from './overlays/Habits';
 import SettingsOverlay from './overlays/Settings';
@@ -893,8 +894,8 @@ export default class Root extends React.Component {
       shareApp: this.shareApp,
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
-      open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
-      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr' },
+      open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), mosques: () => this.openOv('mosques'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openOv('addmember'), workspace: () => this.openOv('workspace') },
+      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', mosques: S.overlay === 'mosques', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr' },
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
@@ -941,6 +942,7 @@ export default class Root extends React.Component {
 
         {v.ov.tasbeh && <TasbehOverlay v={v} />}
         {v.ov.qibla && <QiblaOverlay v={v} />}
+        {v.ov.mosques && <MosquesOverlay v={v} />}
         {v.ov.stats && <StatsOverlay v={v} />}
         {v.ov.habits && <HabitsOverlay v={v} />}
         {v.ov.settings && <SettingsOverlay v={v} />}
