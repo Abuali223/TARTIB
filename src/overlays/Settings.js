@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { F, useC } from '../theme';
 import { OverlayShell, Toggle } from '../components/ui';
 import { t } from '../lib/i18n';
+import { appVersionLabel } from '../lib/native';
 
 function ToggleRow({ label, on, onToggle, last }) {
   const C = useC();
@@ -74,7 +75,7 @@ export default function SettingsOverlay({ v }) {
         <TouchableOpacity onPress={v.logout} activeOpacity={0.85} style={st.logoutBtn}>
           <Text style={{ fontFamily: F.bold, fontSize: 15, color: C.red }}>{t('Chiqish')}</Text>
         </TouchableOpacity>
-        <Text style={st.footer}>TARTIB · v1.0 · بارك الله فيكم</Text>
+        <Text style={st.footer}>TARTIB · {appVersionLabel()} · بارك الله فيكم</Text>
       </ScrollView>
     </OverlayShell>
   );

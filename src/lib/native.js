@@ -10,6 +10,19 @@ export function cameraAvailable() {
   }
 }
 
+// Ilova versiyasi + build raqami (masalan "v1.0 (7)"). Eski APK'da (native
+// modul yo'q) faqat "v1.0" qaytadi — OTA'da qulamaydi.
+export function appVersionLabel() {
+  try {
+    const A = require('expo-application');
+    const v = A.nativeApplicationVersion || '1.0';
+    const b = A.nativeBuildVersion;
+    return b ? `v${v} (${b})` : `v${v}`;
+  } catch (e) {
+    return 'v1.0';
+  }
+}
+
 // QR/havoladan taklif kodini ajratadi. FAQAT "…join/OILA-XXXX" ko'rinishini
 // qabul qiladi — begona QR (Wi-Fi, veb-havola) rad etiladi (bo'sh qaytadi),
 // shunda foydalanuvchi chalg'ituvchi xato o'rniga "QR o'qilmadi" oladi.
