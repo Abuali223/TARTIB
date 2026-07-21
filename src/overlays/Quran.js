@@ -35,7 +35,6 @@ export default function QuranOverlay({ v }) {
   const ayahsRef = useRef([]);
   const reciterRef = useRef(reciter);
   const stopRef = useRef(false);
-  const pausedRef = useRef(false);   // pauza — ovoz yuklangan holda to'xtatilgan
   useEffect(() => { reciterRef.current = reciter; }, [reciter]);
 
   useEffect(() => {
@@ -62,11 +61,9 @@ export default function QuranOverlay({ v }) {
     return () => { alive = false; };
   }, [tab, sel]);
 
-  // Qori o'zgarsa — yuklab olinganini qayta tekshirish; pauzadagi ovozni yangi
-  // qori bilan qaytadan boshlash uchun tozalaymiz (joy — curIdx — saqlanadi)
+  // Qori o'zgarsa — yuklab olinganini qayta tekshirish
   useEffect(() => {
     if (data) setDl(x => ({ ...x, ok: isDownloaded(reciter.ed, data.ayahs) }));
-    if (pausedRef.current) { pausedRef.current = false; unloadSound(); }
   }, [reciter]);
 
   async function unloadSound() {
@@ -74,17 +71,13 @@ export default function QuranOverlay({ v }) {
     if (s) { try { await s.stopAsync(); } catch (e) {} try { await s.unloadAsync(); } catch (e) {} }
   }
   // To'liq to'xtatish (sura almashtirilganda / yopilganda) — joyni ham tozalaydi
-  async function stopPlay() { stopRef.current = true; pausedRef.current = false; await unloadSound(); setPlaying(false); setCurIdx(-1); }
+  async function stopPlay() { stopRef.current = true; await unloadSound(); setPlaying(false); setCurIdx(-1); }
 
-  // Pauza — ovozni yuklangan holda ushlab turadi, davom ettirilganda shu joydan boshlanadi
-  async function pausePlay() {
-    const s = soundRef.current;
-    if (s) { try { await s.pauseAsync(); pausedRef.current = true; } catch (e) {} }
-    setPlaying(false);
-  }
+  // Pauza — joyni (curIdx) saqlab ovozni to'xtatadi. Davom ettirilganda shu
+  // oyat boshidan qaytadan o'qiladi (sura boshidan emas).
+  async function pausePlay() { stopRef.current = true; await unloadSound(); setPlaying(false); }
 
   async function playSeq(idx) {
-    pausedRef.current = false;
     await unloadSound();
     if (stopRef.current) return;
     const ay = ayahsRef.current;
@@ -95,25 +88,18 @@ export default function QuranOverlay({ v }) {
       const src = verseSource(reciterRef.current.ed, a.gn);
       const { sound } = await Audio.Sound.createAsync(
         { uri: src }, { shouldPlay: true },
-        (s) => { if (s.didJustFinish) playSeq(idx + 1); },
+        (s) => { if (s.didJustFinish && !stopRef.current) playSeq(idx + 1); },
       );
       if (stopRef.current) { try { await sound.unloadAsync(); } catch (e) {} return; }
       soundRef.current = sound;
-    } catch (e) { playSeq(idx + 1); }  // bu oyat tushmasa — keyingisiga
+    } catch (e) { if (!stopRef.current) playSeq(idx + 1); }  // bu oyat tushmasa — keyingisiga
   }
 
   const togglePlay = async () => {
     if (playing) { await pausePlay(); return; }   // pauza — joyni saqlaydi
     if (!ayahsRef.current.length) return;
-    // pauzadan davom ettirish — aynan to'xtagan joydan
-    if (pausedRef.current && soundRef.current) {
-      try {
-        stopRef.current = false; setPlaying(true);
-        await soundRef.current.playAsync(); pausedRef.current = false; return;
-      } catch (e) { pausedRef.current = false; }
-    }
     stopRef.current = false; setPlaying(true);
-    playSeq(curIdx >= 0 ? curIdx : 0);
+    playSeq(curIdx >= 0 ? curIdx : 0);            // davom — saqlangan oyatdan
   };
 
   const doDownload = async () => {
