@@ -116,7 +116,7 @@ export default class Root extends React.Component {
   get uid() { return this.state.fbUser ? this.state.fbUser.uid : null; }
 
   async componentDidMount() {
-    this._t = setInterval(() => this.setState({ now: Date.now() }), 1000);
+    this._t = setInterval(() => { this.setState({ now: Date.now() }); this.maybeResetAmals(); }, 1000);
     const saved = await loadState();
     if (saved) {
       const patch = {};
@@ -146,6 +146,7 @@ export default class Root extends React.Component {
           this.setState({ locked: true });
         }
         this._bgAt = null;
+        this.maybeResetAmals();   // fondan qaytganda kun almashgan bo'lsa tozalash
         return;
       }
       if ((s === 'background' || s === 'inactive') && !this._bgAt) {
@@ -577,6 +578,13 @@ export default class Root extends React.Component {
   };
 
   // ————— personal —————
+  // Kun almashsa (yarim tundan keyin) — kunlik amallarni avtomatik tozalash
+  maybeResetAmals = () => {
+    const tk = todayKey();
+    if (this.state.amalsDate !== tk) {
+      this.setState(s => ({ amals: s.amals.map(a => ({ ...a, done: false })), amalsDate: tk }));
+    }
+  };
   toggleAmal = (id) => this.setState(s => ({ amals: s.amals.map(a => a.id === id ? { ...a, done: !a.done } : a), amalsDate: todayKey() }));
   toggleHabit = (id) => this.setState(s => ({ habits: s.habits.map(h => { if (h.id !== id) return h; const w = h.week.slice(); const nd = !w[6]; w[6] = nd; return { ...h, week: w, streak: nd ? h.streak + 1 : Math.max(0, h.streak - 1) }; }) }));
   tasbehTap = () => this.setState(s => ({ tasbehCount: s.tasbehCount + 1 }));
