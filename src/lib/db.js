@@ -70,8 +70,16 @@ export async function joinByCode(uid, code, { restricted = false } = {}) {
   if (!jc.exists()) { const e = new Error('not-found'); e.code = 'ws/not-found'; throw e; }
   const { workspaceId: wid, type } = jc.data();
   const mid = membershipId(wid, uid);
-  const existing = await getDoc(doc(db, 'memberships', mid));
-  if (existing.exists()) { const e = new Error('already'); e.code = 'ws/already-member'; throw e; }
+  // A'zolikni tekshirish. Hujjat MAVJUD bo'lmasa, qoida uni o'qishga ruxsat
+  // bermasligi mumkin (permission-denied) — bu holatda "a'zo emas" deb qabul
+  // qilamiz va davom etamiz. Faqat o'qib bo'lgan va MAVJUD bo'lsa — allaqachon a'zo.
+  try {
+    const existing = await getDoc(doc(db, 'memberships', mid));
+    if (existing.exists()) { const e = new Error('already'); e.code = 'ws/already-member'; throw e; }
+  } catch (e) {
+    if (e && e.code === 'ws/already-member') throw e;   // haqiqiy "allaqachon a'zo"
+    // aks holda (permission-denied va h.k.) — a'zo emas, davom etamiz
+  }
   const role = defaultMemberRole(type);
   await setDoc(doc(db, 'memberships', mid), {
     workspaceId: wid, userId: uid, role,
