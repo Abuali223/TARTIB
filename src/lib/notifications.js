@@ -114,9 +114,10 @@ export async function sendTestNotification() {
   } catch (e) { return false; }
 }
 
-// Test AZON bildirishnomasi — 5 soniyadan keyin 'azan' kanalida (to'liq azon ovozi).
-// Foydalanuvchi telefonni qulflab, ilova yopiqda azon chalinishini tekshirishi uchun.
-export async function sendTestAdhan() {
+// Test AZON bildirishnomasi — 20 soniyadan keyin 'azan' kanalida (to'liq azon ovozi).
+// 20s — foydalanuvchi ilovani YOPIB (recents'dan olib tashlab) qulflaguncha ulguradi;
+// shu bilan ilova butunlay yopiq holatda azon kelishini tekshiradi.
+export async function sendTestAdhan(seconds = 20) {
   try {
     const ok = await ensurePermission();
     if (!ok) return false;
@@ -135,7 +136,7 @@ export async function sendTestAdhan() {
         body: 'Namoz vaqti kirdi. Allohu akbar.',
         sound: 'azan.aac',
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 5, channelId: 'azan' },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds, channelId: 'azan' },
     });
     return true;
   } catch (e) { return false; }

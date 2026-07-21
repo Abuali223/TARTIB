@@ -515,13 +515,14 @@ export default class Root extends React.Component {
     const ok = await sendTestNotification();
     this.flash(ok ? 'Test bildirishnoma yuborildi (2s)' : 'Bildirishnoma ruxsati yo‘q');
   };
-  // Azonni sinash: darrov ichki azon + 5s dan keyin 'azan' kanalida bildirishnoma.
-  // Telefonni qulflab tursangiz — ilova yopiqdagi azon ovozini ham tekshirasiz.
+  // Azonni sinash: 20s dan keyin 'azan' kanalida bildirishnoma keladi.
+  // Foydalanuvchi ilovani YOPIB (recents'dan olib tashlab) qulflab kutadi —
+  // shu bilan ilova butunlay yopiq holatda azon chalinishini tekshiradi.
   testAdhan = async () => {
-    const ok = await sendTestAdhan();
-    this.setState({ adhanOn: 'Sinov' });
-    playAdhan('test', () => this.setState({ adhanOn: null })).catch(() => this.setState({ adhanOn: null }));
-    this.flash(ok ? 'Azon chalinmoqda · 5s dan keyin bildirishnoma (qulflab sinang)' : 'Bildirishnoma ruxsati yo‘q');
+    const ok = await sendTestAdhan(20);
+    this.flash(ok
+      ? 'Sinov: 20s dan keyin azon keladi. Hoziroq ilovani YOPING (recents’dan oling) va kuting.'
+      : 'Bildirishnoma ruxsati yo‘q — Sozlamalardan yoqing');
   };
   setMadhab = (key) => this.setState({ madhab: key, overlay: 'settings' });
   setManualCity = (city) => this.setState({ manualCity: city, overlay: 'settings' }); // city=null → GPS
