@@ -4,9 +4,9 @@
 
 import { Audio } from 'expo-av';
 
-// Bundle qilingan azon (assets/azan.m4a) — oflayn ishlaydi
+// Bundle qilingan azon (assets/azan.aac — ADTS, ishonchli) — oflayn ishlaydi
 let AZAN_ASSET = null;
-try { AZAN_ASSET = require('../../assets/azan.m4a'); } catch (e) { AZAN_ASSET = null; }
+try { AZAN_ASSET = require('../../assets/azan.aac'); } catch (e) { AZAN_ASSET = null; }
 
 // Zaxira — internetdan oqim (fayl bo'lmasa)
 const ADHAN_URLS = [

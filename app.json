@@ -45,7 +45,7 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#EEC271",
-          "sounds": ["./assets/azan.m4a"]
+          "sounds": ["./assets/azan.aac"]
         }
       ],
       "@react-native-google-signin/google-signin",

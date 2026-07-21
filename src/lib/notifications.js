@@ -47,7 +47,7 @@ export async function schedulePrayerReminders(coords, { enabled = true, sound = 
       await Notifications.setNotificationChannelAsync('azan', {
         name: 'Azon (namoz vaqti)',
         importance: Notifications.AndroidImportance.HIGH,
-        sound: 'azan.m4a',
+        sound: 'azan.aac',
         vibrationPattern: [0, 350, 250, 350],
         lightColor: '#D9B36A',
       });
@@ -72,7 +72,7 @@ export async function schedulePrayerReminders(coords, { enabled = true, sound = 
           content: {
             title: `${PRAYER_LABEL[p.k]} namozi vaqti · ${AR[p.k]}`,
             body: `${PRAYER_LABEL[p.k]} namozi vaqti kirdi. Allohu akbar.`,
-            sound: sound ? 'azan.m4a' : 'default',
+            sound: sound ? 'azan.aac' : 'default',
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -109,6 +109,33 @@ export async function sendTestNotification() {
         body: 'Bildirishnoma ishlayapti ✓ Allohu akbar.',
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 2, channelId: 'prayer' },
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+// Test AZON bildirishnomasi — 5 soniyadan keyin 'azan' kanalida (to'liq azon ovozi).
+// Foydalanuvchi telefonni qulflab, ilova yopiqda azon chalinishini tekshirishi uchun.
+export async function sendTestAdhan() {
+  try {
+    const ok = await ensurePermission();
+    if (!ok) return false;
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('azan', {
+        name: 'Azon (namoz vaqti)',
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: 'azan.aac',
+        vibrationPattern: [0, 350, 250, 350],
+        lightColor: '#D9B36A',
+      });
+    }
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'TARTIB — azon sinovi',
+        body: 'Namoz vaqti kirdi. Allohu akbar.',
+        sound: 'azan.aac',
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 5, channelId: 'azan' },
     });
     return true;
   } catch (e) { return false; }

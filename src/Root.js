@@ -15,7 +15,7 @@ import LockScreen from './screens/LockScreen';
 import { setSecurePin, verifySecurePin, clearSecurePin, hashPin, verifyLegacyPin, biometricAvailable, biometricAuth } from './lib/lock';
 import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
-import { schedulePrayerReminders, sendTestNotification } from './lib/notifications';
+import { schedulePrayerReminders, sendTestNotification, sendTestAdhan } from './lib/notifications';
 import { playAdhan, stopAdhan } from './lib/adhan';
 import {
   addTask, createWorkspace, deleteWorkspace, ensureJoinCode, fetchUser, joinByCode, leaveWorkspace, setTaskStatus, updateMemberRole,
@@ -515,6 +515,14 @@ export default class Root extends React.Component {
     const ok = await sendTestNotification();
     this.flash(ok ? 'Test bildirishnoma yuborildi (2s)' : 'Bildirishnoma ruxsati yo‘q');
   };
+  // Azonni sinash: darrov ichki azon + 5s dan keyin 'azan' kanalida bildirishnoma.
+  // Telefonni qulflab tursangiz — ilova yopiqdagi azon ovozini ham tekshirasiz.
+  testAdhan = async () => {
+    const ok = await sendTestAdhan();
+    this.setState({ adhanOn: 'Sinov' });
+    playAdhan('test', () => this.setState({ adhanOn: null })).catch(() => this.setState({ adhanOn: null }));
+    this.flash(ok ? 'Azon chalinmoqda · 5s dan keyin bildirishnoma (qulflab sinang)' : 'Bildirishnoma ruxsati yo‘q');
+  };
   setMadhab = (key) => this.setState({ madhab: key, overlay: 'settings' });
   setManualCity = (city) => this.setState({ manualCity: city, overlay: 'settings' }); // city=null → GPS
   setAppLang = (key) => { setLang(key); this.setState({ lang: key, overlay: 'settings' }); };
@@ -959,7 +967,7 @@ export default class Root extends React.Component {
       openScan: this.openScan, onScanned: this.onScanned,
       settings: S.settings,
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
-      testNotification: this.testNotification,
+      testNotification: this.testNotification, testAdhan: this.testAdhan,
       // Sozlamalar tanlovlari
       madhabName, isManualCity: !!S.manualCity, langName,
       openMadhab: () => this.openPicker('madhab'), openCity: () => this.openPicker('city'), openLang: () => this.openPicker('lang'), openTheme: () => this.openPicker('theme'),
