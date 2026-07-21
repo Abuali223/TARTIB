@@ -28,6 +28,7 @@ export default function QuranOverlay({ v }) {
   const [trShow, setTrShow] = useState(true);        // tarjima ko'rsatish
   const [picker, setPicker] = useState(null);        // null | surah | juz | reciter
   const [playing, setPlaying] = useState(false);
+  const [pausePending, setPausePending] = useState(false);  // "oyat tugagach pauza"
   const [curIdx, setCurIdx] = useState(-1);
   const [dl, setDl] = useState({ on: false, done: 0, total: 0, ok: false });
 
@@ -35,6 +36,7 @@ export default function QuranOverlay({ v }) {
   const ayahsRef = useRef([]);
   const reciterRef = useRef(reciter);
   const stopRef = useRef(false);
+  const pausePendingRef = useRef(false);   // oyat oxirida to'xtash so'ralgan
   useEffect(() => { reciterRef.current = reciter; }, [reciter]);
 
   useEffect(() => {
@@ -71,11 +73,30 @@ export default function QuranOverlay({ v }) {
     if (s) { try { await s.stopAsync(); } catch (e) {} try { await s.unloadAsync(); } catch (e) {} }
   }
   // To'liq to'xtatish (sura almashtirilganda / yopilganda) — joyni ham tozalaydi
-  async function stopPlay() { stopRef.current = true; await unloadSound(); setPlaying(false); setCurIdx(-1); }
+  async function stopPlay() {
+    stopRef.current = true; pausePendingRef.current = false; setPausePending(false);
+    await unloadSound(); setPlaying(false); setCurIdx(-1);
+  }
 
-  // Pauza — joyni (curIdx) saqlab ovozni to'xtatadi. Davom ettirilganda shu
-  // oyat boshidan qaytadan o'qiladi (sura boshidan emas).
-  async function pausePlay() { stopRef.current = true; await unloadSound(); setPlaying(false); }
+  // Darrov pauza (majburiy) — joyni (curIdx) saqlab ovozni to'xtatadi.
+  async function pausePlay() {
+    stopRef.current = true; pausePendingRef.current = false; setPausePending(false);
+    await unloadSound(); setPlaying(false);
+  }
+
+  // Oyat tugagach: pauza so'ralgan bo'lsa — keyingi oyatda to'xtaymiz (oyat
+  // yarmida uzilmaydi), aks holda keyingi oyatga o'tamiz.
+  function afterAyah(idx) {
+    if (pausePendingRef.current) {
+      pausePendingRef.current = false; setPausePending(false);
+      const ay = ayahsRef.current;
+      setPlaying(false);
+      setCurIdx(idx + 1 < ay.length ? idx + 1 : idx);  // davom keyingi oyatdan
+      unloadSound();
+    } else {
+      playSeq(idx + 1);
+    }
+  }
 
   async function playSeq(idx) {
     await unloadSound();
@@ -88,16 +109,22 @@ export default function QuranOverlay({ v }) {
       const src = verseSource(reciterRef.current.ed, a.gn);
       const { sound } = await Audio.Sound.createAsync(
         { uri: src }, { shouldPlay: true },
-        (s) => { if (s.didJustFinish && !stopRef.current) playSeq(idx + 1); },
+        (s) => { if (s.didJustFinish && !stopRef.current) afterAyah(idx); },
       );
       if (stopRef.current) { try { await sound.unloadAsync(); } catch (e) {} return; }
       soundRef.current = sound;
-    } catch (e) { if (!stopRef.current) playSeq(idx + 1); }  // bu oyat tushmasa — keyingisiga
+    } catch (e) { if (!stopRef.current) afterAyah(idx); }  // bu oyat tushmasa — keyingisiga
   }
 
   const togglePlay = async () => {
-    if (playing) { await pausePlay(); return; }   // pauza — joyni saqlaydi
+    if (playing) {
+      if (pausePendingRef.current) { await pausePlay(); return; }  // 2-bosish — darrov to'xtat
+      // 1-bosish — oyat tugagach pauza (oyatni yarmida uzmaymiz)
+      pausePendingRef.current = true; setPausePending(true);
+      return;
+    }
     if (!ayahsRef.current.length) return;
+    pausePendingRef.current = false; setPausePending(false);
     stopRef.current = false; setPlaying(true);
     playSeq(curIdx >= 0 ? curIdx : 0);            // davom — saqlangan oyatdan
   };
@@ -139,9 +166,9 @@ export default function QuranOverlay({ v }) {
             <Text style={st.reciterLbl}>{t('Qori')}</Text>
             <Text numberOfLines={1} style={st.reciterT}>{reciter.name}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[st.iconBtn, playing && st.iconBtnOn]} activeOpacity={0.85} onPress={togglePlay}
-            accessibilityRole="button" accessibilityLabel={playing ? t('To‘xtatish') : t('Tinglash')}>
-            <Text style={[st.iconBtnT, playing && { color: C.ink }]}>{playing ? '⏸' : '▶'}</Text>
+          <TouchableOpacity style={[st.iconBtn, playing && st.iconBtnOn, pausePending && st.iconBtnPending]} activeOpacity={0.85} onPress={togglePlay}
+            accessibilityRole="button" accessibilityLabel={pausePending ? t('Oyat oxirida to‘xtaydi — darrov to‘xtatish') : playing ? t('Oyat oxirida to‘xtatish') : t('Tinglash')}>
+            <Text style={[st.iconBtnT, (playing || pausePending) && { color: C.ink }]}>{pausePending ? '⏳' : playing ? '⏸' : '▶'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={st.iconBtn} activeOpacity={0.85} onPress={doDownload} disabled={dl.on || dl.ok}
             accessibilityRole="button" accessibilityLabel={t('Yuklab olish')}>
@@ -158,6 +185,11 @@ export default function QuranOverlay({ v }) {
             <Text style={[st.iconBtnT, soya && { color: C.ink }]}>☾</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Pauza kutilmoqda — oyat oxirida to'xtaydi */}
+        {pausePending && (
+          <Text style={st.pendHint}>{t('⏳ Oyat oxirida to‘xtaydi · darrov to‘xtatish uchun yana bosing')}</Text>
+        )}
 
         {/* Sarlavha */}
         {data && (
@@ -198,7 +230,7 @@ export default function QuranOverlay({ v }) {
                         </View>
                       )}
                       <TouchableOpacity activeOpacity={0.7}
-                        onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
+                        onPress={() => { pausePendingRef.current = false; setPausePending(false); stopRef.current = false; setPlaying(true); playSeq(i); }}
                         style={[st.vBlock, i > 0 && !newSurah && st.vDivider, isCur && st.vBlockOn]}>
                         <Text style={[st.arabicV, { color: col }]}>
                           {a.text} <Text style={st.ayahNum}>﴿{toArabicNum(a.n)}﴾</Text>
@@ -214,7 +246,7 @@ export default function QuranOverlay({ v }) {
                     const dim = soya && curIdx !== i;
                     const isCur = curIdx === i;
                     return (
-                      <Text key={i} onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
+                      <Text key={i} onPress={() => { pausePendingRef.current = false; setPausePending(false); stopRef.current = false; setPlaying(true); playSeq(i); }}
                         style={{ color: isCur ? C_INK_ACTIVE : (dim ? C_INK_DIM : C_INK) }}>
                         {a.text}
                         <Text style={st.ayahNum}> ﴿{toArabicNum(a.n)}﴾ </Text>
@@ -291,6 +323,8 @@ const mkSt = (C) => StyleSheet.create({
   reciterT: { fontFamily: F.bold, fontSize: 13, color: C.gold, marginTop: 1 },
   iconBtn: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.border },
   iconBtnOn: { backgroundColor: C.gold, borderColor: C.gold },
+  iconBtnPending: { backgroundColor: C.goldD || C.gold, borderColor: C.gold, opacity: 0.9 },
+  pendHint: { fontFamily: F.regular, fontSize: 12, color: C.gold, textAlign: 'center', marginHorizontal: 16, marginBottom: 8, marginTop: -2 },
   iconBtnT: { fontSize: 18, color: C.cream },
   iconBtnUz: { fontFamily: F.extrabold, fontSize: 14, color: C.cream },
   dlT: { fontFamily: F.extrabold, fontSize: 12, color: C.gold },
