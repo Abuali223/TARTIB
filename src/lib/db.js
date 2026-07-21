@@ -104,6 +104,20 @@ export async function leaveWorkspace(wid, uid) {
   await deleteDoc(doc(db, 'memberships', membershipId(wid, uid)));
 }
 
+// Makonni butunlay o'chirish (FAQAT ega). Avval vazifa va a'zoliklar, keyin
+// makon hujjati (qoidalar isOwner() ni tekshira olishi uchun makon oxirida).
+export async function deleteWorkspace(wid) {
+  try {
+    const ts = await getDocs(query(collection(db, 'tasks'), where('workspaceId', '==', wid)));
+    for (const d of ts.docs) { try { await deleteDoc(d.ref); } catch (e) { /* davom */ } }
+  } catch (e) { /* ruxsat/tarmoq */ }
+  try {
+    const ms = await getDocs(query(collection(db, 'memberships'), where('workspaceId', '==', wid)));
+    for (const d of ms.docs) { try { await deleteDoc(d.ref); } catch (e) { /* davom */ } }
+  } catch (e) { /* ruxsat/tarmoq */ }
+  await deleteDoc(doc(db, 'workspaces', wid));
+}
+
 export async function addTask(uid, { workspaceId, assigneeUserId, title, desc, cat, due, type }) {
   const tid = doc(collection(db, 'tasks')).id;   // avto-ID, to'qnashmaydi
   await setDoc(doc(db, 'tasks', tid), {

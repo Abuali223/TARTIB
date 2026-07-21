@@ -42,6 +42,13 @@ export const CompassIcon = ({ color = '#43C08D', size = 22, dot = true }) => (
   </Svg>
 );
 
+export const TrashIcon = ({ color = '#F09A82', size = 18 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Path d="M4 7 h16 M9 7 V5 a1 1 0 0 1 1-1 h4 a1 1 0 0 1 1 1 v2 M6.5 7 l0.9 12 a1.4 1.4 0 0 0 1.4 1.3 h6.4 a1.4 1.4 0 0 0 1.4-1.3 L18.5 7"
+      fill="none" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
 export const BellIcon = ({ color = '#F2EBD9', size = 22 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Path d="M18 16 H6 a1 1 0 0 1-.8-1.6 C6 13.5 6.5 12.5 6.5 10.5 a5.5 5.5 0 0 1 11 0 c0 2 .5 3 1.3 3.9 A1 1 0 0 1 18 16 Z"

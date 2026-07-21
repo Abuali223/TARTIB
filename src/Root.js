@@ -17,7 +17,7 @@ import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
 import { schedulePrayerReminders, sendTestNotification } from './lib/notifications';
 import {
-  addTask, createWorkspace, ensureJoinCode, fetchUser, joinByCode, setTaskStatus, updateMemberRole,
+  addTask, createWorkspace, deleteWorkspace, ensureJoinCode, fetchUser, joinByCode, leaveWorkspace, setTaskStatus, updateMemberRole,
   subscribeInbox, subscribeMyMemberships, subscribeWorkspace, subscribeWorkspaceMembers, subscribeWorkspaceTasks,
 } from './lib/db';
 import Onboarding from './screens/Onboarding';
@@ -426,6 +426,29 @@ export default class Root extends React.Component {
       this.setState({ wsDraft: { type: 'oila', name: '' }, overlay: null, activeWorkspaceId: wid, tab: 'jamoa' });
       this.flash('Makon yaratildi ✓');
     } catch (e) { this.flash('Xatolik: makon yaratilmadi'); }
+  };
+  // Makonni o'chirish (ega) yoki tark etish (a'zo) — tasdiq bilan
+  removeWorkspace = (w) => {
+    const owner = w.ownerUserId === this.uid;
+    Alert.alert(
+      owner ? 'Makonni o‘chirish' : 'Makonni tark etish',
+      owner
+        ? `“${w.name}” makoni va undagi barcha vazifalar butunlay o‘chiriladi. Davom etasizmi?`
+        : `“${w.name}” makonini tark etasizmi?`,
+      [
+        { text: 'Bekor', style: 'cancel' },
+        {
+          text: owner ? 'O‘chirish' : 'Tark etish', style: 'destructive',
+          onPress: async () => {
+            try {
+              if (owner) await deleteWorkspace(w.id); else await leaveWorkspace(w.id, this.uid);
+              if (this.state.activeWorkspaceId === w.id) this.setState({ activeWorkspaceId: null, tab: 'bugun' });
+              this.flash(owner ? 'Makon o‘chirildi' : 'Makondan chiqdingiz');
+            } catch (e) { this.flash('Bajarilmadi — qaytadan urining'); }
+          },
+        },
+      ],
+    );
   };
   onJoinCode = (v) => this.setState({ joinCode: (v + '').replace(/[^A-Za-z0-9-]/g, '').toUpperCase() });
   submitJoin = async () => {
@@ -860,7 +883,7 @@ export default class Root extends React.Component {
       .map(mem => {
         const w = S.myWorkspaces[mem.workspaceId];
         if (!w) return null;
-        return { id: w.id, name: w.name, type: w.type, typeLabel: WS_TYPES[w.type].label, role: mem.role, active: w.id === S.activeWorkspaceId, onSelect: () => this.setActiveWorkspace(w.id) };
+        return { id: w.id, name: w.name, type: w.type, typeLabel: WS_TYPES[w.type].label, role: mem.role, active: w.id === S.activeWorkspaceId, isOwner: w.ownerUserId === this.uid, onSelect: () => this.setActiveWorkspace(w.id), onDelete: () => this.removeWorkspace(w) };
       })
       .filter(Boolean);
     const wsTypeChips = [{ k: 'oila', name: 'Oila' }, { k: 'talim', name: "Ta'lim" }, { k: 'ishxona', name: 'Ishxona' }]

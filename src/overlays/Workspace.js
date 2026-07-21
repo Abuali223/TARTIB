@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { F, useC } from '../theme';
-import { BriefcaseIcon, CheckIcon, ChevronRight, GradCapIcon, PersonIcon, UsersIcon } from '../components/icons';
+import { BriefcaseIcon, CheckIcon, ChevronRight, GradCapIcon, PersonIcon, TrashIcon, UsersIcon } from '../components/icons';
 import { t } from '../lib/i18n';
 
 const TYPE_ICON = {
@@ -11,17 +11,23 @@ const TYPE_ICON = {
   ishxona: { Icon: BriefcaseIcon, bg: 'rgba(111,179,224,0.14)', color: '#6FB3E0' },
 };
 
-function Row({ active, onPress, iconBg, icon, title, sub, showCheck = true }) {
+function Row({ active, onPress, iconBg, icon, title, sub, showCheck = true, onDelete, owner }) {
   const C = useC();
   const st = mkSt(C);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={[st.row, active ? st.rowActive : st.rowIdle]}>
       <View style={[st.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.cream }}>{title}</Text>
-        {!!sub && <Text style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 1 }}>{sub}</Text>}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text numberOfLines={1} style={{ fontFamily: F.bold, fontSize: 16, color: C.cream }}>{title}</Text>
+        {!!sub && <Text numberOfLines={1} style={{ fontFamily: F.regular, fontSize: 12, color: C.sage, marginTop: 1 }}>{sub}</Text>}
       </View>
-      {showCheck && <View style={{ opacity: active ? 1 : 0 }}><CheckIcon size={18} color={C.emerald} strokeWidth={2.4} /></View>}
+      {active && showCheck && <View style={{ marginRight: onDelete ? 4 : 0 }}><CheckIcon size={18} color={C.emerald} strokeWidth={2.4} /></View>}
+      {onDelete && (
+        <TouchableOpacity onPress={onDelete} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={st.delBtn} accessibilityRole="button" accessibilityLabel={owner ? "Makonni o'chirish" : "Makonni tark etish"}>
+          <TrashIcon color={C.red} size={18} />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
@@ -48,7 +54,7 @@ export default function WorkspaceSheet({ v }) {
               {v.myWorkspaces.map(w => {
                 const ic = TYPE_ICON[w.type] || TYPE_ICON.oila;
                 const Icon = ic.Icon;
-                return <Row key={w.id} active={w.active} onPress={w.onSelect} iconBg={ic.bg} icon={<Icon color={ic.color} />} title={w.name} sub={`${t(w.typeLabel)} · ${t(w.role)}`} />;
+                return <Row key={w.id} active={w.active} onPress={w.onSelect} iconBg={ic.bg} icon={<Icon color={ic.color} />} title={w.name} sub={`${t(w.typeLabel)} · ${t(w.role)}`} onDelete={w.onDelete} owner={w.isOwner} />;
               })}
 
               {v.myWorkspaces.length === 0 && (
@@ -158,6 +164,7 @@ const mkSt = (C) => StyleSheet.create({
   rowActive: { backgroundColor: 'rgba(217,179,106,0.12)', borderColor: 'rgba(217,179,106,0.4)' },
   rowIdle: { backgroundColor: C.cardAlt, borderColor: C.hairline },
   rowIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  delBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(240,154,130,0.12)' },
   dashed: { flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%', paddingVertical: 15, paddingHorizontal: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: C.overlay3, borderStyle: 'dashed' },
   label: { fontFamily: F.bold, fontSize: 13, color: C.sageMid, marginBottom: 10, marginHorizontal: 2 },
   typeChip: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: C.overlay1 },
