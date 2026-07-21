@@ -1,31 +1,45 @@
 // TARTIB — Qur'on: matn (API + kesh), audio (qorilar), oflayn yuklash.
 // Matn alquran.cloud API'dan olinadi va AsyncStorage'da keshlanadi (bir marta
-// yuklangach oflayn o'qiladi). Audio everyayah.com'dan oqim yoki yuklab olinadi.
+// yuklangach oflayn o'qiladi). Audio islamic.network CDN'dan oqim yoki yuklab olinadi
+// (oyat-oyat, global oyat raqami bilan).
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Directory, File, Paths } from 'expo-file-system';
 
 const API = 'https://api.alquran.cloud/v1';
 
-// Qorilar — everyayah.com papka nomlari (oyat-oyat mp3)
+// Qorilar — alquran.cloud audio edition ID'lari (islamic.network CDN, oyat-oyat)
 export const RECITERS = [
-  { id: 'afasy', name: 'Mishary al-Afasy', folder: 'Alafasy_128kbps' },
-  { id: 'ajamy', name: 'Ahmad al-Ajmiy', folder: 'Ahmed_ibn_Ali_al-Ajamy_128kbps' },
-  { id: 'minshawi', name: 'Al-Minshawiy', folder: 'Minshawy_Murattal_128kbps' },
-  { id: 'husary', name: 'Mahmud al-Husariy', folder: 'Husary_128kbps' },
-  { id: 'sudais', name: 'Abdurrahmon as-Sudays', folder: 'Abdurrahmaan_As-Sudais_192kbps' },
+  { id: 'afasy', name: 'Mishary al-Afasy', ed: 'ar.alafasy' },
+  { id: 'ajamy', name: 'Ahmad al-Ajmiy', ed: 'ar.ahmedajamy' },
+  { id: 'husary', name: 'Mahmud al-Husariy', ed: 'ar.husary' },
+  { id: 'minshawi', name: 'Al-Minshawiy', ed: 'ar.minshawi' },
+  { id: 'sudais', name: 'Abdurrahmon as-Sudays', ed: 'ar.abdurrahmaansudais' },
 ];
-
-const pad = (x, w) => String(x).padStart(w, '0');
 
 // O'zbekcha tarjima — Muhammad Sodiq Muhammad Yusuf (alquran.cloud edition)
 const UZ = 'uz.sodik';
 
-// ————— Matn (kesh bilan) — v2: tarjima bilan —————
+// Basmala matni (quran-uthmani). Suralar boshida 1-oyatga qo'shilib keladi —
+// uni ajratib alohida ko'rsatamiz. Basmala doim 4 so'z: بسم / الله / الرحمن / الرحيم
+function stripBasmala(surahNo, ayahs) {
+  // Fotiha (1) — basmala aynan 1-oyat; Tavba (9) — basmalasiz. Ularga tegmaymiz.
+  if (surahNo === 1 || surahNo === 9) return;
+  if (!ayahs || !ayahs.length) return;
+  const first = ayahs[0];
+  const toks = (first.text || '').split(' ');
+  // birinchi so'z "بِسۡمِ / بِسْمِ" bilan boshlansa va so'z soni yetarli bo'lsa —
+  // dastlabki 4 so'z (basmala) olib tashlanadi
+  if (toks.length > 4 && /^بِ?سۡ?ْ?مِ/.test(toks[0])) {
+    first.text = toks.slice(4).join(' ');
+  }
+}
+
+// ————— Matn (kesh bilan) — v3: tarjima + global oyat raqami (gn) + basmala ajratilgan —————
 async function cachedText(key, fetcher) {
-  try { const s = await AsyncStorage.getItem('q2.' + key); if (s) return JSON.parse(s); } catch (e) { /* */ }
+  try { const s = await AsyncStorage.getItem('q3.' + key); if (s) return JSON.parse(s); } catch (e) { /* */ }
   const d = await fetcher();
-  try { await AsyncStorage.setItem('q2.' + key, JSON.stringify(d)); } catch (e) { /* */ }
+  try { await AsyncStorage.setItem('q3.' + key, JSON.stringify(d)); } catch (e) { /* */ }
   return d;
 }
 
@@ -47,9 +61,16 @@ export async function getSurah(n) {
     const ar = arr.find(e => e.edition && e.edition.identifier === 'quran-uthmani') || arr[0] || {};
     const uz = arr.find(e => e.edition && e.edition.identifier === UZ);
     const uzA = (uz && uz.ayahs) || [];
+    const ayahs = (ar.ayahs || []).map((a, i) => ({
+      n: a.numberInSurah, gn: a.number, text: a.text,
+      tr: (uzA[i] && uzA[i].text) || '', surah: ar.number,
+    }));
+    stripBasmala(ar.number, ayahs);
     return {
       n: ar.number, name: ar.name, en: ar.englishName, type: ar.revelationType,
-      ayahs: (ar.ayahs || []).map((a, i) => ({ n: a.numberInSurah, text: a.text, tr: (uzA[i] && uzA[i].text) || '', surah: ar.number })),
+      // basmala sarlavhasi: Fotiha (o'zida bor) va Tavba (yo'q)dan tashqari barcha suralarda
+      bismillah: ar.number !== 1 && ar.number !== 9,
+      ayahs,
     };
   });
 }
@@ -62,38 +83,44 @@ export async function getJuz(n) {
     const ar = arr.find(e => e.edition && e.edition.identifier === 'quran-uthmani') || arr[0] || {};
     const uz = arr.find(e => e.edition && e.edition.identifier === UZ);
     const uzA = (uz && uz.ayahs) || [];
-    return {
-      ayahs: (ar.ayahs || []).map((a, i) => ({
-        n: a.numberInSurah, text: a.text, tr: (uzA[i] && uzA[i].text) || '',
-        surah: a.surah.number, surahName: a.surah.name,
-      })),
-    };
+    const ayahs = (ar.ayahs || []).map((a, i) => ({
+      n: a.numberInSurah, gn: a.number, text: a.text, tr: (uzA[i] && uzA[i].text) || '',
+      surah: a.surah.number, surahName: a.surah.name,
+    }));
+    // Pora ichida yangi sura boshlangan joyda 1-oyatdagi basmalani ajratamiz
+    const bySurah = {};
+    ayahs.forEach(a => { (bySurah[a.surah] = bySurah[a.surah] || []).push(a); });
+    Object.keys(bySurah).forEach(sn => {
+      const grp = bySurah[sn];
+      if (grp[0] && grp[0].n === 1) stripBasmala(Number(sn), grp);
+    });
+    return { ayahs };
   });
 }
 
-// ————— Audio —————
-export function verseAudioUrl(folder, surah, ayah) {
-  return `https://everyayah.com/data/${folder}/${pad(surah, 3)}${pad(ayah, 3)}.mp3`;
+// ————— Audio — islamic.network CDN, global oyat raqami (gn) bilan —————
+export function verseAudioUrl(ed, gn) {
+  return `https://cdn.islamic.network/quran/audio/128/${ed}/${gn}.mp3`;
 }
 
-function audioDir(folder) { return new Directory(Paths.document, 'quran-audio', folder); }
-function verseFile(folder, surah, ayah) { return new File(audioDir(folder), `${pad(surah, 3)}${pad(ayah, 3)}.mp3`); }
+function audioDir(ed) { return new Directory(Paths.document, 'quran-audio', ed.replace(/\./g, '_')); }
+function verseFile(ed, gn) { return new File(audioDir(ed), `${gn}.mp3`); }
 
 // Oyat manbasi — oflayn (yuklangan) bo'lsa local uri, aks holda internet URL
-export function verseSource(folder, surah, ayah) {
-  try { const f = verseFile(folder, surah, ayah); if (f.exists) return f.uri; } catch (e) { /* */ }
-  return verseAudioUrl(folder, surah, ayah);
+export function verseSource(ed, gn) {
+  try { const f = verseFile(ed, gn); if (f.exists) return f.uri; } catch (e) { /* */ }
+  return verseAudioUrl(ed, gn);
 }
 
 // Butun sura/pora audiosini yuklab olish (oflayn). onProgress(done,total)
-export async function downloadAyahs(folder, ayahList, onProgress) {
-  const dir = audioDir(folder);
+export async function downloadAyahs(ed, ayahList, onProgress) {
+  const dir = audioDir(ed);
   try { if (!dir.exists) dir.create({ intermediates: true }); } catch (e) { /* */ }
   let done = 0;
   for (const a of ayahList) {
     try {
-      const f = verseFile(folder, a.surah, a.n);
-      if (!f.exists) await File.downloadFileAsync(verseAudioUrl(folder, a.surah, a.n), dir);
+      const f = verseFile(ed, a.gn);
+      if (!f.exists) await File.downloadFileAsync(verseAudioUrl(ed, a.gn), dir);
     } catch (e) { /* bitta oyat tushmasa — davom */ }
     done++;
     if (onProgress) onProgress(done, ayahList.length);
@@ -101,10 +128,10 @@ export async function downloadAyahs(folder, ayahList, onProgress) {
 }
 
 // Yuklab olinganmi (taxminiy — birinchi va oxirgi oyat bilan)
-export function isDownloaded(folder, ayahList) {
+export function isDownloaded(ed, ayahList) {
   if (!ayahList || !ayahList.length) return false;
   try {
     const probe = [ayahList[0], ayahList[ayahList.length - 1]];
-    return probe.every(a => verseFile(folder, a.surah, a.n).exists);
+    return probe.every(a => verseFile(ed, a.gn).exists);
   } catch (e) { return false; }
 }

@@ -11,6 +11,7 @@ import {
 
 const AR_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 const toArabicNum = (n) => String(n).split('').map(d => AR_DIGITS[+d] || d).join('');
+const BASMALA = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
 
 export default function QuranOverlay({ v }) {
   const C = useC();
@@ -53,7 +54,7 @@ export default function QuranOverlay({ v }) {
         if (!alive) return;
         ayahsRef.current = d.ayahs || [];
         setData(d);
-        setDl({ on: false, done: 0, total: 0, ok: isDownloaded(reciter.folder, d.ayahs) });
+        setDl({ on: false, done: 0, total: 0, ok: isDownloaded(reciter.ed, d.ayahs) });
       } catch (e) { if (alive) setError(true); }
       if (alive) setLoading(false);
     })();
@@ -62,7 +63,7 @@ export default function QuranOverlay({ v }) {
 
   // Qori o'zgarsa — yuklab olinganini qayta tekshirish
   useEffect(() => {
-    if (data) setDl(x => ({ ...x, ok: isDownloaded(reciter.folder, data.ayahs) }));
+    if (data) setDl(x => ({ ...x, ok: isDownloaded(reciter.ed, data.ayahs) }));
   }, [reciter]);
 
   async function unloadSound() {
@@ -79,7 +80,7 @@ export default function QuranOverlay({ v }) {
     setCurIdx(idx);
     const a = ay[idx];
     try {
-      const src = verseSource(reciterRef.current.folder, a.surah, a.n);
+      const src = verseSource(reciterRef.current.ed, a.gn);
       const { sound } = await Audio.Sound.createAsync(
         { uri: src }, { shouldPlay: true },
         (s) => { if (s.didJustFinish) playSeq(idx + 1); },
@@ -100,7 +101,7 @@ export default function QuranOverlay({ v }) {
     if (dl.on || !data) return;
     setDl({ on: true, done: 0, total: data.ayahs.length, ok: false });
     try {
-      await downloadAyahs(reciter.folder, data.ayahs, (done, total) => setDl(x => ({ ...x, done, total })));
+      await downloadAyahs(reciter.ed, data.ayahs, (done, total) => setDl(x => ({ ...x, done, total })));
       setDl({ on: false, done: data.ayahs.length, total: data.ayahs.length, ok: true });
     } catch (e) {
       setDl({ on: false, done: 0, total: 0, ok: false });
@@ -172,20 +173,34 @@ export default function QuranOverlay({ v }) {
         ) : (
           <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
             <View style={st.paper}>
+              {/* Sura boshidagi basmala — oyatlardan alohida, markazda */}
+              {tab === 'surah' && data?.bismillah && (
+                <Text style={st.basmala}>{BASMALA}</Text>
+              )}
               {trShow ? (
                 (data?.ayahs || []).map((a, i) => {
                   const dim = soya && curIdx !== i;
                   const isCur = curIdx === i;
                   const col = isCur ? C_INK_ACTIVE : (dim ? C_INK_DIM : C_INK);
+                  // Porada yangi sura boshlansa — nomi + basmala (Fotiha/Tavbadan tashqari)
+                  const newSurah = tab === 'juz' && a.n === 1;
                   return (
-                    <TouchableOpacity key={i} activeOpacity={0.7}
-                      onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
-                      style={[st.vBlock, i > 0 && st.vDivider, isCur && st.vBlockOn]}>
-                      <Text style={[st.arabicV, { color: col }]}>
-                        {a.text} <Text style={st.ayahNum}>﴿{toArabicNum(a.n)}﴾</Text>
-                      </Text>
-                      {!!a.tr && <Text style={[st.tr, { opacity: dim ? 0.5 : 1 }]}>{a.n}. {a.tr}</Text>}
-                    </TouchableOpacity>
+                    <View key={i}>
+                      {newSurah && (
+                        <View style={st.juzHead}>
+                          <Text style={st.juzHeadAr}>{a.surahName}</Text>
+                          {a.surah !== 1 && a.surah !== 9 && <Text style={st.basmala}>{BASMALA}</Text>}
+                        </View>
+                      )}
+                      <TouchableOpacity activeOpacity={0.7}
+                        onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
+                        style={[st.vBlock, i > 0 && !newSurah && st.vDivider, isCur && st.vBlockOn]}>
+                        <Text style={[st.arabicV, { color: col }]}>
+                          {a.text} <Text style={st.ayahNum}>﴿{toArabicNum(a.n)}﴾</Text>
+                        </Text>
+                        {!!a.tr && <Text style={[st.tr, { opacity: dim ? 0.5 : 1 }]}>{a.n}. {a.tr}</Text>}
+                      </TouchableOpacity>
+                    </View>
                   );
                 })
               ) : (
@@ -289,6 +304,9 @@ const mkSt = (C) => StyleSheet.create({
   paper: { backgroundColor: '#FCFAF4', borderRadius: 18, padding: 22, borderWidth: 1, borderColor: 'rgba(238,194,113,0.4)' },
   arabic: { fontSize: 26, lineHeight: 52, textAlign: 'right', writingDirection: 'rtl' },
   ayahNum: { fontSize: 20, color: '#C9A24B' },
+  basmala: { fontSize: 22, lineHeight: 44, textAlign: 'center', writingDirection: 'rtl', color: '#8A6A22', paddingVertical: 6, marginBottom: 4 },
+  juzHead: { alignItems: 'center', marginTop: 10, marginBottom: 2, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(28,58,50,0.14)' },
+  juzHeadAr: { fontSize: 24, textAlign: 'center', writingDirection: 'rtl', color: '#C9A24B' },
   pickBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4,12,8,0.6)', justifyContent: 'flex-end' },
   pickSheet: { maxHeight: '72%', backgroundColor: C.sheet ? C.sheet[0] : C.bg[1], borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: C.border, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 30 },
   pickTitle: { fontFamily: F.serif, fontSize: 19, color: C.cream, marginBottom: 12, marginHorizontal: 4 },

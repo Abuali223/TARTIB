@@ -72,31 +72,31 @@ export default function Bugun({ v }) {
         <View style={{ flex: 1, gap: 13 }}>
           <TouchableOpacity onPress={v.open.tasbeh} activeOpacity={0.85} style={st.quickBtn}>
             <View style={[st.quickIcon, { backgroundColor: 'rgba(217,179,106,0.14)' }]}><BeadsIcon /></View>
-            <View>
-              <Text style={st.quickTitle}>{t('Tasbeh')}</Text>
-              <Text style={st.quickSub}>{t('Zikr sanagich')}</Text>
+            <View style={st.quickTextWrap}>
+              <Text numberOfLines={1} style={st.quickTitle}>{t('Tasbeh')}</Text>
+              <Text numberOfLines={1} style={st.quickSub}>{t('Zikr sanagich')}</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={v.open.qibla} activeOpacity={0.85} style={st.quickBtn}>
             <View style={[st.quickIcon, { backgroundColor: 'rgba(67,192,141,0.14)' }]}><CompassIcon /></View>
-            <View>
-              <Text style={st.quickTitle}>{t('Qibla')}</Text>
-              <Text style={st.quickSub}>{t("Yo'nalish")}</Text>
+            <View style={st.quickTextWrap}>
+              <Text numberOfLines={1} style={st.quickTitle}>{t('Qibla')}</Text>
+              <Text numberOfLines={1} style={st.quickSub}>{t("Yo'nalish")}</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={v.open.mosques} activeOpacity={0.85} style={st.quickBtn}>
             <View style={[st.quickIcon, { backgroundColor: 'rgba(111,179,224,0.14)' }]}><MosqueIcon /></View>
-            <View>
-              <Text style={st.quickTitle}>{t('Masjidlar')}</Text>
-              <Text style={st.quickSub}>{t('Eng yaqin')}</Text>
+            <View style={st.quickTextWrap}>
+              <Text numberOfLines={1} style={st.quickTitle}>{t('Masjidlar')}</Text>
+              <Text numberOfLines={1} style={st.quickSub}>{t('Eng yaqin')}</Text>
             </View>
           </TouchableOpacity>
           {v.canQuran && (
             <TouchableOpacity onPress={v.open.quran} activeOpacity={0.85} style={st.quickBtn}>
               <View style={[st.quickIcon, { backgroundColor: 'rgba(217,179,106,0.14)' }]}><BookIcon /></View>
-              <View>
-                <Text style={st.quickTitle}>{t('Qur‘on')}</Text>
-                <Text style={st.quickSub}>{t('O‘qish va tinglash')}</Text>
+              <View style={st.quickTextWrap}>
+                <Text numberOfLines={1} style={st.quickTitle}>{t('Qur‘on')}</Text>
+                <Text numberOfLines={1} style={st.quickSub}>{t('O‘qish va tinglash')}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -208,6 +208,7 @@ const mkSt = (C) => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 11,
   },
   quickIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  quickTextWrap: { flex: 1, minWidth: 0 },
   quickTitle: { fontFamily: F.bold, fontSize: 14, color: C.cream },
   quickSub: { fontFamily: F.regular, fontSize: 11, color: C.sage },
   card: { borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
