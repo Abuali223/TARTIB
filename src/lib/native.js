@@ -10,6 +10,17 @@ export function cameraAvailable() {
   }
 }
 
+// Qur'on (audio) — expo-av native moduli bor bo'lsagina (yangi APK). Eski APK'da
+// tugma ko'rsatilmaydi, overlay ochilmaydi (import qulashiga yo'l qo'ymaymiz).
+export function quranAvailable() {
+  try {
+    const { requireOptionalNativeModule } = require('expo-modules-core');
+    return !!requireOptionalNativeModule('ExponentAV');
+  } catch (e) {
+    return false;
+  }
+}
+
 // Ilova versiyasi + build raqami (masalan "v1.0 (7)"). Eski APK'da (native
 // modul yo'q) faqat "v1.0" qaytadi — OTA'da qulamaydi.
 export function appVersionLabel() {

@@ -39,7 +39,7 @@ import TaskOverlay from './overlays/Task';
 import AssignOverlay from './overlays/Assign';
 import AddMemberOverlay from './overlays/AddMember';
 import WorkspaceSheet from './overlays/Workspace';
-import { cameraAvailable, parseJoinCode } from './lib/native';
+import { cameraAvailable, parseJoinCode, quranAvailable } from './lib/native';
 import PickerOverlay from './overlays/Picker';
 
 const USE_24H = true;
@@ -924,6 +924,7 @@ export default class Root extends React.Component {
       inviteCode, canInvite: this.canIn(activeWs, CAP.MANAGE_MEMBERS),
       // QR skaner
       canScan: (this._canScan === undefined ? (this._canScan = cameraAvailable()) : this._canScan),
+      canQuran: (this._canQuran === undefined ? (this._canQuran = quranAvailable()) : this._canQuran),
       openScan: this.openScan, onScanned: this.onScanned,
       settings: S.settings,
       toggleSetting: { namoz: () => this.toggleSetting('namoz'), azon: () => this.toggleSetting('azon'), zikr: () => this.toggleSetting('zikr'), jamoa: () => this.toggleSetting('jamoa') },
@@ -939,8 +940,8 @@ export default class Root extends React.Component {
       shareApp: this.shareApp,
       tab: S.tab,
       go: { bugun: () => this.go('bugun'), namoz: () => this.go('namoz'), reja: () => this.go('reja'), jamoa: () => this.go('jamoa'), profil: () => this.go('profil') },
-      open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), mosques: () => this.openOv('mosques'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openInvite(), workspace: () => this.openOv('workspace') },
-      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', mosques: S.overlay === 'mosques', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr', notifs: S.overlay === 'notifs' },
+      open: { tasbeh: () => this.openOv('tasbeh'), qibla: () => this.openOv('qibla'), mosques: () => this.openOv('mosques'), quran: () => this.openOv('quran'), stats: () => this.openOv('stats'), habits: () => this.openOv('habits'), settings: () => this.openOv('settings'), assign: () => this.openOv('assign'), addmember: () => this.openInvite(), workspace: () => this.openOv('workspace') },
+      ov: { tasbeh: S.overlay === 'tasbeh', qibla: S.overlay === 'qibla', mosques: S.overlay === 'mosques', quran: S.overlay === 'quran', stats: S.overlay === 'stats', habits: S.overlay === 'habits', settings: S.overlay === 'settings', member: S.overlay === 'member', task: S.overlay === 'task', assign: S.overlay === 'assign', addmember: S.overlay === 'addmember', workspace: S.overlay === 'workspace', madhab: S.overlay === 'madhab', city: S.overlay === 'city', lang: S.overlay === 'lang', theme: S.overlay === 'theme', scanqr: S.overlay === 'scanqr', notifs: S.overlay === 'notifs' },
       // makon boshqaruvi
       myWorkspaces, shaxsiyActive: isShaxsiy, onSelectShaxsiy: () => this.setActiveWorkspace(null),
       wsDraft: S.wsDraft, wsTypeChips, onWsName: this.onWsName, createWorkspace: this.createWorkspace,
@@ -988,6 +989,7 @@ export default class Root extends React.Component {
         {v.ov.tasbeh && <TasbehOverlay v={v} />}
         {v.ov.qibla && <QiblaOverlay v={v} />}
         {v.ov.mosques && <MosquesOverlay v={v} />}
+        {v.ov.quran && v.canQuran && (() => { const QuranOverlay = require('./overlays/Quran').default; return <QuranOverlay v={v} />; })()}
         {v.ov.notifs && <NotifsOverlay v={v} />}
         {v.ov.stats && <StatsOverlay v={v} />}
         {v.ov.habits && <HabitsOverlay v={v} />}
