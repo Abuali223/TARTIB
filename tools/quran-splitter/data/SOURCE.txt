@@ -1,0 +1,12 @@
+Qur'on matni (ayah_meta.json ichidagi matn va undan hisoblangan mora/harf
+qiymatlari) manbasi:
+
+  Tanzil Qur'an Text (Uthmani, version 1.0.2)
+  Copyright (C) 2008-2010 Tanzil.net
+  License: Creative Commons Attribution 3.0 (CC BY 3.0)
+  https://tanzil.net
+
+ayah_meta.json va surah_meta.json fayllari `dev/quran-uthmani.xml` (Tanzil)
+dan `dev/gen_meta.py` skripti orqali yaratilgan. Qayta yaratish:
+
+  python3 dev/gen_meta.py

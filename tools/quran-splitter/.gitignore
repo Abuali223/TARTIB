@@ -1,0 +1,6 @@
+# Ajratuvchi chiqishi (oyat MP3'lari, tekshirish sahifalari) — repozitoriyга tushmasin
+chiqish/
+out/
+output/
+__pycache__/
+*.pyc

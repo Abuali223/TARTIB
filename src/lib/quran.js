@@ -14,6 +14,9 @@ export const RECITERS = [
   { id: 'minshawi', name: 'Al-Minshawiy', folder: 'Minshawy_Murattal_128kbps' },
   { id: 'husary', name: 'Mahmud al-Husariy', folder: 'Husary_128kbps' },
   { id: 'sudais', name: 'Abdurrahmon as-Sudays', folder: 'Abdurrahmaan_As-Sudais_192kbps' },
+  // O'zbek qori namunasi — to'liq surani `tools/quran-splitter` bilan oyatlarга bo'lib,
+  // hosil bo'lgan SSSAAA.mp3 fayllarni hostingga qo'ying va `folder` ga to'liq URL bering:
+  // { id: 'uz_sample', name: "O'zbek qori", folder: 'https://mening-saytim.uz/uzbek_qori' },
 ];
 
 const pad = (x, w) => String(x).padStart(w, '0');
@@ -72,11 +75,19 @@ export async function getJuz(n) {
 }
 
 // ————— Audio —————
+// `folder` — everyayah.com papka nomi (masalan 'Husary_128kbps') YOKI to'liq URL
+// (masalan 'https://mening-saytim.uz/uzbek_qori'). To'liq URL bo'lsa, oyat fayllari
+// shu manzildan olinadi — o'zbek qorilarini (tools/quran-splitter bilan tayyorlangan)
+// shu tarzda ulash mumkin. Fayl nomlashi bir xil: SSSAAA.mp3 (001001.mp3).
 export function verseAudioUrl(folder, surah, ayah) {
-  return `https://everyayah.com/data/${folder}/${pad(surah, 3)}${pad(ayah, 3)}.mp3`;
+  const name = `${pad(surah, 3)}${pad(ayah, 3)}.mp3`;
+  if (/^https?:\/\//i.test(folder)) return `${String(folder).replace(/\/$/, '')}/${name}`;
+  return `https://everyayah.com/data/${folder}/${name}`;
 }
 
-function audioDir(folder) { return new Directory(Paths.document, 'quran-audio', folder); }
+// Lokal (oflayn) papka kaliti — folder to'liq URL bo'lsa ham xavfsiz nomga aylantiramiz
+function folderKey(folder) { return String(folder).replace(/[^a-zA-Z0-9_-]/g, '_'); }
+function audioDir(folder) { return new Directory(Paths.document, 'quran-audio', folderKey(folder)); }
 function verseFile(folder, surah, ayah) { return new File(audioDir(folder), `${pad(surah, 3)}${pad(ayah, 3)}.mp3`); }
 
 // Oyat manbasi — oflayn (yuklangan) bo'lsa local uri, aks holda internet URL

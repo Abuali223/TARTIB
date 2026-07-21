@@ -1,0 +1,7 @@
+# TARTIB Qur'on ajratuvchi — Python bog'liqliklari
+numpy>=1.21
+
+# ffmpeg. Agar tizimingizda ffmpeg o'rnatilgan bo'lsa (masalan `ffmpeg -version`
+# ishlasa), buni o'tkazib yuborsangiz ham bo'ladi. Aks holda quyidagi paket
+# ffmpeg binarni o'zi bilan olib keladi (alohida o'rnatish shart emas):
+imageio-ffmpeg>=0.4
