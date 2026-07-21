@@ -54,6 +54,8 @@ export const F = {
   serifBold: 'Spectral_700Bold',
   arabic: 'Amiri_400Regular',
   arabicBold: 'Amiri_700Bold',
+  quran: 'UthmanicHafs',   // KFGQPC Uthmanic Hafs — Qur'on tilovati matni
+
   regular: 'Manrope_400Regular',
   medium: 'Manrope_500Medium',
   semibold: 'Manrope_600SemiBold',

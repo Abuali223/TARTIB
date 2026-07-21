@@ -162,7 +162,7 @@ export default function QuranOverlay({ v }) {
         {/* Sarlavha */}
         {data && (
           <View style={st.head}>
-            <Text style={st.headAr}>{tab === 'surah' ? data.name : selName}</Text>
+            <Text style={[st.headAr, tab === 'surah' && { fontFamily: F.quran, fontSize: 30 }]}>{tab === 'surah' ? data.name : selName}</Text>
             {!!meta && <Text style={st.headSub}>{meta}</Text>}
           </View>
         )}
@@ -297,7 +297,7 @@ const mkSt = (C) => StyleSheet.create({
   vBlock: { paddingVertical: 14 },
   vDivider: { borderTopWidth: 1, borderTopColor: 'rgba(28,58,50,0.12)' },
   vBlockOn: { backgroundColor: 'rgba(201,162,75,0.10)', borderRadius: 12, marginHorizontal: -8, paddingHorizontal: 8 },
-  arabicV: { fontSize: 25, lineHeight: 48, textAlign: 'right', writingDirection: 'rtl' },
+  arabicV: { fontFamily: F.quran, fontSize: 25, lineHeight: 56, textAlign: 'right', writingDirection: 'rtl' },
   tr: { fontFamily: F.regular, fontSize: 14.5, lineHeight: 22, color: '#3A5049', marginTop: 8, textAlign: 'left' },
   head: { alignItems: 'center', paddingVertical: 10, marginHorizontal: 16, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
   headAr: { fontFamily: F.serif, fontSize: 26, color: C.gold },
@@ -307,11 +307,11 @@ const mkSt = (C) => StyleSheet.create({
   retry: { marginTop: 16, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 13, backgroundColor: C.gold },
   retryT: { fontFamily: F.extrabold, fontSize: 14, color: C.ink },
   paper: { backgroundColor: '#FCFAF4', borderRadius: 18, padding: 22, borderWidth: 1, borderColor: 'rgba(238,194,113,0.4)' },
-  arabic: { fontSize: 26, lineHeight: 52, textAlign: 'right', writingDirection: 'rtl' },
-  ayahNum: { fontSize: 20, color: '#C9A24B' },
-  basmala: { fontSize: 22, lineHeight: 44, textAlign: 'center', writingDirection: 'rtl', color: '#8A6A22', paddingVertical: 6, marginBottom: 4 },
+  arabic: { fontFamily: F.quran, fontSize: 27, lineHeight: 60, textAlign: 'right', writingDirection: 'rtl' },
+  ayahNum: { fontFamily: F.quran, fontSize: 20, color: '#C9A24B' },
+  basmala: { fontFamily: F.quran, fontSize: 23, lineHeight: 50, textAlign: 'center', writingDirection: 'rtl', color: '#8A6A22', paddingVertical: 6, marginBottom: 4 },
   juzHead: { alignItems: 'center', marginTop: 10, marginBottom: 2, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(28,58,50,0.14)' },
-  juzHeadAr: { fontSize: 24, textAlign: 'center', writingDirection: 'rtl', color: '#C9A24B' },
+  juzHeadAr: { fontFamily: F.quran, fontSize: 26, textAlign: 'center', writingDirection: 'rtl', color: '#C9A24B' },
   pickBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4,12,8,0.6)', justifyContent: 'flex-end' },
   pickSheet: { maxHeight: '72%', backgroundColor: C.sheet ? C.sheet[0] : C.bg[1], borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: C.border, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 30 },
   pickTitle: { fontFamily: F.serif, fontSize: 19, color: C.cream, marginBottom: 12, marginHorizontal: 4 },

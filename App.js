@@ -15,6 +15,8 @@ export default function App() {
     Spectral_600SemiBold, Spectral_700Bold,
     Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold,
     Amiri_400Regular, Amiri_700Bold,
+    // KFGQPC Uthmanic Hafs — Qur'on matni uchun (Madina mushafi uslubi)
+    UthmanicHafs: require('./assets/fonts/UthmanicHafs.otf'),
   });
 
   if (!fontsLoaded) {
