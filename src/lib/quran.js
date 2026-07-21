@@ -18,11 +18,14 @@ export const RECITERS = [
 
 const pad = (x, w) => String(x).padStart(w, '0');
 
-// ————— Matn (kesh bilan) —————
+// O'zbekcha tarjima — Muhammad Sodiq Muhammad Yusuf (alquran.cloud edition)
+const UZ = 'uz.sodik';
+
+// ————— Matn (kesh bilan) — v2: tarjima bilan —————
 async function cachedText(key, fetcher) {
-  try { const s = await AsyncStorage.getItem('q.' + key); if (s) return JSON.parse(s); } catch (e) { /* */ }
+  try { const s = await AsyncStorage.getItem('q2.' + key); if (s) return JSON.parse(s); } catch (e) { /* */ }
   const d = await fetcher();
-  try { await AsyncStorage.setItem('q.' + key, JSON.stringify(d)); } catch (e) { /* */ }
+  try { await AsyncStorage.setItem('q2.' + key, JSON.stringify(d)); } catch (e) { /* */ }
   return d;
 }
 
@@ -38,24 +41,31 @@ export async function getSurahList() {
 
 export async function getSurah(n) {
   return cachedText('s' + n, async () => {
-    const r = await fetch(`${API}/surah/${n}/quran-uthmani`);
+    const r = await fetch(`${API}/surah/${n}/editions/quran-uthmani,${UZ}`);
     const j = await r.json();
-    const d = j.data || {};
+    const arr = j.data || [];
+    const ar = arr.find(e => e.edition && e.edition.identifier === 'quran-uthmani') || arr[0] || {};
+    const uz = arr.find(e => e.edition && e.edition.identifier === UZ);
+    const uzA = (uz && uz.ayahs) || [];
     return {
-      n: d.number, name: d.name, en: d.englishName, type: d.revelationType,
-      ayahs: (d.ayahs || []).map(a => ({ n: a.numberInSurah, text: a.text, surah: d.number })),
+      n: ar.number, name: ar.name, en: ar.englishName, type: ar.revelationType,
+      ayahs: (ar.ayahs || []).map((a, i) => ({ n: a.numberInSurah, text: a.text, tr: (uzA[i] && uzA[i].text) || '', surah: ar.number })),
     };
   });
 }
 
 export async function getJuz(n) {
   return cachedText('j' + n, async () => {
-    const r = await fetch(`${API}/juz/${n}/quran-uthmani`);
+    const r = await fetch(`${API}/juz/${n}/editions/quran-uthmani,${UZ}`);
     const j = await r.json();
-    const d = j.data || {};
+    const arr = j.data || [];
+    const ar = arr.find(e => e.edition && e.edition.identifier === 'quran-uthmani') || arr[0] || {};
+    const uz = arr.find(e => e.edition && e.edition.identifier === UZ);
+    const uzA = (uz && uz.ayahs) || [];
     return {
-      ayahs: (d.ayahs || []).map(a => ({
-        n: a.numberInSurah, text: a.text, surah: a.surah.number, surahName: a.surah.name,
+      ayahs: (ar.ayahs || []).map((a, i) => ({
+        n: a.numberInSurah, text: a.text, tr: (uzA[i] && uzA[i].text) || '',
+        surah: a.surah.number, surahName: a.surah.name,
       })),
     };
   });

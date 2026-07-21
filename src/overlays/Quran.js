@@ -24,6 +24,7 @@ export default function QuranOverlay({ v }) {
   const [error, setError] = useState(false);
   const [reciter, setReciter] = useState(RECITERS[0]);
   const [soya, setSoya] = useState(true);            // soyali rejim
+  const [trShow, setTrShow] = useState(true);        // tarjima ko'rsatish
   const [picker, setPicker] = useState(null);        // null | surah | juz | reciter
   const [playing, setPlaying] = useState(false);
   const [curIdx, setCurIdx] = useState(-1);
@@ -142,6 +143,10 @@ export default function QuranOverlay({ v }) {
               ? <Text style={st.dlT}>{Math.round((dl.done / Math.max(1, dl.total)) * 100)}%</Text>
               : <Text style={[st.iconBtnT, dl.ok && { color: C.emerald }]}>{dl.ok ? '✓' : '⤓'}</Text>}
           </TouchableOpacity>
+          <TouchableOpacity style={[st.iconBtn, trShow && st.iconBtnOn]} activeOpacity={0.85} onPress={() => setTrShow(s => !s)}
+            accessibilityRole="button" accessibilityLabel={t('Tarjima')}>
+            <Text style={[st.iconBtnUz, trShow && { color: C.ink }]}>Uz</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={[st.iconBtn, soya && st.iconBtnOn]} activeOpacity={0.85} onPress={() => setSoya(s => !s)}
             accessibilityRole="button" accessibilityLabel={t('Soyali rejim')}>
             <Text style={[st.iconBtnT, soya && { color: C.ink }]}>☾</Text>
@@ -167,19 +172,37 @@ export default function QuranOverlay({ v }) {
         ) : (
           <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
             <View style={st.paper}>
-              <Text style={st.arabic}>
-                {(data?.ayahs || []).map((a, i) => {
+              {trShow ? (
+                (data?.ayahs || []).map((a, i) => {
                   const dim = soya && curIdx !== i;
                   const isCur = curIdx === i;
+                  const col = isCur ? C_INK_ACTIVE : (dim ? C_INK_DIM : C_INK);
                   return (
-                    <Text key={i} onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
-                      style={{ color: isCur ? C_INK_ACTIVE : (dim ? C_INK_DIM : C_INK) }}>
-                      {a.text}
-                      <Text style={st.ayahNum}> ﴿{toArabicNum(a.n)}﴾ </Text>
-                    </Text>
+                    <TouchableOpacity key={i} activeOpacity={0.7}
+                      onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
+                      style={[st.vBlock, i > 0 && st.vDivider, isCur && st.vBlockOn]}>
+                      <Text style={[st.arabicV, { color: col }]}>
+                        {a.text} <Text style={st.ayahNum}>﴿{toArabicNum(a.n)}﴾</Text>
+                      </Text>
+                      {!!a.tr && <Text style={[st.tr, { opacity: dim ? 0.5 : 1 }]}>{a.n}. {a.tr}</Text>}
+                    </TouchableOpacity>
                   );
-                })}
-              </Text>
+                })
+              ) : (
+                <Text style={st.arabic}>
+                  {(data?.ayahs || []).map((a, i) => {
+                    const dim = soya && curIdx !== i;
+                    const isCur = curIdx === i;
+                    return (
+                      <Text key={i} onPress={() => { stopRef.current = false; setPlaying(true); playSeq(i); }}
+                        style={{ color: isCur ? C_INK_ACTIVE : (dim ? C_INK_DIM : C_INK) }}>
+                        {a.text}
+                        <Text style={st.ayahNum}> ﴿{toArabicNum(a.n)}﴾ </Text>
+                      </Text>
+                    );
+                  })}
+                </Text>
+              )}
             </View>
           </ScrollView>
         )}
@@ -242,14 +265,20 @@ const mkSt = (C) => StyleSheet.create({
   chipT: { fontFamily: F.bold, fontSize: 13, color: C.sageMid },
   sel: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
   selT: { flex: 1, fontFamily: F.bold, fontSize: 14, color: C.cream },
-  bar2: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingBottom: 10 },
-  reciter: { flex: 1, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.overlay1, borderWidth: 1, borderColor: C.hairline },
-  reciterLbl: { fontFamily: F.regular, fontSize: 10.5, color: C.sage, letterSpacing: 0.5 },
-  reciterT: { fontFamily: F.bold, fontSize: 13.5, color: C.gold, marginTop: 1 },
-  iconBtn: { width: 46, height: 46, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.border },
+  bar2: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingBottom: 10 },
+  reciter: { flex: 1, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 12, backgroundColor: C.overlay1, borderWidth: 1, borderColor: C.hairline },
+  reciterLbl: { fontFamily: F.regular, fontSize: 10, color: C.sage, letterSpacing: 0.5 },
+  reciterT: { fontFamily: F.bold, fontSize: 13, color: C.gold, marginTop: 1 },
+  iconBtn: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: C.overlay2, borderWidth: 1, borderColor: C.border },
   iconBtnOn: { backgroundColor: C.gold, borderColor: C.gold },
   iconBtnT: { fontSize: 18, color: C.cream },
+  iconBtnUz: { fontFamily: F.extrabold, fontSize: 14, color: C.cream },
   dlT: { fontFamily: F.extrabold, fontSize: 12, color: C.gold },
+  vBlock: { paddingVertical: 14 },
+  vDivider: { borderTopWidth: 1, borderTopColor: 'rgba(28,58,50,0.12)' },
+  vBlockOn: { backgroundColor: 'rgba(201,162,75,0.10)', borderRadius: 12, marginHorizontal: -8, paddingHorizontal: 8 },
+  arabicV: { fontSize: 25, lineHeight: 48, textAlign: 'right', writingDirection: 'rtl' },
+  tr: { fontFamily: F.regular, fontSize: 14.5, lineHeight: 22, color: '#3A5049', marginTop: 8, textAlign: 'left' },
   head: { alignItems: 'center', paddingVertical: 10, marginHorizontal: 16, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
   headAr: { fontFamily: F.serif, fontSize: 26, color: C.gold },
   headSub: { fontFamily: F.regular, fontSize: 12.5, color: C.sageMid, marginTop: 3 },
