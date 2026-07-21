@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, AppState, BackHandler, Linking, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, AppState, BackHandler, Linking, Platform, Pressable, ScrollView, Share, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { C, F, THEMES, ThemeProvider } from './theme';
@@ -16,6 +16,7 @@ import { setSecurePin, verifySecurePin, clearSecurePin, hashPin, verifyLegacyPin
 import { appShareMessage } from './lib/appMeta';
 import { CAP, WS_TYPES, isManagerPerms, isMinorAge, roleOptionsFor } from './lib/roles';
 import { schedulePrayerReminders, sendTestNotification } from './lib/notifications';
+import { playAdhan, stopAdhan } from './lib/adhan';
 import {
   addTask, createWorkspace, deleteWorkspace, ensureJoinCode, fetchUser, joinByCode, leaveWorkspace, setTaskStatus, updateMemberRole,
   subscribeInbox, subscribeMyMemberships, subscribeWorkspace, subscribeWorkspaceMembers, subscribeWorkspaceTasks,
@@ -89,7 +90,7 @@ export default class Root extends React.Component {
     draft: { assigneeId: null, title: '', category: 'Namoz', due: 'Bugun', dueDate: null, type: 'vazifa' },
     wsDraft: { type: 'oila', name: '' },
     joinCode: '', joinBusy: false,
-    flash: null,
+    flash: null, adhanOn: null,
     amalsDate: todayKey(),
     // ——— Firestore'dan sinxron ———
     myMemberships: [], myWorkspaces: {}, // {wid: workspace}
@@ -116,7 +117,7 @@ export default class Root extends React.Component {
   get uid() { return this.state.fbUser ? this.state.fbUser.uid : null; }
 
   async componentDidMount() {
-    this._t = setInterval(() => { this.setState({ now: Date.now() }); this.maybeResetAmals(); }, 1000);
+    this._t = setInterval(() => { this.setState({ now: Date.now() }); this.maybeResetAmals(); this.maybePlayAdhan(); }, 1000);
     const saved = await loadState();
     if (saved) {
       const patch = {};
@@ -170,6 +171,7 @@ export default class Root extends React.Component {
 
   componentWillUnmount() {
     clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._st);
+    stopAdhan();
     if (this._unsubAuth) this._unsubAuth();
     if (this._backSub) this._backSub.remove();
     if (this._linkSub) this._linkSub.remove();
@@ -614,6 +616,34 @@ export default class Root extends React.Component {
       this.setState(s => ({ amals: s.amals.map(a => ({ ...a, done: false })), amalsDate: tk }));
     }
   };
+
+  // Namoz vaqti kirganda azon (ilova ochiqda — internetdan oqim). Har vaqt kunда
+  // bir marta, vaqt kirgach 90 soniyalik oyna ichida chalinadi.
+  maybePlayAdhan = () => {
+    const S = this.state;
+    if (!S.hydrated || S.locked) return;
+    if (!S.settings || !S.settings.namoz || !S.settings.azon) return;
+    const tk = todayKey();
+    if (this._adhanDay !== tk) { this._adhanDay = tk; this._adhanPlayed = {}; this._adhanList = null; }
+    const now = new Date(S.now);
+    const c = this.effCoords();
+    const key = `${tk}|${c.latitude.toFixed(3)},${c.longitude.toFixed(3)}|${S.madhab}`;
+    if (this._adhanListKey !== key) {   // kunlik jadvalni bir marta hisoblab keshlaymiz
+      this._adhanListKey = key;
+      this._adhanList = prayerList(c, now, S.madhab).filter(p => !p.info);
+    }
+    const list = this._adhanList || [];
+    for (const p of list) {
+      if (!p.date) continue;
+      const dt = now - p.date;               // vaqt kirganidan beri (ms)
+      if (dt >= 0 && dt < 90000 && !this._adhanPlayed[p.k]) {
+        this._adhanPlayed[p.k] = true;
+        this.setState({ adhanOn: p.name });
+        playAdhan(p.k, () => this.setState({ adhanOn: null })).catch(() => this.setState({ adhanOn: null }));
+        break;
+      }
+    }
+  };
   toggleAmal = (id) => this.setState(s => ({ amals: s.amals.map(a => a.id === id ? { ...a, done: !a.done } : a), amalsDate: todayKey() }));
   toggleHabit = (id) => this.setState(s => ({ habits: s.habits.map(h => { if (h.id !== id) return h; const w = h.week.slice(); const nd = !w[6]; w[6] = nd; return { ...h, week: w, streak: nd ? h.streak + 1 : Math.max(0, h.streak - 1) }; }) }));
   tasbehTap = () => this.setState(s => ({ tasbehCount: s.tasbehCount + 1 }));
@@ -621,6 +651,7 @@ export default class Root extends React.Component {
   setDhikr = (i) => this.setState({ dhikrIdx: i, tasbehCount: 0 });
   setTarget = (n) => this.setState({ tasbehTarget: n });
   flash = (msg) => { this.setState({ flash: msg }); clearTimeout(this._ft); this._ft = setTimeout(() => this.setState({ flash: null }), 2200); };
+  stopAdhanNow = () => { stopAdhan(); this.setState({ adhanOn: null }); };
 
   // ————— derived values for screens —————
   vals() {
@@ -949,6 +980,7 @@ export default class Root extends React.Component {
       showIsh: !isChild,
       close: this.closeOv, setScroll: this.setScroll,
       logout: this.logout, flash: S.flash,
+      adhanOn: S.adhanOn, stopAdhan: this.stopAdhanNow,
     };
   }
 
@@ -1011,6 +1043,14 @@ export default class Root extends React.Component {
           </View>
         )}
 
+        {/* Azon chalinmoqda — bosib to'xtatish mumkin */}
+        {!!v.adhanOn && (
+          <Pressable style={st.adhanBar} onPress={v.stopAdhan}>
+            <Text style={st.adhanText}>🕌  {v.adhanOn} — azon chalinmoqda</Text>
+            <Text style={st.adhanStop}>To‘xtatish  ✕</Text>
+          </Pressable>
+        )}
+
         {/* Yangi PIN o'rnatish oynasi (Sozlamalardan) */}
         {v.pinSetup && (
           <LockScreen mode="set" onSetPin={this.onSetPin} />
@@ -1039,5 +1079,14 @@ const st = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 15, shadowOffset: { width: 0, height: 12 }, elevation: 8,
   },
   flashText: { fontFamily: F.bold, fontSize: 14, color: C.cream },
+  adhanBar: {
+    position: 'absolute', bottom: 110, left: 18, right: 18, alignSelf: 'center', zIndex: 56,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: 'rgba(20,64,47,0.98)', borderWidth: 1, borderColor: 'rgba(217,179,106,0.55)',
+    paddingVertical: 14, paddingHorizontal: 18, borderRadius: 16,
+    shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 15, shadowOffset: { width: 0, height: 12 }, elevation: 9,
+  },
+  adhanText: { fontFamily: F.bold, fontSize: 14, color: C.cream, flex: 1, marginRight: 10 },
+  adhanStop: { fontFamily: F.extrabold, fontSize: 13, color: '#D9B36A' },
   topScrim: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: '#0a1f18', zIndex: 60 },
 });
