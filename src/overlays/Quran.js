@@ -35,6 +35,7 @@ export default function QuranOverlay({ v }) {
   const ayahsRef = useRef([]);
   const reciterRef = useRef(reciter);
   const stopRef = useRef(false);
+  const pausedRef = useRef(false);   // pauza — ovoz yuklangan holda to'xtatilgan
   useEffect(() => { reciterRef.current = reciter; }, [reciter]);
 
   useEffect(() => {
@@ -61,18 +62,29 @@ export default function QuranOverlay({ v }) {
     return () => { alive = false; };
   }, [tab, sel]);
 
-  // Qori o'zgarsa — yuklab olinganini qayta tekshirish
+  // Qori o'zgarsa — yuklab olinganini qayta tekshirish; pauzadagi ovozni yangi
+  // qori bilan qaytadan boshlash uchun tozalaymiz (joy — curIdx — saqlanadi)
   useEffect(() => {
     if (data) setDl(x => ({ ...x, ok: isDownloaded(reciter.ed, data.ayahs) }));
+    if (pausedRef.current) { pausedRef.current = false; unloadSound(); }
   }, [reciter]);
 
   async function unloadSound() {
     const s = soundRef.current; soundRef.current = null;
     if (s) { try { await s.stopAsync(); } catch (e) {} try { await s.unloadAsync(); } catch (e) {} }
   }
-  async function stopPlay() { stopRef.current = true; await unloadSound(); setPlaying(false); setCurIdx(-1); }
+  // To'liq to'xtatish (sura almashtirilganda / yopilganda) — joyni ham tozalaydi
+  async function stopPlay() { stopRef.current = true; pausedRef.current = false; await unloadSound(); setPlaying(false); setCurIdx(-1); }
+
+  // Pauza — ovozni yuklangan holda ushlab turadi, davom ettirilganda shu joydan boshlanadi
+  async function pausePlay() {
+    const s = soundRef.current;
+    if (s) { try { await s.pauseAsync(); pausedRef.current = true; } catch (e) {} }
+    setPlaying(false);
+  }
 
   async function playSeq(idx) {
+    pausedRef.current = false;
     await unloadSound();
     if (stopRef.current) return;
     const ay = ayahsRef.current;
@@ -91,8 +103,15 @@ export default function QuranOverlay({ v }) {
   }
 
   const togglePlay = async () => {
-    if (playing) { await stopPlay(); return; }
+    if (playing) { await pausePlay(); return; }   // pauza — joyni saqlaydi
     if (!ayahsRef.current.length) return;
+    // pauzadan davom ettirish — aynan to'xtagan joydan
+    if (pausedRef.current && soundRef.current) {
+      try {
+        stopRef.current = false; setPlaying(true);
+        await soundRef.current.playAsync(); pausedRef.current = false; return;
+      } catch (e) { pausedRef.current = false; }
+    }
     stopRef.current = false; setPlaying(true);
     playSeq(curIdx >= 0 ? curIdx : 0);
   };
