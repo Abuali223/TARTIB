@@ -77,14 +77,20 @@ export async function getSurah(n) {
 
 export async function getJuz(n) {
   return cachedText('j' + n, async () => {
-    const r = await fetch(`${API}/juz/${n}/editions/quran-uthmani,${UZ}`);
-    const j = await r.json();
-    const arr = j.data || [];
-    const ar = arr.find(e => e.edition && e.edition.identifier === 'quran-uthmani') || arr[0] || {};
-    const uz = arr.find(e => e.edition && e.edition.identifier === UZ);
-    const uzA = (uz && uz.ayahs) || [];
-    const ayahs = (ar.ayahs || []).map((a, i) => ({
-      n: a.numberInSurah, gn: a.number, text: a.text, tr: (uzA[i] && uzA[i].text) || '',
+    // Pora uchun alquran.cloud faqat bitta edition endpointini qo'llaydi
+    // (ko'p editionli /juz/.../editions/... yo'q). Shu bois ikkitasini alohida olamiz.
+    const [rAr, rUz] = await Promise.all([
+      fetch(`${API}/juz/${n}/quran-uthmani`).then(r => r.json()).catch(() => null),
+      fetch(`${API}/juz/${n}/${UZ}`).then(r => r.json()).catch(() => null),
+    ]);
+    const ar = (rAr && rAr.data) || {};
+    const arAyahs = ar.ayahs || [];
+    if (!arAyahs.length) throw new Error('juz empty');
+    // Tarjimani global oyat raqami bo'yicha moslashtiramiz (indeks emas — ishonchli)
+    const uzMap = {};
+    ((rUz && rUz.data && rUz.data.ayahs) || []).forEach(x => { uzMap[x.number] = x.text; });
+    const ayahs = arAyahs.map((a) => ({
+      n: a.numberInSurah, gn: a.number, text: a.text, tr: uzMap[a.number] || '',
       surah: a.surah.number, surahName: a.surah.name,
     }));
     // Pora ichida yangi sura boshlangan joyda 1-oyatdagi basmalani ajratamiz
